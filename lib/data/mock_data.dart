@@ -132,10 +132,10 @@ abstract final class MockData {
   ];
 
   static const orders = [
-    OrderSummary(id: '8M-10482', date: '26 сентября, 14:05', method: ReceiveMethod.delivery, status: OrderStatus.onway, eta: '15:20–15:35', items: {'b1': 2, 'b6': 1, 'b4': 1}, total: 21970, bonus: 609),
-    OrderSummary(id: '8M-10311', date: '12 сентября, 10:42', method: ReceiveMethod.pickup, status: OrderStatus.done, items: {'b3': 6, 'b11': 2}, total: 26720, bonus: 536),
-    OrderSummary(id: '8M-10107', date: '28 августа, 18:10', method: ReceiveMethod.delivery, status: OrderStatus.done, items: {'b12': 1, 't3': 1}, total: 17790, bonus: 450),
-    OrderSummary(id: '8M-09984', date: '14 августа, 12:30', method: ReceiveMethod.delivery, status: OrderStatus.cancelled, items: {'b8': 10}, total: 31900),
+    OrderSummary(id: '8M-10482', date: '26 сентября, 14:05', method: ReceiveMethod.delivery, status: OrderStatus.onway, eta: '15:20–15:35', items: {'b1': 2, 'b6': 1, 'b4': 1}, total: 21970, bonus: 609, address: 'Астана, Кабанбай батыра, 11'),
+    OrderSummary(id: '8M-10311', date: '12 сентября, 10:42', method: ReceiveMethod.pickup, status: OrderStatus.done, items: {'b3': 6, 'b11': 2}, total: 26720, bonus: 536, address: 'пр. Мангилик Ел, 55'),
+    OrderSummary(id: '8M-10107', date: '28 августа, 18:10', method: ReceiveMethod.delivery, status: OrderStatus.done, items: {'b12': 1, 't3': 1}, total: 17790, bonus: 450, address: 'Астана, Кабанбай батыра, 11'),
+    OrderSummary(id: '8M-09984', date: '14 августа, 12:30', method: ReceiveMethod.delivery, status: OrderStatus.cancelled, items: {'b8': 10}, total: 31900, address: 'Астана, Кабанбай батыра, 11'),
   ];
 
   static const addresses = [

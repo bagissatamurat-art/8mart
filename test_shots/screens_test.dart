@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:mart8/app.dart';
+import 'package:mart8/ui/widgets/mart_image.dart';
 
 class _MemStorage implements Storage {
   final _m = <String, dynamic>{};
@@ -47,13 +48,14 @@ const shots = {
 void main() {
   setUpAll(() async {
     HydratedBloc.storage = _MemStorage();
+    MartImage.offline = true;
     await _font('Onest', 'assets/fonts/Onest-Variable.ttf');
     final root = Platform.environment['FLUTTER_ROOT'];
     if (root != null) await _font('MaterialIcons', '$root/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf');
   });
 
   for (final e in shots.entries) {
-    testWidgets(e.key, (tester) async {
+    testWidgets(e.key, timeout: const Timeout(Duration(seconds: 60)), (tester) async {
       tester.view.physicalSize = const Size(390 * 2, 844 * 2);
       tester.view.devicePixelRatio = 2;
       addTearDown(tester.view.reset);
@@ -62,8 +64,9 @@ void main() {
       // Картинки из assets декодируются вне fake-async.
       await tester.runAsync(() async {
         for (final el in find.byType(Image).evaluate()) {
-          final img = el.widget as Image;
-          await precacheImage(img.image, el).catchError((_) {});
+          final img = (el.widget as Image).image;
+          if (img is! AssetImage) continue;
+          await precacheImage(img, el).timeout(const Duration(seconds: 3), onTimeout: () {}).catchError((_) {});
         }
         await Future<void>.delayed(const Duration(milliseconds: 300));
       });

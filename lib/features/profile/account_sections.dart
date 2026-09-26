@@ -15,6 +15,7 @@ import '../../state/cart_cubit.dart';
 import '../../state/favorites_cubit.dart';
 import '../../ui/ui.dart';
 import '../common/product_grid.dart';
+import 'order_labels.dart';
 
 enum AccountSection { orders, favorites, addresses, payments, promos, bonus, personal }
 
@@ -51,8 +52,11 @@ class _AccountSectionScreenState extends State<AccountSectionScreen> {
             AccountSection.personal => const _Personal(),
           };
     return Scaffold(
-      appBar: AppBar(leading: const Padding(padding: EdgeInsets.only(left: 8), child: Center(child: MartBackButton())), leadingWidth: 60, title: Text(sectionTitle(t, widget.section))),
-      body: body,
+      // Раздел 390 (#6c): белая панель — назад 40 + заголовок 22/800.
+      body: Column(children: [
+        MartTopPanel(padding: const EdgeInsets.fromLTRB(16, 8, 16, 16), children: [MartTitleRow(title: sectionTitle(t, widget.section), onBack: () => context.go('/profile'))]),
+        Expanded(child: body),
+      ]),
       bottomNavigationBar: widget.section == AccountSection.addresses && !s.loading
           ? MartBottomBar(child: MartButton(label: t.addAddress, variant: MartButtonVariant.secondary, expanded: true, onPressed: () => openAddressSheet(context, null)))
           : null,
@@ -63,7 +67,9 @@ class _AccountSectionScreenState extends State<AccountSectionScreen> {
 Widget _card(BuildContext context, Widget child, {EdgeInsets padding = const EdgeInsets.all(16)}) =>
     Container(padding: padding, decoration: BoxDecoration(color: context.mc.surface, borderRadius: BorderRadius.circular(MartRadius.card)), child: child);
 
-// ── Мои заказы ──
+// ── Мои заказы (MartAccount mobile): активный — розовая рамка, «Привезём к», шкала с подписями, «Следить за заказом»; «История» — карточки с чипом статуса ──
+TextStyle _fs(double size, FontWeight w, Color col, {double? h, double? ls}) => TextStyle(fontFamily: 'Onest', fontSize: size, fontWeight: w, color: col, height: h, letterSpacing: ls);
+
 class _Orders extends StatelessWidget {
   const _Orders();
   @override
@@ -73,57 +79,106 @@ class _Orders extends StatelessWidget {
     final s = context.watch<AccountCubit>().state;
     if (s.orders.isEmpty) return MartEmptyState(title: t.emptyYet, text: t.ordersEmptyHint, action: t.toCatalog, onAction: () => context.go('/catalog'));
     final active = s.orders.where((o) => o.isActive).toList(), past = s.orders.where((o) => !o.isActive).toList();
-    return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 24), children: [
-      if (active.isNotEmpty) ...[Text(t.activeOrder, style: MartText.title.copyWith(color: c.ink1)), const SizedBox(height: 8), for (final o in active) _OrderCard(o), const SizedBox(height: 16)],
-      if (past.isNotEmpty) ...[Text(t.history, style: MartText.title.copyWith(color: c.ink1)), const SizedBox(height: 8), for (final o in past) Padding(padding: const EdgeInsets.only(bottom: 8), child: _OrderCard(o))],
+    return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
+      for (final o in active) ...[_ActiveOrder(o), const SizedBox(height: 10)],
+      if (past.isNotEmpty) Padding(padding: const EdgeInsets.fromLTRB(4, 4, 4, 10), child: Text(t.history, style: _fs(16, FontWeight.w700, c.ink1))),
+      for (final o in past) ...[_PastOrder(o), const SizedBox(height: 10)],
     ]);
   }
 }
 
-class _OrderCard extends StatelessWidget {
-  const _OrderCard(this.o);
+class _ActiveOrder extends StatelessWidget {
+  const _ActiveOrder(this.o);
+  final OrderSummary o;
+  @override
+  Widget build(BuildContext context) {
+    final c = context.mc;
+    final cur = orderStep(o);
+    final labels = orderSteps(o);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card), border: Border.all(color: const Color(0xFFF7C6DC), width: 1.5)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Заказ №${o.id} · ${o.date}', style: _fs(13, FontWeight.w400, c.ink3)),
+            const SizedBox(height: 4),
+            Text(orderStatusLabel(o), style: _fs(20, FontWeight.w800, c.ink1, ls: -0.4)),
+            const SizedBox(height: 4),
+            Text(o.address, style: _fs(14, FontWeight.w400, c.ink2, h: 1.4)),
+          ])),
+          if (o.eta != null) ...[
+            const SizedBox(width: 12),
+            Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), decoration: BoxDecoration(color: c.primary50, borderRadius: BorderRadius.circular(14)),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                Text(o.method == ReceiveMethod.pickup ? 'Будет готов к' : 'Привезём к', style: _fs(12, FontWeight.w400, c.ink2)),
+                const SizedBox(height: 2),
+                Text(o.eta!, style: _fs(16, FontWeight.w700, c.ink1)),
+              ])),
+          ],
+        ]),
+        const SizedBox(height: 16),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          for (var i = 0; i < 4; i++) ...[
+            if (i > 0) const SizedBox(width: 6),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Container(height: 4, decoration: BoxDecoration(color: i < cur ? c.success : i == cur ? c.primary : c.divider, borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 6),
+              Text(labels[i], style: _fs(12, i == cur ? FontWeight.w600 : FontWeight.w400, i <= cur ? c.ink1 : c.ink3, h: 1.3)),
+            ])),
+          ],
+        ]),
+        const SizedBox(height: 16),
+        MartButton(label: 'Следить за заказом', size: MartButtonSize.m44, expanded: true, onPressed: () => context.push('/order/${o.id}')),
+      ]),
+    );
+  }
+}
+
+class _PastOrder extends StatelessWidget {
+  const _PastOrder(this.o);
   final OrderSummary o;
   @override
   Widget build(BuildContext context) {
     final t = L10n.of(context);
     final c = context.mc;
     final cancelled = o.status == OrderStatus.cancelled;
-    final pickup = o.method == ReceiveMethod.pickup;
-    final (label, color) = switch (o.status) {
-      OrderStatus.accepted => (t.stAccepted, c.primary), OrderStatus.assembling => (t.stAssembling, c.primary),
-      OrderStatus.onway => (t.stCourier, c.primary), OrderStatus.ready => (t.stReady, c.primary),
-      OrderStatus.done => (pickup ? t.stIssued : t.stDelivered, c.success), OrderStatus.cancelled => (t.orderCancelled, c.error),
-    };
-    final steps = [OrderStatus.accepted, OrderStatus.assembling, pickup ? OrderStatus.ready : OrderStatus.onway, OrderStatus.done];
-    final cur = steps.indexOf(o.status);
-    return _card(context, Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Row(children: [
-        Expanded(child: Text(t.orderNo(o.id), style: MartText.bodyStrong.copyWith(color: c.ink1))),
-        Text(label, style: MartText.small.copyWith(fontWeight: FontWeight.w600, color: color)),
+    final (chipBg, chipFg) = orderTone(o.status);
+    final ids = o.items.keys.toList();
+    final n = ids.length;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Wrap(spacing: 8, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
+          Text('№${o.id}', style: _fs(15, FontWeight.w600, c.ink1)),
+          Text(o.date, style: _fs(13, FontWeight.w400, c.ink3)),
+          Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: chipBg, borderRadius: BorderRadius.circular(999)),
+              child: Text(orderStatusLabel(o), style: _fs(12, FontWeight.w600, chipFg))),
+          if (o.status == OrderStatus.done && o.bonus > 0) BonusBadge(amount: o.bonus, compact: true),
+        ]),
+        const SizedBox(height: 10),
+        Row(children: [
+          for (final id in ids.take(4)) if (MockData.byId(id) case final p?) Padding(padding: const EdgeInsets.only(right: 6),
+              child: Opacity(opacity: cancelled ? .5 : 1, child: SizedBox.square(dimension: 44, child: MartImage(p.image, radius: 10, fit: BoxFit.cover)))),
+          if (n > 4) Container(width: 44, height: 44, alignment: Alignment.center, decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(10)),
+              child: Text('+${n - 4}', style: _fs(13, FontWeight.w600, c.ink2))),
+        ]),
+        const SizedBox(height: 10),
+        Text('$n ${plural(n, 'позиция', 'позиции', 'позиций')} · ${o.method == ReceiveMethod.pickup ? 'Самовывоз' : 'Доставка'}, ${o.address}', style: _fs(13, FontWeight.w400, c.ink2)),
+        const SizedBox(height: 16),
+        Row(children: [
+          Expanded(child: Text(money(o.total), style: _fs(17, FontWeight.w700, cancelled ? c.ink3 : c.ink1).copyWith(decoration: cancelled ? TextDecoration.lineThrough : null, decorationColor: c.ink3))),
+          GestureDetector(onTap: () => context.push('/order/${o.id}'), child: Container(height: 40, padding: const EdgeInsets.symmetric(horizontal: 12), alignment: Alignment.center,
+              child: Text(t.details, style: _fs(14, FontWeight.w600, c.ink2)))),
+          const SizedBox(width: 4),
+          MartButton(label: t.repeat, variant: MartButtonVariant.secondary, size: MartButtonSize.s40, onPressed: () {
+            context.read<CartCubit>().addAll(o.items);
+            showMartToast(context, t.addedFromOrder, action: t.open, onAction: () => context.go('/cart'));
+          }),
+        ]),
       ]),
-      Text(o.date, style: MartText.caption.copyWith(fontSize: 13, color: c.ink2)),
-      if (o.isActive) ...[
-        const SizedBox(height: 12),
-        Row(children: [for (var i = 0; i < 4; i++) Expanded(child: Container(height: 4, margin: EdgeInsets.only(right: i < 3 ? 4 : 0),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(2), color: i < cur ? c.success : i == cur ? c.primary : c.surface3)))]),
-        if (o.eta != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text('~ ${o.eta}', style: MartText.small.copyWith(color: c.ink2))),
-      ],
-      const SizedBox(height: 12),
-      Row(children: [
-        for (final id in o.items.keys.take(4)) if (MockData.byId(id) case final p?) Padding(padding: const EdgeInsets.only(right: 6), child: SizedBox.square(dimension: 44, child: MartImage(p.image, radius: 10))),
-        const Spacer(),
-        Text(money(o.total), style: MartText.price.copyWith(color: cancelled ? c.ink3 : c.ink1, decoration: cancelled ? TextDecoration.lineThrough : null)),
-      ]),
-      if (o.status == OrderStatus.done && o.bonus > 0) Padding(padding: const EdgeInsets.only(top: 8), child: Row(children: [Text('${t.accrued} ', style: MartText.caption.copyWith(color: c.ink2)), BonusBadge(amount: o.bonus, compact: true)])),
-      const SizedBox(height: 12),
-      Row(children: [
-        if (!o.isActive) ...[Expanded(child: MartButton(label: t.repeat, variant: MartButtonVariant.secondary, size: MartButtonSize.m44, expanded: true, onPressed: () {
-          context.read<CartCubit>().addAll(o.items);
-          showMartToast(context, t.addedFromOrder, action: t.open, onAction: () => context.go('/cart'));
-        })), const SizedBox(width: 8)],
-        Expanded(child: MartButton(label: t.details, variant: MartButtonVariant.ghost, size: MartButtonSize.m44, expanded: true, onPressed: () => context.push('/order/${o.id}'))),
-      ]),
-    ]));
+    );
   }
 }
 

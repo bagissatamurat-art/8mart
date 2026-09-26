@@ -95,8 +95,8 @@ class CatalogFilter extends Equatable {
 enum OrderStatus { accepted, assembling, onway, ready, done, cancelled }
 
 class OrderSummary extends Equatable {
-  const OrderSummary({required this.id, required this.date, required this.method, required this.status, required this.items, required this.total, this.eta, this.bonus = 0});
-  final String id, date;
+  const OrderSummary({required this.id, required this.date, required this.method, required this.status, required this.items, required this.total, this.eta, this.bonus = 0, this.address = ''});
+  final String id, date, address;
   final ReceiveMethod method;
   final OrderStatus status;
   final Map<String, int> items;
