@@ -253,7 +253,9 @@ class _Cta extends StatelessWidget {
     Future<void> place() async {
       final id = await co.place();
       if (!context.mounted) return;
-      context.read<OrderCubit>().create(id: id, plan: plan, method: cart.method ?? ReceiveMethod.delivery, total: total, bonus: cart.bonus);
+      context.read<OrderCubit>().create(id: id, plan: plan, method: cart.method ?? ReceiveMethod.delivery, total: total, bonus: cart.bonus,
+          lines: cart.active.toList(), address: cart.address, paidWith: s.payment == 'kaspi' ? 'Оплачено Kaspi' : 'Оплачено картой',
+          goods: cart.goods, discount: cart.discount, spent: spend);
       if (s.payment == 'kaspi') {
         // В проде: ссылка оплаты от бэкенда → приложение Kaspi → возврат по 8mart.kz/pay/return?order=<id>
         await launchUrl(Uri.parse('https://kaspi.kz/pay/8mart?order=$id'), mode: LaunchMode.externalApplication);

@@ -31,8 +31,8 @@
 | 07 #7b Каталог (корень / категория / список) | features/catalog/catalog_screen.dart | ✅ |
 | 02 #2b Корзина | features/cart/cart_screen.dart | ✅ |
 | 03 #3b Оформление | features/checkout/checkout_screen.dart | ✅ |
-| 03 Статус заказа | features/order/order_status_screen.dart | ⏳ |
+| 03 Статус заказа (#3b success) | features/order/order_status_screen.dart + ui/blocks/order_timeline.dart | ✅ |
 | 04 Способ получения | features/method/method_sheet.dart | ✅ |
 | 05 Поиск (#5b, #5d) | features/search/search_screen.dart | ✅ |
-| 06 Кабинет | features/profile/* | ⏳ |
+| 06 Кабинет (#6b, #6c) | features/profile/* | ✅ |
 | 08 Товар | features/product/product_view.dart (ProductPage) | ✅ |
