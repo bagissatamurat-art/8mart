@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"></helmet>
+<div style="font-family:Onest,system-ui,sans-serif;color:#17151A;width:100%;box-sizing:border-box">
+  <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:center;gap:16px;height:80px;padding:0 40px;background:#FFFFFF;border-radius:0 0 24px 24px">
+      <a href="{{ homeHref }}" style="display:flex;align-items:center;flex:none"><img src="./assets/logo.svg" alt="8mart" style="height:28px;width:auto;display:block"></a>
+      <button type="button" onClick="{{ onMethod }}" style="display:flex;align-items:center;gap:10px;height:56px;padding:0 18px;border-radius:999px;border:0;background:#F7F7F8;font:inherit;font-size:15px;font-weight:500;cursor:pointer;flex:none;max-width:280px" style-hover="background:#EEEDF1">
+        <span style="width:10px;height:10px;border-radius:50%;background:{{ methodDot }};flex:none"></span>
+        <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;min-width:0"><span style="font-size:12px;color:#6B6873">{{ methodLabel }}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">{{ address }}</span></span>
+        <span style="width:8px;height:8px;border-right:2px solid #6B6873;border-bottom:2px solid #6B6873;transform:rotate(45deg);margin:-4px 0 0 4px;flex:none"></span>
+      </button>
+      <div style="flex:1;position:relative;display:flex;align-items:center;height:56px;border-radius:999px;background:#F7F7F8;border:1.5px solid {{ searchBc }};box-shadow:{{ searchRing }};padding:0 20px;gap:12px">
+        <span style="position:relative;width:18px;height:18px;flex:none"><span style="position:absolute;left:0;top:0;width:12px;height:12px;border:2px solid #6B6873;border-radius:50%"></span><span style="position:absolute;left:12px;top:12px;width:7px;height:2px;background:#6B6873;border-radius:1px;transform:rotate(45deg);transform-origin:0 50%"></span></span>
+        <input value="{{ query }}" onChange="{{ onQuery }}" onFocus="{{ onSearchFocus }}" placeholder="Искать в 8mart" style="flex:1;border:0;background:transparent;outline:none;font:inherit;font-size:16px;color:#17151A;min-width:0">
+        <sc-if value="{{ hasQuery }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ clearQuery }}" aria-label="Очистить" style="width:28px;height:28px;border-radius:50%;border:0;background:#E3E2E7;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0"><span style="position:relative;width:12px;height:12px;display:block"><span style="position:absolute;left:0;top:5px;width:12px;height:2px;background:#6B6873;transform:rotate(45deg)"></span><span style="position:absolute;left:0;top:5px;width:12px;height:2px;background:#6B6873;transform:rotate(-45deg)"></span></span></button></sc-if>
+      </div>
+      <button type="button" onClick="{{ openMenu }}" aria-label="Меню" aria-expanded="{{ menuOpen }}" style="display:flex;align-items:center;gap:12px;height:56px;padding:0 {{ menuPadR }} 0 20px;border-radius:999px;border:0;background:#F7F7F8;font:inherit;color:#17151A;cursor:pointer;flex:none" style-hover="background:#EEEDF1">
+        <span style="width:18px;height:14px;display:flex;flex-direction:column;justify-content:space-between;flex:none"><span style="height:2px;border-radius:1px;background:#17151A"></span><span style="height:2px;border-radius:1px;background:#17151A"></span><span style="height:2px;border-radius:1px;background:#17151A"></span></span>
+        <sc-if value="{{ user }}" hint-placeholder-val="{{ false }}"><span style="width:40px;height:40px;border-radius:50%;background:#FBDCEA;color:#EE1D74;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ initial }}</span></sc-if>
+        <sc-if value="{{ guest }}" hint-placeholder-val="{{ true }}"><span style="font-size:15px;font-weight:600">Войти</span></sc-if>
+      </button>
+    </div>
+    <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeMenu }}" style="position:absolute;inset:0;background:rgba(23,21,26,.45);z-index:40"></div>
+      <aside role="dialog" aria-modal="true" aria-label="Меню" style="position:absolute;top:0;right:0;bottom:0;width:420px;max-width:100%;background:#fff;z-index:41;display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(23,21,26,.12);border-radius:24px 0 0 24px;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 20px 12px 24px;flex:none">
+          <sc-if value="{{ user }}" hint-placeholder-val="{{ false }}"><a href="{{ profileHref }}" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:#17151A;min-width:0"><span style="width:48px;height:48px;border-radius:50%;background:#FBDCEA;color:#EE1D74;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">{{ initial }}</span><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><b style="font-size:18px;font-weight:700">{{ userName }}</b><span style="font-size:13px;color:#6B6873">{{ userPhone }}</span></span></a></sc-if>
+          <sc-if value="{{ guest }}" hint-placeholder-val="{{ true }}"><b style="font-size:22px;font-weight:800;letter-spacing:-.02em">Меню</b></sc-if>
+          <button type="button" onClick="{{ closeMenu }}" aria-label="Закрыть" style="width:40px;height:40px;border-radius:50%;border:0;background:#F7F7F8;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex:none" style-hover="background:#EEEDF1"><span style="position:relative;width:14px;height:14px;display:block"><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#17151A;transform:rotate(45deg)"></span><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#17151A;transform:rotate(-45deg)"></span></span></button>
+        </div>
+        <div style="flex:1;min-height:0;overflow-y:auto;padding:4px 12px 20px;display:flex;flex-direction:column;gap:16px">
+          <sc-if value="{{ guest }}" hint-placeholder-val="{{ true }}"><div style="margin:0 12px;padding:20px;border-radius:20px;background:#FDF0F6;display:flex;flex-direction:column;gap:14px"><div style="display:flex;flex-direction:column;gap:4px"><b style="font-size:17px">Войдите в 8mart</b><span style="font-size:14px;color:#6B6873;line-height:1.4">Заказы, избранное, адреса и бонусы — в одном месте</span></div><a href="{{ loginHref }}" style="text-decoration:none"><dc-import name="MartButton" label="Войти" size="56" full="{{ true }}" hint-size="100%,56px"></dc-import></a></div></sc-if>
+          <sc-if value="{{ user }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:2px">
+            <sc-if value="{{ hasActive }}" hint-placeholder-val="{{ false }}"><a href="{{ statusHref }}" style="margin:0 12px 10px;padding:14px 16px;border-radius:16px;background:#FDF0F6;text-decoration:none;color:#17151A;display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:12px;color:#6B6873">Заказ №{{ activeNo }}</span><b style="font-size:15px;font-weight:700">{{ activeStatus }}</b></span><span style="font-size:14px;font-weight:600;color:#EE1D74;white-space:nowrap">{{ activeEta }}</span></a></sc-if>
+            <sc-for list="{{ accountItems }}" as="it" hint-placeholder-count="7"><a href="{{ it.href }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;height:48px;padding:0 12px;border-radius:12px;text-decoration:none;color:#17151A;font-size:15px;font-weight:500" style-hover="background:#F7F7F8"><span>{{ it.label }}</span><span style="display:flex;align-items:center;gap:10px"><sc-if value="{{ it.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;font-weight:600;color:{{ it.badgeFg }}">{{ it.badge }}</span></sc-if><span style="width:7px;height:7px;border-right:2px solid #9E9BA6;border-top:2px solid #9E9BA6;transform:rotate(45deg);margin-right:4px"></span></span></a></sc-for>
+          </div></sc-if>
+          <div style="height:1px;background:#EEEDF1;margin:0 12px;flex:none"></div>
+          <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;color:#9E9BA6;padding:0 12px 6px">Каталог</span>
+            <sc-for list="{{ cats }}" as="c" hint-placeholder-count="5"><a href="{{ c.href }}" style="display:flex;align-items:center;gap:12px;height:48px;padding:0 12px;border-radius:12px;text-decoration:none;color:#17151A;font-size:15px;font-weight:500" style-hover="background:#F7F7F8"><span style="width:32px;height:32px;border-radius:10px;background:#F7F7F8;overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center"><sc-if value="{{ c.hasImg }}" hint-placeholder-val="{{ false }}"><img src="{{ c.img }}" alt="" style="width:32px;height:32px;object-fit:cover;display:block"></sc-if></span>{{ c.name }}</a></sc-for>
+          </div>
+          <div style="height:1px;background:#EEEDF1;margin:0 12px;flex:none"></div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <a href="{{ supportLink }}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;border-radius:12px;text-decoration:none;color:#17151A" style-hover="background:#F7F7F8"><span style="width:32px;height:32px;border-radius:50%;background:#EAF7F0;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:12px;height:9px;border-radius:5px 5px 5px 2px;border:2px solid #1DA765;box-sizing:content-box"></span></span><span style="display:flex;flex-direction:column;gap:1px"><span style="font-size:15px;font-weight:500">Написать в поддержку</span><span style="font-size:12px;color:#6B6873">WhatsApp</span></span></a>
+            <a href="{{ phoneHref }}" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;border-radius:12px;text-decoration:none;color:#17151A" style-hover="background:#F7F7F8"><span style="width:32px;height:32px;border-radius:50%;background:#F7F7F8;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:8px;height:14px;border:2px solid #17151A;border-radius:3px;box-sizing:content-box"></span></span><span style="display:flex;flex-direction:column;gap:1px"><span style="font-size:15px;font-weight:500">{{ brandPhone }}</span><span style="font-size:12px;color:#6B6873">Ежедневно</span></span></a>
+          </div>
+          <sc-if value="{{ user }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ logout }}" style="align-self:flex-start;height:44px;padding:0 12px;border:0;background:transparent;font:inherit;font-size:14px;font-weight:500;color:#9E9BA6;cursor:pointer" style-hover="color:#17151A">Выйти</button></sc-if>
+        </div>
+      </aside>
+    </sc-if>
+  </sc-if>
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:12px;padding:12px 16px 12px;background:#FFFFFF;border-radius:0 0 24px 24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <a href="{{ homeHref }}" style="display:flex;align-items:center"><img src="./assets/logo.svg" alt="8mart" style="height:24px;width:auto;display:block"></a>
+        <button type="button" onClick="{{ onMethod }}" style="display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:999px;border:0;background:#F7F7F8;font:inherit;font-size:14px;font-weight:500;cursor:pointer;min-width:0;color:#17151A">
+          <span style="width:8px;height:8px;border-radius:50%;background:{{ methodDot }};flex:none"></span>
+          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px">{{ methodShort }}</span>
+          <span style="width:7px;height:7px;border-right:2px solid #6B6873;border-bottom:2px solid #6B6873;transform:rotate(45deg);margin:-3px 0 0 2px;flex:none"></span>
+        </button>
+      </div>
+      <div style="display:flex;align-items:center;height:48px;border-radius:999px;background:#F7F7F8;border:1.5px solid {{ searchBc }};padding:0 16px;gap:10px">
+        <span style="position:relative;width:18px;height:18px;flex:none"><span style="position:absolute;left:0;top:0;width:12px;height:12px;border:2px solid #6B6873;border-radius:50%"></span><span style="position:absolute;left:12px;top:12px;width:7px;height:2px;background:#6B6873;border-radius:1px;transform:rotate(45deg);transform-origin:0 50%"></span></span>
+        <input value="{{ query }}" onChange="{{ onQuery }}" onFocus="{{ onSearchFocus }}" placeholder="Искать в 8mart" style="flex:1;border:0;background:transparent;outline:none;font:inherit;font-size:16px;color:#17151A;min-width:0">
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:80},
+&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;desktop&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;mobile&quot;],&quot;tsType&quot;:&quot;'desktop'|'mobile'&quot;},
+&quot;method&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:null,&quot;options&quot;:[null,&quot;delivery&quot;,&quot;pickup&quot;],&quot;tsType&quot;:&quot;null|'delivery'|'pickup'&quot;},
+&quot;address&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},
+&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},
+&quot;cartCount&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;tsType&quot;:&quot;number&quot;},
+&quot;cartAmountText&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},
+&quot;query&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},
+&quot;searchFocused&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},
+&quot;homeHref&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;loginHref&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;profileHref&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;cartHref&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},
+&quot;onMethod&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onQuery&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(q:string)=&gt;void&quot;},&quot;onSearchFocus&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;}}">
+class Component extends DCLogic {
+  state = { query: undefined, menu: undefined, D: null };
+  componentDidMount() {
+    import('./data.js').then(D => this.setState({ D }));
+    this.onKey = (e) => { if (e.key === 'Escape' && this.state.menu) this.setState({ menu: false }); };
+    window.addEventListener('keydown', this.onKey);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+  menuVals() {
+    const p = this.props, D = this.state.D;
+    const acc = p.profileHref ?? (encodeURI('06 Личный кабинет.dc.html') + '#6a');
+    const active = D ? D.ORDERS.find(o => ['accepted', 'assembling', 'onway', 'ready'].includes(o.status)) : null;
+    const S = D ? D.ORDER_STATUS : {};
+    const promos = D ? D.USER_PROMOS.filter(x => x.status === 'active').length : 0;
+    const items = [['Мои заказы', ''], ['Избранное', D ? String(D.getFavorites().length) : ''], ['Адреса', ''], ['Способы оплаты', ''], ['Промокоды', promos ? String(promos) : ''], ['Бонусы', D ? D.BONUS.balance.toLocaleString('ru-RU').replace(/\u00a0/g, ' ') : ''], ['Личные данные', '']];
+    return {
+      menuOpen: !!(this.state.menu ?? p.menuOpen), profileHref: acc, openMenu: () => this.setState({ menu: true }), closeMenu: () => this.setState({ menu: false }),
+      menuPadR: p.userName ? '8px' : '22px', userPhone: D ? D.USER.phone : '',
+      accountItems: items.map(([label, badge]) => ({ label, href: acc, hasBadge: !!badge, badge, badgeFg: label === 'Бонусы' ? '#13824D' : '#6B6873' })),
+      hasActive: !!active, activeNo: active ? active.id : '', activeStatus: active && S[active.status] ? S[active.status].label : '', activeEta: active && active.eta ? 'к ' + active.eta.split('–')[0] : '',
+      statusHref: encodeURI('03 Оформление.dc.html') + '#3a',
+      cats: D ? D.CATEGORIES.map(c => ({ name: c.name, img: c.img || '', hasImg: !!c.img, href: encodeURI('07 Каталог.dc.html') + '#7a' })) : [],
+      supportLink: 'https://wa.me/' + (D ? D.SUPPORT_WA : ''), brandPhone: D ? D.BRAND.phone : '', phoneHref: D ? 'tel:' + D.BRAND.phoneRaw : '#',
+      logout: () => { this.setState({ menu: false }); p.onLogout && p.onLogout(); },
+    };
+  }
+  renderVals() {
+    const p = this.props;
+    const mode = p.mode ?? 'desktop';
+    const method = p.method ?? null; // null | 'delivery' | 'pickup'
+    const query = this.state.query ?? p.query ?? '';
+    const count = Number(p.cartCount ?? 0);
+    const money = p.cartAmountText ?? '';
+    const addr = p.address ?? '';
+    const methodLabel = method === 'delivery' ? 'Доставка' : method === 'pickup' ? 'Самовывоз' : 'Как получить заказ?';
+    return {
+      ...this.menuVals(),
+      isDesktop: mode === 'desktop', isMobile: mode === 'mobile',
+      homeHref: p.homeHref ?? '#', loginHref: p.loginHref ?? (encodeURI('03 Оформление.dc.html') + '#3a'), cartHref: p.cartHref ?? '#',
+      methodLabel, address: method ? (addr || 'Укажите адрес') : 'Выбрать способ',
+      methodShort: method ? (addr || methodLabel) : 'Как получить заказ?',
+      methodDot: method ? '#1DA765' : '#F59E0B',
+      query, hasQuery: query.length > 0,
+      searchBc: p.searchFocused ? '#EE1D74' : 'transparent', searchRing: p.searchFocused ? '0 0 0 3px rgba(238,29,116,.18)' : 'none',
+      guest: !p.userName, user: !!p.userName, userName: p.userName, initial: p.userName ? p.userName[0] : '',
+      cartLabel: count > 0 ? 'Корзина' : 'Корзина', cartAmount: count > 0 ? money : '', cartVariant: count > 0 ? 'primary' : 'secondary',
+      onMethod: p.onMethod, onSearchFocus: p.onSearchFocus,
+      onQuery: (e) => { this.setState({ query: e.target.value }); p.onQuery && p.onQuery(e.target.value); },
+      clearQuery: () => { this.setState({ query: '' }); p.onQuery && p.onQuery(''); },
+    };
+  }
+}
+</script>
+</body>
+</html>

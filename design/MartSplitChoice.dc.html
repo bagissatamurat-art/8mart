@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"></helmet>
+<div style="display:flex;flex-direction:column;gap:12px;font-family:Onest,system-ui,sans-serif;color:#17151A;width:100%">
+  <div style="display:flex;flex-direction:column;gap:4px"><b style="font-size:{{ titleSize }};font-weight:700">{{ title }}</b><span style="font-size:13px;color:#6B6873;line-height:1.4">{{ sub }}</span></div>
+  <div style="display:grid;grid-template-columns:{{ cols }};gap:8px">
+    <sc-for list="{{ opts }}" as="o" hint-placeholder-count="2">
+      <button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.sel }}" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:16px;border:1.5px solid {{ o.bc }};background:{{ o.bg }};font:inherit;color:#17151A;text-align:left;cursor:pointer;box-sizing:border-box;min-height:56px" style-hover="border-color:{{ o.bch }}">
+        <span style="width:20px;height:20px;border-radius:50%;border:2px solid {{ o.rc }};box-sizing:border-box;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px"><span style="width:10px;height:10px;border-radius:50%;background:{{ o.dot }}"></span></span>
+        <span style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0"><span style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><span style="font-size:15px;font-weight:600">{{ o.title }}</span><span style="font-size:14px;font-weight:600;white-space:nowrap;color:{{ o.feeColor }}">{{ o.feeText }}</span></span><span style="font-size:13px;color:#6B6873;line-height:1.4">{{ o.sub }}</span></span>
+      </button>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:720,&quot;height&quot;:150},&quot;options&quot;:{&quot;editor&quot;:null,&quot;default&quot;:[{&quot;id&quot;:&quot;split&quot;,&quot;together&quot;:false,&quot;title&quot;:&quot;Двумя доставками&quot;,&quot;sub&quot;:&quot;Сегодня — 2 товара курьером, завтра — 2 товара Газелью&quot;,&quot;feeText&quot;:&quot;1 000 + 3 000 тг.&quot;,&quot;sel&quot;:true},{&quot;id&quot;:&quot;together&quot;,&quot;together&quot;:true,&quot;title&quot;:&quot;Всё вместе завтра&quot;,&quot;sub&quot;:&quot;Одной Газелью, 9:00–21:00&quot;,&quot;feeText&quot;:&quot;3 000 тг.&quot;,&quot;sel&quot;:false}],&quot;tsType&quot;:&quot;SplitOption[]&quot;},&quot;method&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;delivery&quot;,&quot;options&quot;:[&quot;delivery&quot;,&quot;pickup&quot;],&quot;tsType&quot;:&quot;'delivery'|'pickup'&quot;},&quot;compact&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onPick&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(together:boolean)=&gt;void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, pk = p.method === 'pickup', compact = !!p.compact;
+    const opts = (p.options || []).map(o => ({ ...o, bc: o.sel ? '#EE1D74' : '#E3E2E7', bch: o.sel ? '#EE1D74' : '#C9C7CF', bg: o.sel ? '#FDF0F6' : '#fff', rc: o.sel ? '#EE1D74' : '#C9C7CF', dot: o.sel ? '#EE1D74' : 'transparent',
+      feeColor: o.feeText === 'Бесплатно' ? '#1DA765' : '#17151A', pick: () => p.onPick && p.onPick(o.together) }));
+    return {
+      opts, cols: compact ? '1fr' : '1fr 1fr', titleSize: compact ? '16px' : '18px',
+      title: pk ? 'Как забрать заказ' : 'Как привезти заказ',
+      sub: pk ? 'Тяжёлые товары выдаём только со склада, с завтрашнего дня' : 'Тяжёлые товары возим Газелью — только на следующий день',
+    };
+  }
+}
+</script>
+</body>
+</html>

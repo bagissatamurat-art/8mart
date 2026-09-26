@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#E6E6EA;font-family:Onest,system-ui,sans-serif;color:#17151A}a{color:#EE1D74}a:hover{color:#D6136A}</style></helmet>
+<section style="display:flex;flex-direction:column;gap:48px;padding:48px;width:max-content">
+  <div style="display:flex;gap:48px;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Корзина · 1440</div>
+    <div id="2a" data-screen-label="Корзина 1440" style="position:relative;width:1440px;min-height:900px;background:#F2F2F4;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;gap:16px">
+      <dc-import name="MartHeader" mode="desktop" method="{{ method }}" address="{{ address }}" cart-count="{{ count }}" cart-amount-text="{{ goodsText }}" user-name="{{ userName }}" on-method="{{ openModal }}" hint-size="100%,80px"></dc-import>
+      <div style="padding:0 40px 40px;display:flex;flex-direction:column;gap:20px">
+        <nav style="display:flex;gap:8px;font-size:14px;color:#6B6873"><a href="#1a" style="color:#6B6873;text-decoration:none">Главная</a><span>·</span><span style="color:#17151A">Корзина</span></nav>
+        <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:96px 24px;text-align:center;background:#fff;border-radius:24px"><span style="width:160px;height:160px;border-radius:50%;background:#FDF0F6;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="assets/empty-cart.png" alt="" style="width:100px;height:100px"></span><h1 style="margin:0;font-size:28px;font-weight:800;letter-spacing:-.02em">В корзине пусто</h1><span style="font-size:15px;color:#6B6873;line-height:1.4;max-width:360px">Загляните в каталог — стройматериалы и цветы привезём за 60–90 минут</span><a href="#1a" style="text-decoration:none"><dc-import name="MartButton" label="В каталог" size="56" hint-size="160px,56px"></dc-import></a></div>
+        </sc-if>
+        <sc-if value="{{ notEmpty }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start">
+          <main style="display:flex;flex-direction:column;gap:16px;min-width:0">
+            <div style="display:flex;align-items:baseline;justify-content:space-between"><h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.02em">Корзина <span style="color:#9E9BA6;font-weight:600">· {{ title }}</span></h1><button type="button" onClick="{{ clearAll }}" style="border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;color:#6B6873;cursor:pointer;padding:0" style-hover="color:#E23D3D">Очистить корзину</button></div>
+            <sc-if value="{{ hasSold }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:16px;background:#FDEDED;font-size:14px;line-height:1.4"><span style="display:flex;gap:12px;align-items:center"><span style="width:20px;height:20px;border-radius:50%;background:#E23D3D;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">!</span>{{ soldAlert }}</span><button type="button" onClick="{{ removeSold }}" style="border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;color:#E23D3D;cursor:pointer;padding:0;white-space:nowrap">Удалить все</button></div></sc-if>
+            <sc-if value="{{ canSplit }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border-radius:24px;padding:20px"><dc-import name="MartSplitChoice" options="{{ splitOpts }}" method="{{ method }}" on-pick="{{ setTogether }}" hint-size="100%,130px"></dc-import></div></sc-if>
+            <sc-for list="{{ shipments }}" as="sh" hint-placeholder-count="1"><div style="background:#fff;border-radius:24px;padding:8px;display:flex;flex-direction:column;gap:4px">
+              <div style="padding:12px 12px 8px"><dc-import name="MartShipmentHead" kind="{{ sh.kind }}" method="{{ method }}" label="{{ sh.label }}" when="{{ sh.when }}" meta="{{ sh.meta }}" fee-text="{{ sh.feeText }}" hint-size="100%,72px"></dc-import></div>
+              <div style="height:1px;background:#EEEDF1;margin:0 12px 4px"></div>
+              <sc-for list="{{ sh.lines }}" as="l" hint-placeholder-count="2"><dc-import name="MartCartLine" product="{{ l.p }}" qty="{{ l.qty }}" sold-out="{{ l.soldOut }}" on-change="{{ setQty }}" hint-size="100%,104px"></dc-import></sc-for>
+            </div></sc-for>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:baseline;justify-content:space-between"><h2 style="margin:0;font-size:20px;font-weight:700">Не забыть</h2></div>
+              <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:stretch"><sc-for list="{{ upsell }}" as="it" hint-placeholder-count="5"><dc-import name="MartProductCard" product="{{ it.p }}" qty="{{ it.qty }}" on-qty="{{ setQty }}" hint-size="100%,320px"></dc-import></sc-for></div>
+            </div>
+          </main>
+          <aside style="background:#fff;border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:16px;position:sticky;top:16px">
+            <button type="button" onClick="{{ openModal }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:14px;border:0;background:#F7F7F8;font:inherit;text-align:left;cursor:pointer;color:#17151A" style-hover="background:#EEEDF1"><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:12px;color:#6B6873">{{ methodLabel }}</span><span style="font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ address }}</span></span><span style="font-size:14px;font-weight:600;color:#EE1D74;white-space:nowrap">Изменить</span></button>
+            <dc-import name="MartPromo" status="{{ promoStatus }}" code="{{ promoCode }}" discount-text="{{ promoDiscText }}" min-sum="{{ promoMin }}" on-apply="{{ applyPromo }}" on-remove="{{ removePromo }}" hint-size="100%,56px"></dc-import>
+            <div style="height:1px;background:#EEEDF1"></div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:14px">
+              <div style="display:flex;justify-content:space-between"><span style="color:#6B6873">{{ title }}</span><span>{{ goodsText }}</span></div>
+              <sc-if value="{{ hasDiscount }}" hint-placeholder-val="{{ false }}"><div style="display:flex;justify-content:space-between"><span style="color:#6B6873">Скидка по промокоду</span><span style="color:#1DA765">−{{ discountText }}</span></div></sc-if>
+              <sc-for list="{{ fees }}" as="f" hint-placeholder-count="1"><div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#6B6873">{{ f.label }}</span><span style="color:{{ f.color }};white-space:nowrap">{{ f.text }}</span></div></sc-for>
+              <sc-if value="{{ showProgress }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:6px"><div style="height:6px;border-radius:3px;background:#F2F2F4;overflow:hidden"><div style="height:100%;width:{{ progress }};background:#1DA765;border-radius:3px"></div></div><span style="font-size:13px;color:#6B6873">{{ progressLabel }} {{ leftText }}</span></div></sc-if>
+            </div>
+            <div style="height:1px;background:#EEEDF1"></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:18px">Итого</b><b style="font-size:24px;letter-spacing:-.01em">{{ totalText }}</b></div>
+            <sc-if value="{{ hasEarn }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:#EAF7F0;font-size:13px;line-height:1.35;color:#0F6B3E"><span style="width:14px;height:14px;border-radius:50%;background:#1DA765;color:#fff;font-size:9px;font-weight:800;line-height:1;display:inline-flex;align-items:center;justify-content:center;flex:none;font-family:Onest,system-ui,sans-serif">Б</span><span>{{ earnText }}</span></div></sc-if>
+            <a href="#checkout" style="text-decoration:none"><dc-import name="MartButton" label="Оформить" amount="{{ totalText }}" size="56" full="{{ true }}" disabled="{{ ctaDisabled }}" reason="{{ ctaReason }}" hint-size="100%,56px"></dc-import></a>
+            <sc-if value="{{ ctaDisabled }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#E23D3D;text-align:center;line-height:1.4">{{ ctaReason }}</span></sc-if>
+          </aside>
+        </div>
+        </sc-if>
+      </div>
+      <sc-if value="{{ modal }}" hint-placeholder-val="{{ false }}"><dc-import name="MartMethodModal" mode="desktop" tab="{{ modalTab }}" on-confirm="{{ confirmMethod }}" on-close="{{ closeModal }}" hint-size="100%,100%"></dc-import></sc-if>
+    </div></div>
+
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Корзина · 390</div>
+    <div id="2b" data-screen-label="Корзина 390" style="position:relative;width:390px;height:844px;background:#F2F2F4;border-radius:8px;overflow:hidden;display:flex;flex-direction:column">
+      <div style="height:44px;background:#fff;flex:none"></div>
+      <div style="background:#fff;border-radius:0 0 24px 24px;padding:8px 16px 16px;display:flex;flex-direction:column;gap:12px;flex:none">
+        <div style="display:flex;align-items:center;gap:8px"><a href="#1b" aria-label="Назад" style="width:40px;height:40px;border-radius:50%;background:#F7F7F8;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:9px;height:9px;border-left:2px solid #17151A;border-bottom:2px solid #17151A;transform:rotate(45deg);margin-left:3px"></span></a><h1 style="margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em;flex:1">Корзина <span style="color:#9E9BA6;font-weight:600">· {{ title }}</span></h1><sc-if value="{{ notEmpty }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ clearAll }}" aria-label="Очистить" style="border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;color:#6B6873;cursor:pointer;padding:0">Очистить</button></sc-if></div>
+        <sc-if value="{{ notEmpty }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ openModal }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-radius:14px;border:0;background:#F7F7F8;font:inherit;text-align:left;cursor:pointer;color:#17151A"><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:12px;color:#6B6873">{{ methodLabel }}</span><span style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ address }}</span></span><span style="font-size:13px;font-weight:600;color:#EE1D74">Изменить</span></button></sc-if>
+      </div>
+      <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}"><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center"><span style="width:128px;height:128px;border-radius:50%;background:#FDF0F6;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="assets/empty-cart.png" alt="" style="width:80px;height:80px"></span><b style="font-size:20px">В корзине пусто</b><span style="font-size:14px;color:#6B6873;line-height:1.4">Стройматериалы и цветы привезём за 60–90 минут</span><a href="#1b" style="text-decoration:none"><dc-import name="MartButton" label="В каталог" size="56" hint-size="160px,56px"></dc-import></a></div></sc-if>
+      <sc-if value="{{ notEmpty }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:12px 16px 16px;display:flex;flex-direction:column;gap:12px">
+        <sc-if value="{{ hasSold }}" hint-placeholder-val="{{ false }}"><div style="flex:none;display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:14px;background:#FDEDED;font-size:13px;line-height:1.4;flex:none"><span style="width:18px;height:18px;border-radius:50%;background:#E23D3D;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">!</span><span>{{ soldAlert }} <button type="button" onClick="{{ removeSold }}" style="border:0;background:transparent;font:inherit;font-size:13px;font-weight:600;color:#E23D3D;cursor:pointer;padding:0">Удалить все</button></span></div></sc-if>
+        <sc-if value="{{ canSplit }}" hint-placeholder-val="{{ false }}"><div style="flex:none;background:#fff;border-radius:20px;padding:16px"><dc-import name="MartSplitChoice" compact="{{ true }}" options="{{ splitOpts }}" method="{{ method }}" on-pick="{{ setTogether }}" hint-size="100%,200px"></dc-import></div></sc-if>
+        <sc-for list="{{ shipments }}" as="sh" hint-placeholder-count="1"><div style="flex:none;background:#fff;border-radius:20px;padding:6px;display:flex;flex-direction:column;gap:2px"><div style="padding:10px 10px 8px"><dc-import name="MartShipmentHead" compact="{{ true }}" kind="{{ sh.kind }}" method="{{ method }}" label="{{ sh.label }}" when="{{ sh.when }}" meta="{{ sh.meta }}" fee-text="{{ sh.feeText }}" hint-size="100%,68px"></dc-import></div><div style="height:1px;background:#EEEDF1;margin:0 10px 2px"></div><sc-for list="{{ sh.lines }}" as="l" hint-placeholder-count="2"><dc-import name="MartCartLine" compact="{{ true }}" product="{{ l.p }}" qty="{{ l.qty }}" sold-out="{{ l.soldOut }}" on-change="{{ setQty }}" hint-size="100%,80px"></dc-import></sc-for></div></sc-for>
+        <div style="flex:none;background:#fff;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px">
+          <dc-import name="MartPromo" status="{{ promoStatus }}" code="{{ promoCode }}" discount-text="{{ promoDiscText }}" min-sum="{{ promoMin }}" on-apply="{{ applyPromo }}" on-remove="{{ removePromo }}" hint-size="100%,56px"></dc-import>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:14px">
+            <div style="display:flex;justify-content:space-between"><span style="color:#6B6873">{{ title }}</span><span>{{ goodsText }}</span></div>
+            <sc-if value="{{ hasDiscount }}" hint-placeholder-val="{{ false }}"><div style="display:flex;justify-content:space-between"><span style="color:#6B6873">Промокод</span><span style="color:#1DA765">−{{ discountText }}</span></div></sc-if>
+            <sc-for list="{{ fees }}" as="f" hint-placeholder-count="1"><div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#6B6873">{{ f.label }}</span><span style="color:{{ f.color }};white-space:nowrap">{{ f.text }}</span></div></sc-for>
+            <sc-if value="{{ showProgress }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:6px"><div style="height:6px;border-radius:3px;background:#F2F2F4;overflow:hidden"><div style="height:100%;width:{{ progress }};background:#1DA765;border-radius:3px"></div></div><span style="font-size:13px;color:#6B6873">{{ progressLabel }} {{ leftText }}</span></div></sc-if>
+            <sc-if value="{{ hasEarn }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:#EAF7F0;font-size:13px;line-height:1.35;color:#0F6B3E"><span style="width:14px;height:14px;border-radius:50%;background:#1DA765;color:#fff;font-size:9px;font-weight:800;line-height:1;display:inline-flex;align-items:center;justify-content:center;flex:none;font-family:Onest,system-ui,sans-serif">Б</span><span>{{ earnText }}</span></div></sc-if>
+          </div>
+        </div>
+      </div>
+      <div style="padding:8px 16px 8px;background:#fff;box-shadow:0 -1px 0 #EEEDF1;display:flex;flex-direction:column;gap:6px;flex:none"><sc-if value="{{ ctaDisabled }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#E23D3D;text-align:center">{{ ctaReason }}</span></sc-if><a href="#checkout" style="text-decoration:none"><dc-import name="MartButton" label="Оформить" amount="{{ totalText }}" size="56" full="{{ true }}" disabled="{{ ctaDisabled }}" reason="{{ ctaReason }}" hint-size="100%,56px"></dc-import></a></div>
+      </sc-if>
+      <dc-import name="MartTabBar" active="cart" cart-count="{{ count }}" hint-size="100%,84px"></dc-import>
+      <sc-if value="{{ modal }}" hint-placeholder-val="{{ false }}"><dc-import name="MartMethodModal" mode="mobile" tab="{{ modalTab }}" on-confirm="{{ confirmMethod }}" on-close="{{ closeModal }}" hint-size="100%,100%"></dc-import></sc-if>
+    </div></div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+&quot;preset&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;soldOut&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;soldOut&quot;,&quot;free&quot;,&quot;light&quot;,&quot;heavy&quot;,&quot;empty&quot;],&quot;tsType&quot;:&quot;'normal'|'soldOut'|'free'|'light'|'heavy'|'empty'&quot;,&quot;section&quot;:&quot;Сценарий&quot;},
+&quot;method&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;delivery&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;delivery&quot;,&quot;pickup&quot;],&quot;tsType&quot;:&quot;'none'|'delivery'|'pickup'&quot;,&quot;section&quot;:&quot;Сценарий&quot;},
+&quot;promo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;idle&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;applied&quot;,&quot;notFound&quot;,&quot;expired&quot;,&quot;minSum&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Сценарий&quot;},
+&quot;together&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Сценарий&quot;},
+&quot;loggedIn&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Сценарий&quot;}}">
+class Component extends DCLogic {
+  state = { D: null, cart: null, sold: null, method: undefined, address: undefined, modal: false, promo: undefined };
+  componentDidMount() { import('./data.js').then(D => this.setState({ D })); }
+  renderVals() {
+    const p = this.props, D = this.state.D, P = D ? D.PRODUCTS : [];
+    const money = (n) => D ? D.money(n) : '';
+    const method = this.state.method !== undefined ? this.state.method : (p.method === 'none' ? null : (p.method ?? 'delivery'));
+    const address = this.state.address ?? (method === 'pickup' ? 'Астана, пр. Мангилик Ел, 55' : 'Астана, Кабанбай батыра, 11, кв. 14');
+    const preset = p.preset ?? 'normal'; // empty | normal | soldOut | free | light | heavy
+    const base = preset === 'empty' ? {} : preset === 'free' ? { b1: 4, b4: 1, b7: 1 } : preset === 'light' ? { b4: 1, b6: 2, t4: 1 } : preset === 'heavy' ? { b1: 10, b3: 6 } : { b1: 2, b6: 1, b4: 1, b3: 1 };
+    const cart = this.state.cart ?? base;
+    const sold = this.state.sold ?? (preset === 'soldOut' ? ['b3'] : []);
+    const setQty = (id, q) => { const c = { ...cart }; if (q <= 0) delete c[id]; else c[id] = q; this.setState({ cart: c, sold: sold.filter(s => s !== id || q > 0) }); };
+    const ids = Object.keys(cart);
+    const lines = ids.map(id => P.find(x => x.id === id)).filter(Boolean).map(pr => ({ p: pr, qty: cart[pr.id], soldOut: sold.includes(pr.id) }));
+    const activeLines = lines.filter(l => !l.soldOut);
+    const goods = activeLines.reduce((s, l) => s + (l.p.price || 0) * l.qty, 0);
+    const count = activeLines.reduce((s, l) => s + l.qty, 0);
+    const promo = this.state.promo ?? (p.promo ?? 'idle'); // idle|applied|notFound|expired|minSum
+    const promoMin = 15000;
+    const discount = promo === 'applied' ? Math.round(goods * 0.1) : 0;
+    const afterDiscount = goods - discount;
+    const together = this.state.together ?? !!p.together;
+    const plan = D ? D.planShipments(lines, { method: method || 'delivery', together, goodsTotal: afterDiscount, pickupPoint: address }) : { list: [], fee: 0, canSplit: false, multi: false, hasCourierFee: false };
+    const fee = plan.fee;
+    const hasSold = lines.some(l => l.soldOut);
+    const ctaReason = !method ? (D ? D.CTA_BLOCKED.method : '') : hasSold ? (D ? D.CTA_BLOCKED.soldOut : '') : '';
+    const upsellIds = ['b6', 'b10', 'b11', 'b2', 'b8'].filter(id => !cart[id]);
+    return {
+      method, address, userName: p.loggedIn ? 'Айгерим' : '', methodLabel: method === 'pickup' ? 'Самовывоз' : method === 'delivery' ? 'Доставка' : 'Как получить заказ?',
+      modal: this.state.modal, modalTab: method || 'delivery', openModal: () => this.setState({ modal: true }), closeModal: () => this.setState({ modal: false }),
+      confirmMethod: (v) => this.setState({ method: v.method, address: (v.city ? v.city + ', ' : '') + (v.address || ''), modal: false }),
+      isEmpty: lines.length === 0, notEmpty: lines.length > 0,
+      title: D ? D.itemsTitle(count) : '', count, lines, setQty, clearAll: () => this.setState({ cart: {}, sold: [] }),
+      hasSold, soldAlert: D ? D.CART_ALERT.soldOut : '', removeSold: () => { const c = { ...cart }; sold.forEach(id => delete c[id]); this.setState({ cart: c, sold: [] }); },
+      upsell: upsellIds.map(id => P.find(x => x.id === id)).filter(Boolean).slice(0, 5).map(pr => ({ p: pr, qty: 0 })),
+      promoStatus: promo, promoCode: 'MART10', promoDiscText: discount ? '−' + money(discount) : '−10%', promoMin,
+      applyPromo: (code) => { const c = code.toUpperCase(); this.setState({ promo: c === 'MART10' ? (goods >= promoMin ? 'applied' : 'minSum') : c === 'SPRING' ? 'expired' : 'notFound' }); }, removePromo: () => this.setState({ promo: 'idle' }),
+      goodsText: money(goods), hasDiscount: discount > 0, discountText: money(discount),
+      canSplit: plan.canSplit, splitOpts: plan.canSplit && D ? D.splitOptions(lines, { method: method || 'delivery', together, goodsTotal: afterDiscount }) : [], setTogether: (v) => this.setState({ together: v }),
+      shipments: plan.list, fees: method === 'pickup' ? [{ label: 'Самовывоз', text: 'Бесплатно', color: '#1DA765' }] : plan.list.map(x => ({ label: x.feeLabel, text: x.feeText, color: x.feeColor })),
+      progressLabel: plan.multi ? 'До бесплатной доставки курьером' : 'До бесплатной доставки',
+      showProgress: D && method !== 'pickup' && plan.hasCourierFee && afterDiscount > 0, progress: D ? Math.min(100, Math.round(afterDiscount / D.DELIVERY.freeFrom * 100)) + '%' : '0%',
+      leftText: D ? money(Math.max(0, D.DELIVERY.freeFrom - afterDiscount)).replace('тг.', 'тг') : '',
+      ...(() => { const e = D ? D.bonusFor(activeLines) : 0; return { hasEarn: e > 0, earnText: e && D ? D.bonusText(e) + ' начислим после получения заказа' : '' }; })(),
+      totalText: money(afterDiscount + fee), ctaDisabled: !!ctaReason || count === 0, ctaReason,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#E6E6EA;font-family:Onest,system-ui,sans-serif;color:#17151A}a{color:#EE1D74}a:hover{color:#D6136A}</style></helmet>
+<section style="display:flex;flex-direction:column;gap:48px;padding:48px;width:max-content">
+  <div style="display:flex;gap:48px;align-items:flex-start;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Способ получения · 1440</div>
+      <div id="4a" data-screen-label="Способ получения 1440" style="position:relative;width:1440px;height:900px;background:#F2F2F4;border-radius:8px;overflow:hidden">
+        <dc-import name="MartHeader" mode="desktop" method="{{ null }}" hint-size="100%,80px"></dc-import>
+        <dc-import name="MartMethodModal" mode="desktop" tab="{{ tab }}" city="astana" user-geo="{{ userGeo }}" on-confirm="{{ log }}" hint-size="100%,100%"></dc-import>
+      </div></div>
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Способ получения · 390</div>
+      <div id="4b" data-screen-label="Способ получения 390" style="position:relative;width:390px;height:844px;background:#F2F2F4;border-radius:8px;overflow:hidden">
+        <div style="height:44px;background:#fff"></div>
+        <dc-import name="MartMethodModal" mode="mobile" tab="{{ tab }}" city="astana" user-geo="{{ userGeo }}" on-confirm="{{ log }}" hint-size="100%,100%"></dc-import>
+      </div></div>
+  </div>
+  <div style="max-width:720px;background:#fff;border-radius:20px;padding:20px;font-size:14px;line-height:1.5;color:#6B6873">
+    <b style="color:#17151A">Поведение.</b> Один экран, свич Доставка/Самовывоз переключает режим карты без перезагрузки. Город — из списка (кнопка на карте). <b style="color:#17151A">Доставка:</b> пин в центре, над ним статус — лоадер, затем адрес дома; адрес подставляется в «Улица, дом» и правится вручную. <b style="color:#17151A">Самовывоз:</b> карта подгоняет масштаб под все точки города; список синхронизирован с маркерами; при известной геолокации — расстояние и «Ближайшая». Крестик — всегда; CTA заблокирован, пока нет адреса или точки. Модалка показывается до первого добавления в корзину и по клику на адрес в шапке.
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;tab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;delivery&quot;,&quot;options&quot;:[&quot;delivery&quot;,&quot;pickup&quot;],&quot;tsType&quot;:&quot;'delivery'|'pickup'&quot;,&quot;section&quot;:&quot;Сценарий&quot;},&quot;userGeo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Сценарий&quot;}}">
+class Component extends DCLogic {
+  renderVals() { return { tab: this.props.tab ?? 'delivery', userGeo: this.props.userGeo ?? true, log: (v) => console.log('method:', v) }; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>@keyframes acc-pulse{0%,100%{opacity:1}50%{opacity:.45}}</style></helmet>
+<div style="display:flex;flex-direction:column;gap:{{ gap }};width:100%;box-sizing:border-box;font-family:Onest,system-ui,sans-serif;color:#17151A">
+
+  <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+    <sc-for list="{{ skeletons }}" as="k" hint-placeholder-count="3"><div style="background:#fff;border-radius:{{ rCard }};padding:{{ padCard }};display:flex;flex-direction:column;gap:12px;animation:acc-pulse 1.4s ease-in-out infinite">
+      <span style="width:40%;height:18px;border-radius:6px;background:#EEEDF1"></span><span style="width:70%;height:14px;border-radius:6px;background:#F2F2F4"></span>
+      <div style="display:flex;gap:8px"><span style="width:48px;height:48px;border-radius:10px;background:#F2F2F4"></span><span style="width:48px;height:48px;border-radius:10px;background:#F2F2F4"></span><span style="width:48px;height:48px;border-radius:10px;background:#F2F2F4"></span></div>
+    </div></sc-for>
+  </sc-if>
+
+  <sc-if value="{{ isOrders }}" hint-placeholder-val="{{ true }}">
+    <sc-for list="{{ activeOrders }}" as="o" hint-placeholder-count="1">
+      <div style="background:#fff;border-radius:{{ rCard }};padding:{{ padCard }};display:flex;flex-direction:column;gap:16px;border:1.5px solid #F7C6DC">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:13px;color:#9E9BA6">Заказ №{{ o.id }} · {{ o.date }}</span><b style="font-size:{{ fsTitle }};font-weight:800;letter-spacing:-.02em">{{ o.statusLabel }}</b><span style="font-size:14px;color:#6B6873;line-height:1.4">{{ o.address }}</span></div>
+          <sc-if value="{{ o.hasEta }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;padding:10px 12px;border-radius:14px;background:#FDF0F6;flex:none"><span style="font-size:12px;color:#6B6873">{{ o.etaLabel }}</span><b style="font-size:16px;white-space:nowrap">{{ o.eta }}</b></div></sc-if>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px"><sc-for list="{{ o.steps }}" as="s" hint-placeholder-count="4"><div style="display:flex;flex-direction:column;gap:6px"><span style="height:4px;border-radius:2px;background:{{ s.bg }}"></span><span style="font-size:12px;color:{{ s.fg }};font-weight:{{ s.fw }};line-height:1.3">{{ s.label }}</span></div></sc-for></div>
+        <a href="{{ statusHref }}" style="text-decoration:none;align-self:{{ ctaAlign }};width:{{ ctaW }}"><dc-import name="MartButton" label="Следить за заказом" size="44" full="{{ m }}" hint-size="100%,44px"></dc-import></a>
+      </div>
+    </sc-for>
+    <sc-if value="{{ m }}" hint-placeholder-val="{{ false }}"><b style="font-size:16px;padding:4px 4px 0">История</b></sc-if>
+    <sc-for list="{{ pastOrders }}" as="o" hint-placeholder-count="3">
+      <div style="background:#fff;border-radius:{{ rCard }};padding:{{ padCard }};display:flex;flex-direction:{{ rowDir }};align-items:{{ rowAlign }};gap:16px">
+        <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:15px;font-weight:600">№{{ o.id }}</b><span style="font-size:13px;color:#9E9BA6">{{ o.date }}</span><span style="padding:3px 8px;border-radius:999px;background:{{ o.chipBg }};color:{{ o.chipFg }};font-size:12px;font-weight:600">{{ o.statusLabel }}</span><sc-if value="{{ o.hasBonus }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:4px;padding:3px 8px 3px 4px;border-radius:999px;background:#EAF7F0;color:#13824D;font-size:12px;font-weight:600;white-space:nowrap"><span style="width:12px;height:12px;border-radius:50%;background:#1DA765;color:#fff;font-size:8px;font-weight:800;line-height:1;display:inline-flex;align-items:center;justify-content:center;flex:none;font-family:Onest,system-ui,sans-serif">Б</span>{{ o.bonusText }}</span></sc-if></div>
+          <div style="display:flex;align-items:center;gap:6px"><sc-for list="{{ o.thumbs }}" as="t" hint-placeholder-count="3"><img src="{{ t.img }}" alt="" style="width:44px;height:44px;border-radius:10px;object-fit:cover;background:#F7F7F8;opacity:{{ o.op }}"></sc-for><sc-if value="{{ o.hasMore }}" hint-placeholder-val="{{ false }}"><span style="width:44px;height:44px;border-radius:10px;background:#F7F7F8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#6B6873">+{{ o.more }}</span></sc-if></div>
+          <span style="font-size:13px;color:#6B6873">{{ o.meta }}</span>
+        </div>
+        <div style="display:flex;flex-direction:{{ actDir }};align-items:{{ actAlign }};justify-content:space-between;gap:10px;flex:none">
+          <b style="font-size:17px;white-space:nowrap;color:{{ o.sumFg }};text-decoration:{{ o.sumDeco }}">{{ o.total }}</b>
+          <div style="display:flex;align-items:center;gap:4px">
+            <a href="{{ statusHref }}" style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#6B6873;text-decoration:none;border-radius:999px" style-hover="background:#F7F7F8">Подробнее</a>
+            <dc-import name="MartButton" label="{{ o.reLabel }}" variant="secondary" size="40" loading="{{ o.reLoading }}" on-click="{{ o.reorder }}" hint-size="120px,40px"></dc-import>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </sc-if>
+
+  <sc-if value="{{ isAddresses }}" hint-placeholder-val="{{ false }}">
+    <sc-for list="{{ addresses }}" as="a" hint-placeholder-count="2">
+      <div style="background:#fff;border-radius:{{ rCard }};padding:{{ padCard }};display:flex;flex-direction:column;gap:12px;border:1.5px solid {{ a.bc }}">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="display:flex;align-items:center;gap:8px"><b style="font-size:16px;font-weight:700">{{ a.title }}</b><sc-if value="{{ a.isDefault }}" hint-placeholder-val="{{ false }}"><span style="padding:2px 8px;border-radius:999px;background:#FDF0F6;color:#EE1D74;font-size:12px;font-weight:600">Основной</span></sc-if></span><span style="font-size:15px;line-height:1.4">{{ a.street }}, {{ a.city }}</span><sc-if value="{{ a.hasDetails }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:#6B6873">{{ a.details }}</span></sc-if></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:0 -8px -4px">
+          <sc-if value="{{ a.canDefault }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ a.makeDefault }}" style="height:40px;padding:0 8px;border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;color:#EE1D74;cursor:pointer">Сделать основным</button></sc-if>
+          <button type="button" onClick="{{ a.edit }}" style="height:40px;padding:0 8px;border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;color:#6B6873;cursor:pointer">Изменить</button>
+          <button type="button" onClick="{{ a.remove }}" style="height:40px;padding:0 8px;border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;color:#6B6873;cursor:pointer">Удалить</button>
+        </div>
+      </div>
+    </sc-for>
+    <button type="button" onClick="{{ onAddAddress }}" style="display:flex;align-items:center;justify-content:center;gap:10px;height:56px;border-radius:{{ rCard }};border:1.5px dashed #E3E2E7;background:transparent;font:inherit;font-size:15px;font-weight:600;color:#17151A;cursor:pointer" style-hover="background:#fff"><span style="position:relative;width:14px;height:14px"><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#EE1D74"></span><span style="position:absolute;left:6px;top:0;width:2px;height:14px;background:#EE1D74"></span></span>Добавить адрес</button>
+    <sc-if value="{{ addrModal }}" hint-placeholder-val="{{ false }}"><dc-import name="MartMethodModal" mode="{{ modeName }}" tab="delivery" address-only="{{ true }}" title="{{ addrModalTitle }}" subtitle="Двигайте карту или введите адрес" cta-label="Сохранить адрес" street="{{ addrStreet }}" address-title="{{ addrTitleVal }}" entrance="{{ addrEntrance }}" flat="{{ addrFlat }}" closable="{{ true }}" on-close="{{ closeAddr }}" on-confirm="{{ saveAddr }}" hint-size="100%,0px"></dc-import></sc-if>
+  </sc-if>
+
+  <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border-radius:{{ rCard }};padding:{{ padCard }};display:flex;flex-direction:column;gap:16px;max-width:{{ formW }}">
+      <dc-import name="MartInput" label="Имя" required="{{ true }}" value="{{ name }}" on-change="{{ setName }}" error="{{ nameError }}" hint-size="100%,56px"></dc-import>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:0 8px 0 16px;border-radius:16px;background:#F7F7F8">
+        <span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#6B6873">Телефон</span><span style="font-size:16px">{{ phone }}</span></span>
+        <button type="button" onClick="{{ onChangePhone }}" style="height:40px;padding:0 12px;border:0;border-radius:999px;background:#fff;font:inherit;font-size:14px;font-weight:600;color:#EE1D74;cursor:pointer">Изменить</button>
+      </div>
+      <sc-if value="{{ nameDirty }}" hint-placeholder-val="{{ false }}"><dc-import name="MartButton" label="Сохранить" size="56" full="{{ m }}" disabled="{{ nameInvalid }}" reason="Укажите имя" loading="{{ saving }}" on-click="{{ saveName }}" hint-size="160px,56px"></dc-import></sc-if>
+      <sc-if value="{{ saved }}" hint-placeholder-val="{{ false }}"><span style="font-size:14px;color:#1DA765;font-weight:600">Сохранено</span></sc-if>
+    </div>
+    <button type="button" onClick="{{ onDeleteAccount }}" style="align-self:flex-start;height:44px;padding:0 4px;border:0;background:transparent;font:inherit;font-size:14px;font-weight:500;color:#9E9BA6;cursor:pointer;text-decoration:underline;text-underline-offset:3px" style-hover="color:#E23D3D">Удалить аккаунт</button>
+  </sc-if>
+
+  <sc-if value="{{ isPayment }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border-radius:{{ rCard }};padding:{{ padCard }};display:flex;align-items:center;gap:14px">
+      <img src="./assets/kaspi-logo.svg" alt="Kaspi" style="width:40px;height:40px;border-radius:10px;display:block;flex:none">
+      <span style="display:flex;flex-direction:column;gap:2px"><b style="font-size:15px;font-weight:600">Kaspi Pay</b><span style="font-size:13px;color:#6B6873;line-height:1.4">Оплата в приложении Kaspi — привязывать не нужно</span></span>
+    </div>
+    <sc-for list="{{ cards }}" as="c" hint-placeholder-count="2">
+      <div style="background:#fff;border-radius:{{ rCard }};padding:{{ padCard }};display:flex;align-items:center;gap:14px">
+        <span style="width:40px;height:40px;border-radius:10px;background:#F7F7F8;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:24px;height:17px;border-radius:3px;border:2px solid #17151A;box-sizing:border-box;position:relative"><span style="position:absolute;left:0;right:0;top:4px;height:2px;background:#17151A"></span></span></span>
+        <span style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0"><span style="display:flex;align-items:center;gap:8px"><b style="font-size:15px;font-weight:600">{{ c.brand }} •• {{ c.last4 }}</b><sc-if value="{{ c.isDefault }}" hint-placeholder-val="{{ false }}"><span style="padding:2px 8px;border-radius:999px;background:#FDF0F6;color:#EE1D74;font-size:12px;font-weight:600">Основная</span></sc-if></span><span style="font-size:13px;color:#6B6873">Действует до {{ c.exp }}</span></span>
+        <button type="button" onClick="{{ c.remove }}" aria-label="Удалить карту" style="width:40px;height:40px;border-radius:50%;border:0;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex:none" style-hover="background:#F7F7F8"><span style="position:relative;width:14px;height:14px;display:block"><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#6B6873;transform:rotate(45deg)"></span><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#6B6873;transform:rotate(-45deg)"></span></span></button>
+      </div>
+    </sc-for>
+    <span style="font-size:13px;color:#6B6873;line-height:1.4;padding:0 4px">Новая карта сохранится при следующей оплате картой онлайн</span>
+  </sc-if>
+
+  <sc-if value="{{ isFavorites }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ noFavs }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border-radius:{{ rCard }};padding:32px 20px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center"><svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.3-9.3C1.5 8 3.4 4.5 6.9 4.5c2 0 3.5 1.1 5.1 3 1.6-1.9 3.1-3 5.1-3 3.5 0 5.4 3.5 4.2 6.7-1.8 4.7-9.3 9.3-9.3 9.3z" fill="none" stroke="#C9C7CE" stroke-width="1.6" stroke-linejoin="round"></path></svg><b style="font-size:17px">Пока пусто</b><span style="font-size:14px;color:#6B6873;line-height:1.4">Нажмите на сердце в карточке товара, чтобы сохранить его здесь</span></div></sc-if>
+    <div style="display:grid;grid-template-columns:{{ favCols }};gap:{{ favGap }};align-items:stretch">
+      <sc-for list="{{ favorites }}" as="f" hint-placeholder-count="4"><dc-import name="MartProductCard" product="{{ f.p }}" qty="{{ f.qty }}" favorite="{{ true }}" on-favorite="{{ toggleFav }}" on-qty="{{ setQty }}" hint-size="100%,300px"></dc-import></sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isPromos }}" hint-placeholder-val="{{ false }}">
+    <sc-for list="{{ promos }}" as="c" hint-placeholder-count="3">
+      <div style="background:#fff;border-radius:{{ rCard }};padding:{{ padCard }};display:flex;align-items:center;gap:14px;opacity:{{ c.op }}">
+        <span style="padding:8px 12px;border-radius:12px;border:1.5px dashed {{ c.bc }};font-size:15px;font-weight:700;letter-spacing:.06em;color:{{ c.fg }};flex:none">{{ c.code }}</span>
+        <span style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0"><b style="font-size:15px;font-weight:600">{{ c.title }}</b><span style="font-size:13px;color:#6B6873">{{ c.cond }} · {{ c.until }}</span></span>
+        <sc-if value="{{ c.active }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ c.copy }}" style="height:40px;padding:0 14px;border:0;border-radius:999px;background:{{ c.btnBg }};font:inherit;font-size:14px;font-weight:600;color:{{ c.btnFg }};cursor:pointer;flex:none;white-space:nowrap">{{ c.btnLabel }}</button></sc-if>
+      </div>
+    </sc-for>
+    <span style="font-size:13px;color:#6B6873;line-height:1.4;padding:0 4px">Промокод вводится в корзине или при оформлении</span>
+  </sc-if>
+
+  <sc-if value="{{ isBonus }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#17151A;color:#fff;border-radius:{{ rCard }};padding:{{ padBig }};display:flex;flex-direction:column;gap:8px">
+      <span style="font-size:14px;color:#C9C7CE">Ваш баланс</span>
+      <span style="display:flex;align-items:baseline;gap:10px"><b style="font-size:40px;font-weight:800;letter-spacing:-.02em">{{ bonusBalance }}</b><span style="font-size:16px;color:#C9C7CE">{{ bonusWord }}</span></span>
+      <span style="font-size:14px;color:#C9C7CE;line-height:1.5">1 бонус = 1 тг · за товары с отметкой <span style="display:inline-flex;align-items:center;gap:4px;padding:1px 6px 1px 3px;border-radius:999px;background:#EAF7F0;color:#13824D;font-size:12px;font-weight:600;vertical-align:1px"><span style="width:10px;height:10px;border-radius:50%;background:#1DA765;color:#fff;font-size:6px;font-weight:800;line-height:1;display:inline-flex;align-items:center;justify-content:center;flex:none;font-family:Onest,system-ui,sans-serif">Б</span>+N</span> начисляем бонусы после получения заказа · оплачивайте бонусами до {{ bonusMax }}% суммы товаров</span>
+    </div>
+    <div style="background:#fff;border-radius:{{ rCard }};padding:{{ padCard }};display:flex;flex-direction:column;gap:4px">
+      <b style="font-size:16px;padding-bottom:8px">История</b>
+      <sc-for list="{{ bonusHistory }}" as="h" hint-placeholder-count="3"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #EEEDF1"><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:14px;line-height:1.4">{{ h.title }}</span><span style="font-size:13px;color:#9E9BA6">{{ h.date }}</span></span><b style="font-size:15px;color:{{ h.fg }};white-space:nowrap">{{ h.amountText }}</b></div></sc-for>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:700},&quot;section&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;orders&quot;,&quot;options&quot;:[&quot;orders&quot;,&quot;addresses&quot;,&quot;profile&quot;,&quot;payment&quot;,&quot;favorites&quot;,&quot;promos&quot;,&quot;bonus&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;desktop&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;mobile&quot;],&quot;tsType&quot;:&quot;'desktop'|'mobile'&quot;},&quot;loading&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;State&quot;},&quot;phone&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;statusHref&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;onReorder&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(o:{id:string,items:{id:string,qty:number}[],count:number})=&gt;void&quot;},&quot;onChangePhone&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onDeleteAccount&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onAddAddress&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;}}">
+class Component extends DCLogic {
+  state = { D: null, addresses: null, cards: null, name: undefined, savedName: undefined, saving: false, saved: false, qty: {}, copied: null, re: null };
+  componentDidMount() { import('./data.js').then(D => { this.setState({ D, favs: D.getFavorites() }); this.offF = D.onFavorites(f => this.setState({ favs: f })); }); }
+  componentWillUnmount() { this.offF && this.offF(); clearTimeout(this.cT); clearTimeout(this.sT); }
+  renderVals() {
+    const p = this.props, D = this.state.D, st = this.state, m = (p.mode ?? 'desktop') === 'mobile';
+    const sec = p.section ?? 'orders', P = D ? D.PRODUCTS : [], money = (n) => D ? D.money(n) : '';
+    const find = (id) => P.find(x => x.id === id);
+    const loading = !!p.loading || !D;
+    const S = D ? D.ORDER_STATUS : {};
+    const orderTotal = (o) => { const g = o.items.reduce((s, it) => s + ((find(it.id) || {}).price || 0) * it.qty, 0); const disc = o.promo && D ? Math.round(g * D.PROMO.pct / 100) : 0; const fee = D && o.method === 'delivery' && g - disc < D.DELIVERY.freeFrom ? D.DELIVERY.fee : 0; return g - disc + fee; };
+    const orders = D ? D.ORDERS : [];
+    const activeSet = ['accepted', 'assembling', 'onway', 'ready'];
+    const stepIds = (o) => o.method === 'pickup' ? ['accepted', 'assembling', 'ready', 'done'] : ['accepted', 'assembling', 'onway', 'done'];
+    const stepLabels = (o) => o.method === 'pickup' ? ['Принят', 'Собираем', 'Готов', 'Выдан'] : ['Принят', 'Собираем', 'В пути', 'Доставлен'];
+    const label = (o) => { const s = S[o.status] || {}; return o.method === 'pickup' && s.labelPickup ? s.labelPickup : s.label; };
+    const activeOrders = orders.filter(o => activeSet.includes(o.status)).map(o => { const ids = stepIds(o), cur = ids.indexOf(o.status);
+      return { ...o, statusLabel: label(o), hasEta: !!o.eta, etaLabel: o.method === 'pickup' ? 'Будет готов к' : 'Привезём к', eta: o.eta,
+        address: (o.method === 'pickup' ? 'Самовывоз · ' : 'Доставка · ') + o.address,
+        steps: stepLabels(o).map((l, i) => ({ label: l, bg: i < cur ? '#1DA765' : i === cur ? '#EE1D74' : '#EEEDF1', fg: i <= cur ? '#17151A' : '#9E9BA6', fw: i === cur ? 600 : 400 })) }; });
+    const tone = { active: ['#FDF0F6', '#EE1D74'], ok: ['#EAF7F0', '#1DA765'], bad: ['#FDEDED', '#E23D3D'] };
+    const pastOrders = orders.filter(o => !activeSet.includes(o.status)).map(o => {
+      const t = tone[(S[o.status] || {}).tone] || tone.ok, cnt = o.items.reduce((s, it) => s + it.qty, 0), thumbs = o.items.slice(0, 4).map(it => ({ img: (find(it.id) || {}).img }));
+      const re = st.re && st.re.id === o.id ? st.re.state : null, cancelled = o.status === 'cancelled';
+      const earned = o.status === 'done' && D ? D.bonusFor(o.items.map(it => ({ p: find(it.id) || {}, qty: it.qty }))) : 0;
+      return { ...o, hasBonus: earned > 0, bonusText: earned && D ? D.bonusText(earned) : '', statusLabel: label(o), chipBg: t[0], chipFg: t[1], thumbs, hasMore: o.items.length > 4, more: o.items.length - 4, op: cancelled ? .5 : 1,
+        meta: `${o.items.length} ${D ? D.plural(o.items.length, 'позиция', 'позиции', 'позиций') : ''} · ${o.method === 'pickup' ? 'Самовывоз' : 'Доставка'}, ${o.address}`,
+        total: money(orderTotal(o)), sumFg: cancelled ? '#9E9BA6' : '#17151A', sumDeco: cancelled ? 'line-through' : 'none',
+        reLabel: re === 'done' ? 'В корзине' : 'Повторить', reLoading: re === 'loading',
+        reorder: () => { if (re) return; this.setState({ re: { id: o.id, state: 'loading' } }); setTimeout(() => { this.setState({ re: { id: o.id, state: 'done' } }); p.onReorder && p.onReorder({ id: o.id, items: o.items, count: cnt }); }, 600); } };
+    });
+    const addresses = (st.addresses ?? (D ? D.ADDRESSES : [])).map(a => ({ ...a, bc: a.isDefault ? '#F7C6DC' : 'transparent', canDefault: !a.isDefault,
+      hasDetails: !!(a.entrance || a.floor || a.flat), details: [a.entrance && `подъезд ${a.entrance}`, a.floor && `этаж ${a.floor}`, a.flat && `кв. ${a.flat}`].filter(Boolean).join(', '),
+      makeDefault: () => this.setState({ addresses: (st.addresses ?? D.ADDRESSES).map(x => ({ ...x, isDefault: x.id === a.id })) }),
+      edit: () => this.setState({ addr: { id: a.id } }),
+      remove: () => this.setState({ addresses: (st.addresses ?? D.ADDRESSES).filter(x => x.id !== a.id) }) }));
+    const list0 = st.addresses ?? (D ? D.ADDRESSES : []), editing = st.addr && st.addr.id ? list0.find(x => x.id === st.addr.id) : null;
+    const addrVals = {
+      addrModal: !!st.addr, modeName: m ? 'mobile' : 'desktop', addrModalTitle: editing ? 'Изменить адрес' : 'Новый адрес',
+      addrStreet: editing ? editing.street : '', addrTitleVal: editing ? editing.title : '', addrEntrance: editing ? editing.entrance : '', addrFlat: editing ? editing.flat : '',
+      closeAddr: () => this.setState({ addr: null }),
+      saveAddr: (v) => { const item = { title: v.title || 'Адрес', street: v.address, city: v.city, entrance: v.entrance, floor: editing ? editing.floor : '', flat: v.flat };
+        const list = editing ? list0.map(x => x.id === editing.id ? { ...x, ...item } : x) : [...list0, { id: 'a' + Date.now(), ...item, isDefault: list0.length === 0 }];
+        this.setState({ addresses: list, addr: null }); },
+    };
+    const cards = (st.cards ?? (D ? D.CARDS : [])).map(c => ({ ...c, remove: () => this.setState({ cards: (st.cards ?? D.CARDS).filter(x => x.id !== c.id) }) }));
+    const baseName = st.savedName ?? (D ? D.USER.name : ''), name = st.name ?? baseName;
+    const promos = (D ? D.USER_PROMOS : []).map(c => { const active = c.status === 'active', copied = st.copied === c.code;
+      return { ...c, active, op: active ? 1 : .5, bc: active ? '#EE1D74' : '#C9C7CE', fg: active ? '#EE1D74' : '#6B6873', btnLabel: copied ? 'Скопировано' : 'Скопировать', btnBg: copied ? '#EAF7F0' : '#F7F7F8', btnFg: copied ? '#1DA765' : '#17151A',
+        copy: () => { try { navigator.clipboard && navigator.clipboard.writeText(c.code); } catch (e) {} clearTimeout(this.cT); this.setState({ copied: c.code }); this.cT = setTimeout(() => this.setState({ copied: null }), 1600); } }; });
+    const B = D ? D.BONUS : { balance: 0, rate: 0, maxPart: 0, history: [] };
+    return {
+      m, gap: m ? '10px' : '12px', rCard: m ? '20px' : '24px', padCard: m ? '16px' : '20px 24px', padBig: m ? '20px' : '28px', fsTitle: m ? '20px' : '24px',
+      rowDir: m ? 'column' : 'row', rowAlign: m ? 'stretch' : 'center', actDir: m ? 'row' : 'column', actAlign: m ? 'center' : 'flex-end', ctaAlign: m ? 'stretch' : 'flex-start', ctaW: m ? '100%' : 'auto', formW: m ? 'none' : '520px',
+      isLoading: loading, skeletons: [1, 2, 3],
+      isOrders: !loading && sec === 'orders', isAddresses: !loading && sec === 'addresses', isProfile: !loading && sec === 'profile', isPayment: !loading && sec === 'payment',
+      isFavorites: !loading && sec === 'favorites', isPromos: !loading && sec === 'promos', isBonus: !loading && sec === 'bonus',
+      statusHref: p.statusHref ?? '#', activeOrders, pastOrders, addresses, onAddAddress: () => this.setState({ addr: {} }), cards, ...addrVals,
+      name, setName: (v) => this.setState({ name: v, saved: false }), nameError: '', nameDirty: name !== baseName, nameInvalid: name.trim().length < 2, saving: st.saving, saved: st.saved,
+      saveName: () => { this.setState({ saving: true }); setTimeout(() => { this.setState({ saving: false, savedName: name.trim(), name: undefined, saved: true }); clearTimeout(this.sT); this.sT = setTimeout(() => this.setState({ saved: false }), 2000); }, 600); },
+      phone: p.phone ?? (D ? D.USER.phone : ''), onChangePhone: p.onChangePhone, onDeleteAccount: p.onDeleteAccount,
+      favCols: m ? 'repeat(2,minmax(0,1fr))' : 'repeat(4,minmax(0,1fr))', favGap: m ? '8px' : '12px',
+      toggleFav: () => {}, hasFavs: (st.favs || []).length > 0, noFavs: !!D && (st.favs || []).length === 0,
+      favorites: (st.favs || []).map(find).filter(Boolean).map(pr => ({ p: pr, qty: st.qty[pr.id] || 0 })), setQty: (id, q) => this.setState({ qty: { ...st.qty, [id]: q } }),
+      promos, bonusBalance: B.balance.toLocaleString('ru-RU').replace(/,/g, ' '), bonusWord: D ? D.plural(B.balance, 'бонус', 'бонуса', 'бонусов') : '', bonusRate: B.rate, bonusMax: B.maxPart,
+      bonusHistory: B.history.map(h => ({ ...h, amountText: (h.amount > 0 ? '+' : '−') + Math.abs(h.amount).toLocaleString('ru-RU'), fg: h.amount > 0 ? '#1DA765' : '#17151A' })),
+    };
+  }
+}
+</script>
+</body>
+</html>

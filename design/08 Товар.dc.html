@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#E6E6EA;font-family:Onest,system-ui,sans-serif;color:#17151A}a{color:#EE1D74}a:hover{color:#D6136A}</style></helmet>
+<section style="display:flex;flex-direction:column;gap:48px;padding:48px;width:max-content">
+  <div style="display:flex;gap:48px;align-items:flex-start">
+
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Страница товара · 1440</div>
+    <div id="8a" data-screen-label="Товар 1440" style="position:relative;width:1440px;min-height:900px;background:#F2F2F4;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;gap:16px">
+      <dc-import name="MartHeader" mode="desktop" method="{{ method }}" address="{{ address }}" cart-count="{{ cartCount }}" cart-amount-text="{{ cartAmountText }}" hint-size="100%,80px"></dc-import>
+      <div style="padding:0 40px 40px;display:flex;flex-direction:column;gap:16px">
+        <nav style="display:flex;align-items:center;gap:8px;font-size:14px;color:#6B6873;flex-wrap:wrap">
+          <a href="01 Главная и каталог.dc.html" style="color:#6B6873;text-decoration:none">Главная</a><span>·</span>
+          <a href="07 Каталог.dc.html" style="color:#6B6873;text-decoration:none">Каталог</a><span>·</span>
+          <a href="07 Каталог.dc.html" style="color:#6B6873;text-decoration:none">{{ catName }}</a><span>·</span>
+          <span style="color:#17151A">{{ subName }}</span>
+        </nav>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start"><div style="min-width:0"><dc-import name="MartProductView" page="{{ true }}" mode="desktop" product-id="{{ productId }}" cart="{{ cart }}" method="{{ method }}" on-qty="{{ setQty }}" hint-size="100%,760px"></dc-import></div><div style="position:sticky;top:16px"><dc-import name="MartMiniCart" cart="{{ cart }}" method="{{ method }}" on-change="{{ setQty }}" hint-size="100%,440px"></dc-import></div></div>
+      </div>
+    </div></div>
+
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Страница товара · 390</div>
+    <div id="8b" data-screen-label="Товар 390" style="position:relative;width:390px;height:844px;background:#FFFFFF;border-radius:8px;overflow:hidden;display:flex;flex-direction:column">
+      <div style="height:44px;background:#fff;flex:none"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 12px 8px;flex:none">
+        <a href="07 Каталог.dc.html" aria-label="Назад" style="width:44px;height:44px;border-radius:50%;background:#F7F7F8;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:9px;height:9px;border-left:2px solid #17151A;border-bottom:2px solid #17151A;transform:rotate(45deg);margin-left:3px"></span></a>
+        <span style="font-size:14px;color:#6B6873;flex:1;min-width:0;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ subName }}</span>
+        <a href="02 Корзина.dc.html" aria-label="Корзина" style="position:relative;width:44px;height:44px;border-radius:50%;background:#F7F7F8;display:flex;align-items:center;justify-content:center;flex:none;text-decoration:none"><span style="width:16px;height:13px;border:2px solid #17151A;border-top-width:2px;border-radius:2px 2px 5px 5px;box-sizing:border-box;margin-top:3px;position:relative"><span style="position:absolute;left:2px;top:-7px;width:8px;height:6px;border:2px solid #17151A;border-bottom:0;border-radius:5px 5px 0 0;box-sizing:border-box"></span></span><sc-if value="{{ hasCart }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;right:-2px;top:-2px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:#EE1D74;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ cartCount }}</span></sc-if></a>
+      </div>
+      <div style="flex:1;min-height:0;position:relative">
+        <div style="position:absolute;inset:0"><dc-import name="MartProductView" page="{{ true }}" mode="mobile" product-id="{{ productId }}" cart="{{ cart }}" method="{{ method }}" on-qty="{{ setQty }}" hint-size="100%,100%"></dc-import></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;productId&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;b1&quot;,&quot;options&quot;:[&quot;b1&quot;,&quot;b9&quot;,&quot;b4&quot;,&quot;b5&quot;,&quot;t4&quot;,&quot;f1&quot;,&quot;f4&quot;,&quot;g4&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Сценарий&quot;},&quot;method&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;delivery&quot;,&quot;options&quot;:[&quot;delivery&quot;,&quot;pickup&quot;],&quot;tsType&quot;:&quot;'delivery'|'pickup'&quot;,&quot;section&quot;:&quot;Сценарий&quot;}}">
+class Component extends DCLogic {
+  state = { D: null, cart: null };
+  componentDidMount() { import('./data.js').then(D => this.setState({ D })); }
+  renderVals() {
+    const p = this.props, D = this.state.D, money = (n) => D ? D.money(n) : '';
+    const q = new URLSearchParams(location.search).get('id');
+    const productId = q || p.productId || 'b1';
+    const P = D ? D.PRODUCTS : [], pr = P.find(x => x.id === productId) || {};
+    const cat = D ? D.CATEGORIES.find(c => c.sub.some(s => s.slug === pr.cat)) : null, sub = cat ? cat.sub.find(s => s.slug === pr.cat) : null;
+    const cart = this.state.cart ?? { b6: 1, b4: 1 };
+    const keys = Object.keys(cart), count = keys.reduce((s, k) => s + cart[k], 0);
+    const amount = D ? keys.reduce((s, k) => { const it = D.cartItem(k); return s + (it && it.price ? it.price * cart[k] : 0); }, 0) : 0;
+    const method = p.method ?? 'delivery';
+    return {
+      productId, catName: cat ? cat.name : '', subName: sub ? sub.name : '', cart,
+      setQty: (key, n) => { const c = { ...cart }; if (n <= 0) delete c[key]; else c[key] = n; this.setState({ cart: c }); },
+      method, address: method === 'pickup' ? 'пр. Мангилик Ел, 55' : 'Кабанбай батыра, 11',
+      cartCount: count, hasCart: count > 0, cartAmountText: money(amount),
+    };
+  }
+}
+</script>
+</body>
+</html>

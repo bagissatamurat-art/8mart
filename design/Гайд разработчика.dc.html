@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#E6E6EA;font-family:Onest,system-ui,sans-serif;color:#17151A}a{color:#EE1D74}a:hover{color:#D6136A}</style></helmet>
+<x-import component-from-global-scope="deck-stage" from="./deck-stage.js" width="1920" height="1080" hint-size="100%,100%">
+
+<section data-label="Обложка" data-screen-label="01" style="background:#17151A;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:120px;box-sizing:border-box;font-family:Onest,system-ui,sans-serif">
+  <img src="./assets/logo.svg" alt="8mart" style="height:56px;width:auto;align-self:flex-start;filter:brightness(0) invert(1)">
+  <div style="display:flex;flex-direction:column;gap:32px;max-width:1300px">
+    <span style="font-size:32px;font-weight:600;color:#F7B4D1">Мобильное приложение · iOS + Android · Flutter</span>
+    <h1 style="margin:0;font-size:120px;font-weight:800;letter-spacing:-.03em;line-height:1">User flow для разработчика</h1>
+    <p style="margin:0;font-size:36px;line-height:1.4;color:#C9C7CF;text-wrap:pretty">Какой экран куда ведёт, какие у него состояния, где его код в <b style="color:#fff">flutter_8mart/</b> и какой API он вызывает.</p>
+  </div>
+  <div style="display:flex;gap:48px;font-size:26px;color:#9E9BA6"><span>Макеты — design/</span><span>Правила — CLAUDE.md</span><span>API — README.md</span><span>Вопросы — docs/OPEN_QUESTIONS.md</span></div>
+</section>
+
+<section data-label="Главный сценарий" data-screen-label="02" style="background:#F2F2F4;padding:80px 100px;box-sizing:border-box;color:#17151A;display:flex;flex-direction:column;gap:48px;font-family:Onest,system-ui,sans-serif">
+  <div style="display:flex;flex-direction:column;gap:12px"><span style="font-size:26px;font-weight:600;color:#EE1D74">CJM · главный путь покупки</span><h2 style="margin:0;font-size:64px;font-weight:800;letter-spacing:-.02em">От главной до статуса заказа — 7 шагов</h2></div>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between">
+    <sc-for list="{{ cjm }}" as="s" hint-placeholder-count="7">
+      <div style="display:flex;align-items:flex-start;gap:0">
+        <div style="display:flex;flex-direction:column;gap:16px;width:196px">
+          <img src="{{ s.img }}" alt="" style="width:196px;height:424px;object-fit:cover;object-position:top;border-radius:20px;box-shadow:0 8px 24px rgba(23,21,26,.12);background:#fff">
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;align-items:center;gap:10px"><span style="width:36px;height:36px;border-radius:50%;background:#EE1D74;color:#fff;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">{{ s.n }}</span><b style="font-size:26px;line-height:1.1">{{ s.t }}</b></span><span style="font-size:24px;line-height:1.3;color:#6B6873">{{ s.d }}</span></div>
+        </div>
+        <sc-if value="{{ s.arrow }}" hint-placeholder-val="{{ true }}"><span style="width:44px;height:424px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;border-right:4px solid #EE1D74;border-top:4px solid #EE1D74;transform:rotate(45deg);margin-left:-6px"></span></span></sc-if>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section data-label="Карта навигации" data-screen-label="03" style="background:#fff;padding:80px 100px;box-sizing:border-box;color:#17151A;display:flex;flex-direction:column;gap:40px;font-family:Onest,system-ui,sans-serif">
+  <div style="display:flex;flex-direction:column;gap:12px"><span style="font-size:26px;font-weight:600;color:#EE1D74">Навигация · lib/router.dart</span><h2 style="margin:0;font-size:64px;font-weight:800;letter-spacing:-.02em">Таб-бар + экраны поверх</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+      <div style="display:flex;flex-direction:column;gap:16px;padding:28px;border-radius:28px;background:#F7F7F8">
+        <span style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:36px">{{ t.t }}</b><code style="font-size:24px;color:#6B6873">{{ t.p }}</code></span>
+        <sc-for list="{{ t.items }}" as="i" hint-placeholder-count="3"><div style="display:flex;gap:12px;align-items:flex-start;font-size:24px;line-height:1.35"><span style="width:10px;height:10px;border-radius:50%;background:#EE1D74;flex:none;margin-top:12px"></span><span>{{ i }}</span></div></sc-for>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px">
+    <sc-for list="{{ stack }}" as="t" hint-placeholder-count="4">
+      <div style="display:flex;flex-direction:column;gap:8px;padding:24px 28px;border-radius:24px;border:2px solid #E3E2E7"><code style="font-size:26px;font-weight:600;color:#EE1D74">{{ t.p }}</code><span style="font-size:24px;line-height:1.35">{{ t.d }}</span></div>
+    </sc-for>
+  </div>
+  <span style="font-size:24px;color:#6B6873">Шторки (showMartSheet): карточка товара, способ получения, фильтры, отмена заказа, Face ID. Свайп вниз / системное «назад» закрывают шторку раньше экрана.</span>
+</section>
+
+<sc-for list="{{ screens }}" as="s" hint-placeholder-count="1">
+<section data-label="{{ s.t }}" style="background:#F2F2F4;padding:72px 100px;box-sizing:border-box;color:#17151A;display:flex;gap:72px;font-family:Onest,system-ui,sans-serif">
+  <div style="display:flex;gap:24px;flex:none;align-items:flex-start">
+    <sc-for list="{{ s.imgs }}" as="im" hint-placeholder-count="1"><img src="{{ im }}" alt="" style="height:936px;width:432px;object-fit:cover;object-position:top;border-radius:32px;box-shadow:0 12px 40px rgba(23,21,26,.14);background:#fff"></sc-for>
+  </div>
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:32px">
+    <div style="display:flex;flex-direction:column;gap:12px"><span style="display:flex;gap:16px;align-items:center;font-size:26px;font-weight:600;color:#EE1D74"><span>Экран {{ s.n }}</span><code style="padding:4px 14px;border-radius:999px;background:#fff;color:#17151A">{{ s.route }}</code></span><h2 style="margin:0;font-size:60px;font-weight:800;letter-spacing:-.02em;line-height:1.05">{{ s.t }}</h2></div>
+    <div style="display:flex;flex-direction:column;gap:14px;padding:28px;border-radius:28px;background:#fff">
+      <b style="font-size:26px;color:#6B6873">Действие → куда ведёт</b>
+      <sc-for list="{{ s.go }}" as="g" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);gap:12px;align-items:center;font-size:25px;line-height:1.3"><span>{{ g.a }}</span><span style="width:14px;height:14px;border-right:3px solid #EE1D74;border-top:3px solid #EE1D74;transform:rotate(45deg);justify-self:center"></span><b style="font-weight:600">{{ g.b }}</b></div></sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:10px;padding:24px 28px;border-radius:28px;background:#fff"><b style="font-size:26px;color:#6B6873">Состояния</b><sc-for list="{{ s.st }}" as="x" hint-placeholder-count="3"><span style="font-size:24px;line-height:1.35">· {{ x }}</span></sc-for></div>
+      <div style="display:flex;flex-direction:column;gap:10px;padding:24px 28px;border-radius:28px;background:#17151A;color:#fff"><b style="font-size:26px;color:#9E9BA6">Код и API</b><sc-for list="{{ s.code }}" as="x" hint-placeholder-count="3"><code style="font-size:23px;line-height:1.4;color:#F7B4D1;word-break:break-word">{{ x }}</code></sc-for></div>
+    </div>
+  </div>
+</section>
+</sc-for>
+
+<section data-label="Правила ветвления" data-screen-label="Ветвления" style="background:#fff;padding:80px 100px;box-sizing:border-box;color:#17151A;display:flex;flex-direction:column;gap:40px;font-family:Onest,system-ui,sans-serif">
+  <div style="display:flex;flex-direction:column;gap:12px"><span style="font-size:26px;font-weight:600;color:#EE1D74">Если… то…</span><h2 style="margin:0;font-size:64px;font-weight:800;letter-spacing:-.02em">Развилки сценария</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px">
+    <sc-for list="{{ rules }}" as="r" hint-placeholder-count="8"><div style="display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1.2fr);gap:16px;align-items:center;padding:24px 28px;border-radius:24px;background:#F7F7F8;font-size:24px;line-height:1.35"><span style="color:#6B6873">{{ r.a }}</span><span style="width:14px;height:14px;border-right:3px solid #EE1D74;border-top:3px solid #EE1D74;transform:rotate(45deg);justify-self:center"></span><b style="font-weight:600">{{ r.b }}</b></div></sc-for>
+  </div>
+</section>
+
+<section data-label="Deep links и push" data-screen-label="Deep links" style="background:#F2F2F4;padding:80px 100px;box-sizing:border-box;color:#17151A;display:flex;flex-direction:column;gap:40px;font-family:Onest,system-ui,sans-serif">
+  <div style="display:flex;flex-direction:column;gap:12px"><span style="font-size:26px;font-weight:600;color:#EE1D74">Вход в приложение извне</span><h2 style="margin:0;font-size:64px;font-weight:800;letter-spacing:-.02em">Deep links, push, возвраты</h2></div>
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <sc-for list="{{ links }}" as="l" hint-placeholder-count="6"><div style="display:grid;grid-template-columns:520px minmax(0,1fr) 440px;gap:32px;align-items:center;padding:24px 32px;border-radius:24px;background:#fff;font-size:25px;line-height:1.35"><code style="font-weight:600;color:#EE1D74">{{ l.u }}</code><span>{{ l.d }}</span><span style="color:#6B6873">{{ l.to }}</span></div></sc-for>
+  </div>
+</section>
+
+<section data-label="Push-уведомления" data-screen-label="Push" style="background:#fff;padding:72px 100px;box-sizing:border-box;color:#17151A;display:flex;flex-direction:column;gap:28px;font-family:Onest,system-ui,sans-serif">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:40px"><div style="display:flex;flex-direction:column;gap:12px"><span style="font-size:26px;font-weight:600;color:#EE1D74">lib/core/push.dart · docs/APP_SPEC.md §1</span><h2 style="margin:0;font-size:64px;font-weight:800;letter-spacing:-.02em">Push-уведомления</h2></div><span style="font-size:24px;line-height:1.4;color:#6B6873;max-width:620px;text-align:right">Разрешение — после первого заказа. Статусы и бонусы включены по умолчанию, акции и корзина — только по согласию.</span></div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px 24px">
+    <sc-for list="{{ pushes }}" as="p" hint-placeholder-count="14"><div style="display:grid;grid-template-columns:120px minmax(0,1fr) 220px;gap:16px;align-items:center;padding:14px 20px;border-radius:18px;background:#F7F7F8;font-size:23px;line-height:1.3"><span style="justify-self:start;padding:4px 12px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:20px;font-weight:600">{{ p.ch }}</span><span><b style="font-weight:600">{{ p.t }}</b><br><span style="color:#6B6873">{{ p.d }}</span></span><code style="font-size:20px;color:#EE1D74;text-align:right">{{ p.to }}</code></div></sc-for>
+  </div>
+</section>
+
+<section data-label="Настройки и документы" data-screen-label="Настройки" style="background:#F2F2F4;padding:80px 100px;box-sizing:border-box;color:#17151A;display:flex;flex-direction:column;gap:40px;font-family:Onest,system-ui,sans-serif">
+  <div style="display:flex;flex-direction:column;gap:12px"><span style="font-size:26px;font-weight:600;color:#EE1D74">Профиль → Настройки · lib/features/profile/settings_screen.dart</span><h2 style="margin:0;font-size:64px;font-weight:800;letter-spacing:-.02em">Язык, тема, уведомления, документы</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px">
+    <sc-for list="{{ settingsCols }}" as="col" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;gap:14px;padding:28px;border-radius:28px;background:#fff">
+      <span style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><b style="font-size:32px">{{ col.t }}</b><code style="font-size:20px;color:#6B6873">{{ col.p }}</code></span>
+      <sc-for list="{{ col.rows }}" as="r" hint-placeholder-count="4"><div style="display:flex;flex-direction:column;gap:2px;padding:12px 0;border-top:1px solid #EEEDF1"><span style="font-size:24px;font-weight:600">{{ r.a }}</span><span style="font-size:22px;line-height:1.35;color:#6B6873">{{ r.b }}</span></div></sc-for>
+    </div></sc-for>
+  </div>
+</section>
+
+<section data-label="Чек-лист" data-screen-label="Чек-лист" style="background:#17151A;padding:80px 100px;box-sizing:border-box;color:#fff;display:flex;flex-direction:column;gap:40px;font-family:Onest,system-ui,sans-serif">
+  <div style="display:flex;flex-direction:column;gap:12px"><span style="font-size:26px;font-weight:600;color:#F7B4D1">Для разработчика</span><h2 style="margin:0;font-size:64px;font-weight:800;letter-spacing:-.02em">С чего начать</h2></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+    <sc-for list="{{ todo }}" as="t" hint-placeholder-count="8"><div style="display:flex;gap:20px;align-items:flex-start;padding:24px 28px;border-radius:24px;background:#25232A;font-size:25px;line-height:1.4"><span style="width:44px;height:44px;border-radius:50%;background:#EE1D74;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">{{ t.n }}</span><span>{{ t.t }}</span></div></sc-for>
+  </div>
+</section>
+
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const G = './guide/';
+    const cjm = [
+      ['Главная', 'Каталог, поиск, «В корзину»', 's-home'], ['Способ', 'Доставка или самовывоз — до первого товара', 's-method'], ['Товар', 'Шторка: фото, фасовка, CTA', 's-product'],
+      ['Корзина', 'Отправления, распроданные, промокод', 's-cart'], ['Вход', 'Код в WhatsApp / Telegram', 's-auth-screen'], ['Оформление', 'Адрес, слоты, оплата, оферта', 's-checkout'], ['Статус', 'Шкала, push, отмена', 's-status'],
+    ].map(([t, d, i], k, a) => ({ n: k + 1, t, d, img: G + i + '.png', arrow: k < a.length - 1 }));
+    const tabs = [
+      { t: 'Главная', p: '/', items: ['Способ получения в шапке', 'Категории', 'Сетка товаров 2 в ряд'] },
+      { t: 'Каталог', p: '/catalog', items: ['Категория → подкатегория', 'Фильтры и сортировка — шторка', 'Бесконечная прокрутка'] },
+      { t: 'Корзина', p: '/cart', items: ['Счётчик на вкладке', 'Отправления и итоги', 'CTA «Оформить · сумма»'] },
+      { t: 'Профиль', p: '/profile', items: ['Гость → вход', 'Разделы кабинета', 'Настройки: тема, язык, Face ID'] },
+    ];
+    const stack = [
+      { p: '/checkout', d: 'Оформление (гость видит вход)' }, { p: '/order/:id', d: 'Статус заказа' }, { p: '/p/:id', d: 'Страница товара' }, { p: '/search', d: 'Поиск и результаты' },
+    ];
+    const S = (n, t, route, imgs, go, st, code) => ({ n, t, route, imgs: imgs.map(i => G + i + '.png'), go: go.map(([a, b]) => ({ a, b })), st, code });
+    const screens = [
+      S('1', 'Главная', '/', ['s-home'], [['Адрес в шапке', 'Способ получения (шторка)'], ['Поле поиска', 'Поиск'], ['Плитка категории', 'Каталог категории'], ['Карточка товара', 'Товар (шторка)'], ['«В корзину», способ не выбран', 'Способ получения'], ['«В корзину», способ выбран', '+1, тост «Открыть» → Корзина']],
+        ['Гость / вошёл', 'Способ не выбран — «Как получить заказ?»', 'Нет интернета — плашка, кеш каталога', 'Pull-to-refresh'], ['features/home/home_screen.dart', 'CartCubit, FavoritesCubit', 'GET /categories', 'GET /products']),
+      S('2', 'Каталог', '/catalog', ['s-catalog'], [['Категория', 'Подкатегории + «Все товары»'], ['Чип подкатегории', 'Список отфильтрован'], ['«Фильтры» / сортировка', 'Шторка фильтров'], ['Карточка', 'Товар (шторка)'], ['Конец списка', '«Это все товары»']],
+        ['Загрузка — скелетоны', 'Пусто по фильтрам — «Сбросить»', 'Подгрузка по PAGE_SIZE'], ['features/catalog/catalog_screen.dart', 'state/catalog_cubit.dart', 'GET /products?category&sub&sort&page · /products/count']),
+      S('3', 'Поиск', '/search', ['s-search', 's-results'], [['Фокус в поле', 'Недавние и «часто ищут»'], ['Ввод от 1 символа', 'Подсказки: категории + товары'], ['Enter / «Все результаты»', 'Результаты с чипами категорий'], ['Карточка', 'Товар (шторка)']],
+        ['Ничего не нашли — популярные запросы', 'Фильтры — шторка'], ['features/search/search_screen.dart', 'state/search_history_cubit.dart', 'GET /search/suggest?q · GET /products?q']),
+      S('4', 'Товар', 'шторка · /p/:id', ['s-product'], [['Свайп по фото', 'Следующее фото, точки'], ['Фасовка / размер / цвет', 'Меняется цена и позиция'], ['Сердце', 'Избранное (везде сразу)'], ['«Поделиться»', 'Системный share'], ['«В корзину · сумма»', 'Степпер + «Корзина»']],
+        ['Нет фото — плейсхолдер', 'Тяжёлый товар — метка и условия Газели', 'Цветы — «от …», выбор S/M/L'], ['features/product/product_view.dart', 'GET /products/{id}']),
+      S('5', 'Способ получения', 'шторка', ['s-method'], [['Доставка: двигаем карту', 'Адрес по пину (обратное геокод.)'], ['Ввод «Улица, дом» от 3 символов', 'Подсказки DaData, до 6'], ['Самовывоз: точка на карте / в списке', 'Выбор точки'], ['«Готово»', 'Адрес в шапке, шторка закрыта'], ['Крестик без выбора', '«Как получить заказ?» остаётся']],
+        ['Загрузка / ничего не нашли / сервис недоступен → «поставьте пин»', 'Улица без дома → курсор для номера'], ['features/method/method_sheet.dart (Mapbox — TODO)', 'GET /geo/suggest · /geo/reverse', 'GET /pickup-points?city']),
+      S('6', 'Корзина', '/cart', ['s-cart'], [['Плашка способа', 'Способ получения'], ['«Двумя / Всё вместе»', 'Перестроение отправлений и цены'], ['Степпер / ×', 'Кол-во / удаление'], ['«Удалить все» в алерте', 'Распроданные убраны, CTA активен'], ['«Оформить · сумма»', 'Оформление (гость → вход)']],
+        ['Пусто — иллюстрация + «В каталог»', 'Распроданные: серые, не в сумме, CTA disabled', 'Только курьер / только Газель / смешанная', 'До бесплатной доставки — прогресс'], ['features/cart/cart_screen.dart', 'domain/shipments.dart (planShipments)', 'POST /cart/validate']),
+      S('7', 'Вход', 'внутри /checkout и /profile', ['s-auth-screen'], [['Телефон → «Получить код»', 'Код в WhatsApp, 4 ячейки'], ['4-я цифра', 'Проверка автоматически'], ['Новый пользователь', '«Как вас зовут?»'], ['«Нет WhatsApp?»', 'Telegram-бот → /auth/tg'], ['Успешный вход (первый)', 'Предложение Face ID']],
+        ['Неверный код — красные ячейки, очистка', 'Код в буфере — «Вставить»', 'Ждём подтверждение бота — лоадер'], ['features/auth/auth_view.dart', 'state/auth_cubit.dart', 'POST /auth/code · /auth/verify', 'POST /auth/tg · GET /auth/tg/{token}']),
+      S('8', 'Оформление', '/checkout', ['s-checkout'], [['Слот курьера', 'Время доставки 1'], ['День, интервал Газели', 'Время доставки 2'], ['«Подъём на этаж»', '+ liftFee × шт × (этаж−1)'], ['Kaspi Pay', 'Приложение Kaspi → /pay/return → Статус'], ['Карта → «Оплатить · сумма»', 'WebView 3-D Secure → Статус']],
+        ['CTA disabled: нет оферты / нет имени', 'Сохранённые карты + «Новой картой»', 'Самовывоз — без адреса и слотов'], ['features/checkout/checkout_screen.dart', 'ui/blocks/payment_picker.dart', 'POST /orders → {id, payUrl}']),
+      S('9', 'Статус заказа', '/order/:id', ['s-status'], [['Смена статуса (push)', 'Шкала обновляется'], ['Тап по push', 'Этот экран'], ['«Написать в поддержку»', 'WhatsApp с номером заказа'], ['«Отменить заказ»', 'Подтверждение → «Заказ отменён»'], ['«Продолжить покупки»', 'Главная']],
+        ['Своя шкала на каждое отправление', 'Отмена — пока ничего не в пути', 'Первый заказ — запрос push', 'Доставлен — «Начислено +N»'], ['features/order/order_status_screen.dart', 'GET /orders/{id}', 'POST /orders/{id}/cancel', 'FCM / APNs']),
+      S('10', 'Профиль', '/profile', ['s-profile', 's-orders'], [['Гость', 'Вход'], ['«Мои заказы» → «Подробнее»', 'Статус заказа'], ['«Повторить»', 'Товары в корзине, тост'], ['Адреса → добавить', 'Способ получения (только адрес)'], ['Тема / язык / Face ID', 'Сразу применяется']],
+        ['Загрузка — скелетоны', 'Пусто — «Пока пусто»', 'Удаление аккаунта → Главная + тост'], ['features/profile/profile_screen.dart · account_sections.dart', 'GET /me/orders · /me/addresses · /me/cards', 'GET/PUT /favorites · GET /me/bonus']),
+    ];
+    const rules = [
+      ['Способ получения не выбран, жмут «В корзину»', 'Шторка выбора, товар не добавлен'],
+      ['Шторку закрыли без выбора', 'В шапке «Как получить заказ?»'],
+      ['В корзине есть распроданное', 'Алерт сверху, CTA заблокирован'],
+      ['Курьерские + тяжёлые товары', 'Выбор «Двумя доставками» / «Всё вместе завтра»'],
+      ['Самовывоз тяжёлого', 'Только склад, завтра с 9:00'],
+      ['Сумма курьерской ≥ порога', 'Курьер бесплатно, Газель платная всегда'],
+      ['Гость жмёт «Оформить»', 'Вход → потом оформление'],
+      ['Новый пользователь после кода', 'Шаг «Как вас зовут?»'],
+      ['Нет WhatsApp', 'Telegram-бот, ждём подтверждение'],
+      ['Оплата Kaspi', 'Приложение Kaspi, возврат по ссылке'],
+      ['Хоть одно отправление в пути', 'Отменить заказ уже нельзя'],
+      ['Нет интернета', 'Кеш каталога, оплата недоступна'],
+    ].map(([a, b]) => ({ a, b }));
+    const links = [
+      ['8mart.kz/p/{id}', 'Товар — из «Поделиться», рекламы', 'ProductPage'],
+      ['8mart.kz/order/{id}', 'Статус — из push, SMS', 'OrderStatusScreen'],
+      ['8mart.kz/pay/return?order=', 'Возврат после оплаты Kaspi / карты', '→ /order/{id}'],
+      ['8mart.kz/auth/tg?token=&phone=', 'Возврат из Telegram-бота', 'AuthCubit.telegramConfirmed'],
+      ['t.me/<bot>?start=<token>', 'Исходящая ссылка на бота', 'url_launcher'],
+      ['push {orderId, shipment, status}', 'Смена статуса отправления', 'OrderCubit.setStatus'],
+    ].map(([u, d, to]) => ({ u, d, to }));
+    const todo = [
+      'flutter create . --org kz.mart8 --platforms ios,android', 'flutter pub get && flutter gen-l10n', 'flutter analyze && flutter test — починить (код не компилировался)',
+      'Открыть design/ через npx serve и Widgetbook — сверить', 'Заменить MockData на API (формы из README)', 'Mapbox, Firebase push, deep links — настройки из README',
+      'Подключить: API, Mapbox, push, оплату, connectivity', 'Вопросы к бизнесу — docs/OPEN_QUESTIONS.md',
+    ].map((t, i) => ({ n: i + 1, t }));
+    const CH = { orders: ['Заказ', '#FDF0F6', '#D6136A'], bonus: ['Бонусы', '#EAF7F0', '#13824D'], promo: ['Акции', '#FEF3DC', '#8A5A00'], cart: ['Корзина', '#EEEDF1', '#6B6873'] };
+    const pushes = [
+      ['orders', 'Заказ принят', 'Соберём за 30–40 минут', '/order/:id'], ['orders', 'Собираем заказ', 'Проверяем наличие', '/order/:id'],
+      ['orders', 'Курьер в пути', 'Будет к 15:20–15:35', '/order/:id'], ['orders', 'Газель в пути', 'Водитель позвонит за 30 мин', '/order/:id'],
+      ['orders', 'Готов к выдаче', 'Храним 24 часа', '/order/:id'], ['orders', 'Доставлен / выдан', 'Начислим +N бонусов', '/order/:id'],
+      ['orders', 'Заказ отменён', 'Вернём сумму на Kaspi / карту', '/order/:id'], ['orders', 'Деньги вернулись', 'Сумма и куда', '/order/:id'],
+      ['orders', 'Оплата не прошла', 'Заказ ждёт 30 минут', '/checkout'], ['orders', 'Товар закончился', 'Замените или удалите', '/cart'],
+      ['bonus', '+N бонусов', 'После получения заказа (не сгорают)', '/profile/bonus'],
+      ['promo', 'Акция / промокод', 'Не чаще раза в неделю', 'link · /profile/promos'], ['cart', 'Забытая корзина', 'Через 24 часа', '/cart'],
+    ].map(([k, t, d, to]) => ({ ch: CH[k][0], bg: CH[k][1], fg: CH[k][2], t, d, to }));
+    const settingsCols = [
+      { t: 'Настройки', p: '/profile/settings', rows: [['Язык', 'Русский / Қазақша — шторка, сразу без перезапуска; при первом запуске — по языку системы'], ['Тема', 'Как в системе (по умолч.) / Светлая / Тёмная'], ['Уведомления', 'Переключатели каналов →'], ['Face ID / отпечаток', 'Только вошедшим']] },
+      { t: 'Уведомления', p: '…/notifications', rows: [['Статус заказа', 'Вкл. по умолчанию, рекомендуем не выключать'], ['Бонусы', 'Вкл. по умолчанию'], ['Акции и скидки', 'Выкл., только по согласию'], ['Забытая корзина', 'Выкл., только по согласию'], ['Нет системного разрешения', 'Плашка «Открыть настройки»']] },
+      { t: 'Документы', p: '…/documents', rows: [['Публичная оферта', 'Также чекбокс в оформлении'], ['Политика конфиденциальности · Согласие на ПД', 'Также на экране входа'], ['Доставка и возврат · Бонусная программа', 'Также в карточке товара и «Бонусах»'], ['Лицензии · О приложении', 'showLicensePage · версия сборки'], ['Тексты документов', 'Пока заглушки — напишет бизнес']] },
+    ].map(c => ({ ...c, rows: c.rows.map(([a, b]) => ({ a, b })) }));
+    return { cjm, tabs, stack, screens, rules, links, todo, pushes, settingsCols };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#E6E6EA;font-family:Onest,system-ui,sans-serif;color:#17151A}a{color:#EE1D74}a:hover{color:#D6136A}</style></helmet>
+<section style="display:flex;flex-direction:column;gap:48px;padding:48px;width:max-content">
+  <div style="display:flex;gap:48px;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Поиск · 1440 · подсказки</div>
+      <div id="5a" data-screen-label="Поиск 1440 — подсказки" style="position:relative;width:1440px;height:820px;background:#F2F2F4;border-radius:8px;overflow:hidden">
+        <dc-import name="MartHeader" mode="desktop" method="delivery" address="Астана, Кабанбай батыра, 11" cart-count="3" cart-amount-text="{{ cartText }}" query="{{ q }}" search-focused="{{ true }}" on-query="{{ setQ }}" hint-size="100%,80px"></dc-import>
+        <div style="position:absolute;inset:0;top:80px;background:rgba(23,21,26,.35)"></div>
+        <div style="position:absolute;left:470px;top:84px;width:575px"><dc-import name="MartSearch" query="{{ q }}" on-query="{{ setQ }}" on-submit="{{ submit }}" hint-size="100%,360px"></dc-import></div>
+      </div></div>
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Поиск · 390 · экран</div>
+      <div id="5b" data-screen-label="Поиск 390" style="position:relative;width:390px;height:844px;background:#fff;border-radius:8px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:44px;flex:none"></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 16px 12px;flex:none">
+          <a href="#1b" aria-label="Назад" style="width:40px;height:40px;border-radius:50%;background:#F7F7F8;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:9px;height:9px;border-left:2px solid #17151A;border-bottom:2px solid #17151A;transform:rotate(45deg);margin-left:3px"></span></a>
+          <div style="flex:1;display:flex;align-items:center;height:48px;border-radius:999px;background:#F7F7F8;border:1.5px solid #EE1D74;box-shadow:0 0 0 3px rgba(238,29,116,.18);padding:0 16px;gap:10px"><input value="{{ q }}" onChange="{{ onInput }}" placeholder="Искать в 8mart" autoFocus="{{ true }}" style="flex:1;border:0;background:transparent;outline:none;font:inherit;font-size:16px;color:#17151A;min-width:0"><sc-if value="{{ hasQ }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ clearQ }}" aria-label="Очистить" style="width:28px;height:28px;border-radius:50%;border:0;background:#E3E2E7;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex:none"><span style="position:relative;width:12px;height:12px;display:block"><span style="position:absolute;left:0;top:5px;width:12px;height:2px;background:#6B6873;transform:rotate(45deg)"></span><span style="position:absolute;left:0;top:5px;width:12px;height:2px;background:#6B6873;transform:rotate(-45deg)"></span></span></button></sc-if></div>
+        </div>
+        <div style="flex:1;overflow:auto;padding:0 12px"><dc-import name="MartSearch" mode="mobile" query="{{ q }}" on-query="{{ setQ }}" on-submit="{{ submit }}" hint-size="100%,400px"></dc-import></div>
+        <div style="height:34px;flex:none"></div>
+      </div></div>
+  </div>
+
+  <div style="display:flex;gap:48px;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Результаты · 1440</div>
+      <div id="5c" data-screen-label="Результаты поиска 1440" style="position:relative;width:1440px;min-height:820px;background:#F2F2F4;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;gap:16px">
+        <dc-import name="MartHeader" mode="desktop" method="delivery" address="Астана, Кабанбай батыра, 11" cart-count="3" cart-amount-text="{{ cartText }}" query="{{ rq }}" hint-size="100%,80px"></dc-import>
+        <div style="display:grid;grid-template-columns:260px minmax(0,1fr) 340px;gap:16px;padding:0 40px 40px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <aside style="background:#fff;border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:12px">
+              <b style="font-size:18px">Нашли в категориях</b>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <button type="button" onClick="{{ pickAll }}" style="display:flex;align-items:center;justify-content:space-between;height:40px;padding:0 10px;border:0;border-radius:12px;background:{{ allBg }};font:inherit;font-size:15px;font-weight:{{ allFw }};color:#17151A;cursor:pointer;text-align:left" style-hover="background:#F7F7F8"><span>Все результаты</span><span style="font-size:13px;color:#9E9BA6">{{ hitsTotal }}</span></button>
+                <sc-for list="{{ rTree }}" as="g" hint-placeholder-count="1">
+                  <div style="display:flex;align-items:center;gap:10px;height:40px;padding:0 10px;font-size:13px;font-weight:600;color:#9E9BA6;letter-spacing:.04em;text-transform:uppercase"><img src="{{ g.img }}" alt="" style="width:24px;height:24px;border-radius:6px;object-fit:cover">{{ g.name }}</div>
+                  <sc-for list="{{ g.subs }}" as="s" hint-placeholder-count="2">
+                    <button type="button" onClick="{{ s.pick }}" style="display:flex;align-items:center;justify-content:space-between;height:40px;padding:0 10px 0 44px;border:0;border-radius:12px;background:{{ s.bg }};font:inherit;font-size:15px;font-weight:{{ s.fw }};color:#17151A;cursor:pointer;text-align:left" style-hover="background:#F7F7F8"><span>{{ s.name }}</span><span style="font-size:13px;color:#9E9BA6">{{ s.count }}</span></button>
+                  </sc-for>
+                </sc-for>
+              </div>
+            </aside>
+            <aside style="background:#fff;border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:16px">
+              <div style="display:flex;align-items:center;justify-content:space-between"><b style="font-size:18px">Фильтры</b><sc-if value="{{ fActive }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ resetF }}" style="border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;color:#EE1D74;cursor:pointer;padding:0">Сбросить</button></sc-if></div>
+              <dc-import name="MartFilters" value="{{ filters }}" on-change="{{ setF }}" groups="{{ fGroups }}" result-count="{{ rCount }}" show-actions="{{ false }}" hint-size="100%,380px"></dc-import>
+            </aside>
+          </div>
+          <main style="display:flex;flex-direction:column;gap:20px;min-width:0">
+            <nav style="display:flex;gap:8px;font-size:14px;color:#6B6873"><a href="#1a" style="color:#6B6873;text-decoration:none">Главная</a><span>·</span><span style="color:#17151A">Поиск</span></nav>
+            <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.02em">«{{ rq }}»</h1><span style="font-size:16px;color:#9E9BA6">{{ rCountText }}</span></div>
+            <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <sc-if value="{{ catPicked }}" hint-placeholder-val="{{ false }}"><dc-import name="MartChip" label="{{ catPickedName }}" selected="{{ true }}" removable="{{ true }}" on-click="{{ pickAll }}" hint-size="130px,36px"></dc-import></sc-if>
+                <sc-for list="{{ fChips }}" as="c" hint-placeholder-count="1"><dc-import name="MartChip" label="{{ c.label }}" removable="{{ true }}" on-click="{{ c.remove }}" hint-size="100px,36px"></dc-import></sc-for>
+              </div>
+              <button type="button" style="display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;border:0;background:#fff;font:inherit;font-size:14px;font-weight:500;cursor:pointer;color:#17151A">По релевантности<span style="width:7px;height:7px;border-right:2px solid #6B6873;border-bottom:2px solid #6B6873;transform:rotate(45deg);margin-top:-3px"></span></button>
+            </div>
+            <sc-if value="{{ rHas }}" hint-placeholder-val="{{ true }}"><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:stretch"><sc-for list="{{ results }}" as="it" hint-placeholder-count="5"><dc-import name="MartProductCard" product="{{ it.p }}" qty="{{ it.qty }}" on-qty="{{ setQty }}" hint-size="100%,320px"></dc-import></sc-for></div></sc-if>
+            <sc-if value="{{ rEmpty }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:64px 24px;text-align:center;background:#fff;border-radius:24px"><b style="font-size:20px">С такими фильтрами ничего нет</b><span style="font-size:15px;color:#6B6873">Ослабьте условия или сбросьте фильтры</span><dc-import name="MartButton" label="Сбросить фильтры" variant="secondary" size="44" on-click="{{ resetF }}" hint-size="180px,44px"></dc-import></div></sc-if>
+          </main>
+          <div style="position:sticky;top:16px"><dc-import name="MartMiniCart" cart="{{ cart }}" method="{{ miniMethod }}" on-change="{{ setQty }}" hint-size="100%,440px"></dc-import></div>
+        </div>
+      </div></div>
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Результаты · 390</div>
+      <div id="5d" data-screen-label="Результаты поиска 390" style="position:relative;width:390px;height:844px;background:#F2F2F4;border-radius:8px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:44px;background:#fff;flex:none"></div>
+        <div style="background:#fff;border-radius:0 0 24px 24px;padding:8px 16px 16px;display:flex;flex-direction:column;gap:12px;flex:none">
+          <div style="display:flex;align-items:center;gap:8px"><a href="#5b" aria-label="Назад" style="width:40px;height:40px;border-radius:50%;background:#F7F7F8;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:9px;height:9px;border-left:2px solid #17151A;border-bottom:2px solid #17151A;transform:rotate(45deg);margin-left:3px"></span></a><a href="#5b" style="flex:1;display:flex;align-items:center;height:48px;border-radius:999px;background:#F7F7F8;padding:0 16px;text-decoration:none;color:#17151A;font-size:16px">{{ rq }}</a></div>
+          <div style="display:flex;gap:8px;overflow:hidden">
+            <button type="button" onClick="{{ openSheet }}" style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;border:1.5px solid {{ fBc }};background:{{ fBg }};color:{{ fFg }};font:inherit;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;flex:none"><span style="display:flex;flex-direction:column;gap:3px;width:14px"><span style="height:2px;background:currentColor;border-radius:1px"></span><span style="height:2px;width:10px;background:currentColor;border-radius:1px"></span><span style="height:2px;width:6px;background:currentColor;border-radius:1px"></span></span>Фильтры<sc-if value="{{ fActive }}" hint-placeholder-val="{{ false }}"><span style="min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#fff;color:#EE1D74;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-sizing:border-box">{{ fCount }}</span></sc-if></button>
+            <dc-import name="MartChip" label="Все" selected="{{ allSel }}" on-click="{{ pickAll }}" hint-size="60px,36px"></dc-import>
+            <sc-for list="{{ rCats }}" as="c" hint-placeholder-count="2"><dc-import name="MartChip" label="{{ c.name }}" count="{{ c.count }}" selected="{{ c.sel }}" on-click="{{ c.pick }}" hint-size="110px,36px"></dc-import></sc-for>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:14px;color:#9E9BA6">{{ rCountText }}</span><button type="button" style="display:flex;align-items:center;gap:6px;border:0;background:transparent;font:inherit;font-size:14px;font-weight:500;color:#17151A;cursor:pointer;padding:0">По релевантности<span style="width:6px;height:6px;border-right:2px solid #6B6873;border-bottom:2px solid #6B6873;transform:rotate(45deg);margin-top:-3px"></span></button></div>
+        </div>
+        <div style="flex:1;overflow:hidden;padding:16px 16px 0"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch"><sc-for list="{{ resultsMobile }}" as="it" hint-placeholder-count="4"><dc-import name="MartProductCard" product="{{ it.p }}" qty="{{ it.qty }}" on-qty="{{ setQty }}" hint-size="100%,300px"></dc-import></sc-for></div></div>
+        <sc-if value="{{ sheet }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;inset:0;background:rgba(23,21,26,.45);display:flex;align-items:flex-end;z-index:20">
+            <div style="width:100%;max-height:88%;background:#fff;border-radius:24px 24px 0 0;padding:20px 16px 24px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;overflow:auto">
+              <div style="display:flex;align-items:center;justify-content:space-between"><b style="font-size:20px;font-weight:800;letter-spacing:-.02em">Фильтры</b><button type="button" onClick="{{ closeSheet }}" aria-label="Закрыть" style="width:36px;height:36px;border-radius:50%;border:0;background:#F7F7F8;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0"><span style="position:relative;width:14px;height:14px;display:block"><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#6B6873;transform:rotate(45deg)"></span><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#6B6873;transform:rotate(-45deg)"></span></span></button></div>
+              <dc-import name="MartFilters" value="{{ filters }}" on-change="{{ setF }}" groups="{{ fGroups }}" result-count="{{ rCount }}" result-text="{{ rCountText }}" on-apply="{{ closeSheet }}" hint-size="100%,480px"></dc-import>
+            </div>
+          </div>
+        </sc-if>
+        <dc-import name="MartTabBar" active="catalog" cart-count="3" hint-size="100%,84px"></dc-import>
+      </div></div>
+  </div>
+  <div style="max-width:720px;background:#fff;border-radius:20px;padding:20px;font-size:14px;line-height:1.5;color:#6B6873"><b style="color:#17151A">Поведение.</b> Фокус в поле → выпадающие подсказки: недавние запросы и «часто ищут». Ввод → совпадения по категориям и до 5 товаров с подсветкой, цена в строке, «Все результаты · N». Enter / «Все результаты» → страница результатов с чипами категорий-уточнений. Нет совпадений → подсказка и популярные запросы. На мобильном поиск — отдельный экран, открывается по тапу на поле в шапке.</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+&quot;query&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;цем&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Подсказки&quot;},
+&quot;resultQuery&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;цемент&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Результаты&quot;},
+&quot;resultCategory&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:null,&quot;options&quot;:[null,&quot;sukhie-smesi&quot;,&quot;kraski&quot;,&quot;rozy&quot;],&quot;tsType&quot;:&quot;string|null&quot;,&quot;section&quot;:&quot;Результаты&quot;},
+&quot;filtersPreset&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Результаты&quot;},
+&quot;showFilterSheet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Результаты&quot;}}">
+class Component extends DCLogic {
+  state = { D: null, q: undefined, cart: { b1: 2, b6: 1, b4: 1 } };
+  componentDidMount() { import('./data.js').then(D => this.setState({ D })); }
+  renderVals() {
+    const p = this.props, D = this.state.D, P = D ? D.PRODUCTS : [];
+    const q = this.state.q ?? (p.query ?? 'цем');
+    const rq = p.resultQuery ?? 'цемент';
+    const ql = rq.toLowerCase();
+    const allHits = P.filter(x => x.name.toLowerCase().includes(ql) || (D && D.CATEGORIES.some(c => c.sub.some(s => s.slug === x.cat && s.name.toLowerCase().includes(ql)))));
+    const catSel = this.state.catSel ?? (p.resultCategory || null);
+    const EMPTY_F = { min: '', max: '', brands: [], packs: [], inStock: false, sale: false };
+    const filters = this.state.filters || (p.filtersPreset ? { ...EMPTY_F, sale: true } : EMPTY_F);
+    const byCat = catSel ? allHits.filter(x => x.cat === catSel) : allHits;
+    const hits = byCat.filter(x => (!filters.min || (x.price || 0) >= +filters.min) && (!filters.max || (x.price || 0) <= +filters.max) && (!filters.sale || x.oldPrice));
+    const subs = D ? D.CATEGORIES.flatMap(c => c.sub.map(s => ({ ...s, root: c }))) : [];
+    const cats = subs.filter(s => allHits.some(h => h.cat === s.slug)).map(s => ({ slug: s.slug, name: s.name, count: allHits.filter(h => h.cat === s.slug).length, sel: catSel === s.slug, pick: () => this.setState({ catSel: catSel === s.slug ? null : s.slug }) }));
+    const rTree = (D ? D.CATEGORIES : []).map(c => ({ name: c.name, img: c.img, subs: cats.filter(s => c.sub.some(x => x.slug === s.slug)).map(s => ({ ...s, bg: s.sel ? '#FDF0F6' : 'transparent', fw: s.sel ? 700 : 400 })) })).filter(g => g.subs.length);
+    const fChips = [];
+    if (filters.min || filters.max) fChips.push({ label: `${filters.min ? 'от ' + filters.min : ''}${filters.min && filters.max ? ' ' : ''}${filters.max ? 'до ' + filters.max : ''} тг`, remove: () => this.setState({ filters: { ...filters, min: '', max: '' } }) });
+    (filters.brands || []).forEach(b => fChips.push({ label: b, remove: () => this.setState({ filters: { ...filters, brands: filters.brands.filter(x => x !== b) } }) }));
+    (filters.packs || []).forEach(b => fChips.push({ label: b, remove: () => this.setState({ filters: { ...filters, packs: filters.packs.filter(x => x !== b) } }) }));
+    if (filters.inStock) fChips.push({ label: 'В наличии', remove: () => this.setState({ filters: { ...filters, inStock: false } }) });
+    if (filters.sale) fChips.push({ label: 'Со скидкой', remove: () => this.setState({ filters: { ...filters, sale: false } }) });
+    const cart = this.state.cart;
+    const wrap = (a) => a.map(x => ({ p: x, qty: cart[x.id] || 0 }));
+    const packs = [...new Set(byCat.map(x => x.weight))].map(w => [w, byCat.filter(x => x.weight === w).length]);
+    return {
+      q, hasQ: q.length > 0, setQ: (v) => this.setState({ q: v }), onInput: (e) => this.setState({ q: e.target.value }), clearQ: () => this.setState({ q: '' }),
+      submit: (v) => console.log('search:', v), cart, miniMethod: 'delivery',
+      cartText: D ? D.money(17970) : '',
+      rq, rCount: hits.length, rCountText: `${hits.length} ${D ? D.plural(hits.length, 'товар', 'товара', 'товаров') : ''}`, rHasCats: cats.length > 0, rCats: cats, rTree, hitsTotal: allHits.length,
+      rHas: hits.length > 0, rEmpty: hits.length === 0 && allHits.length > 0,
+      results: wrap(hits), resultsMobile: wrap(hits.slice(0, 4)),
+      catPicked: !!catSel, catPickedName: (subs.find(s => s.slug === catSel) || {}).name || '', allSel: !catSel, allBg: !catSel ? '#FDF0F6' : 'transparent', allFw: !catSel ? 700 : 400, pickAll: () => this.setState({ catSel: null }),
+      filters, setF: (v) => this.setState({ filters: v }), resetF: () => this.setState({ filters: EMPTY_F }), fActive: fChips.length > 0, fCount: fChips.length, fChips,
+      fGroups: [{ key: 'packs', title: 'Фасовка', items: packs }],
+      fBc: fChips.length ? '#EE1D74' : '#E3E2E7', fBg: fChips.length ? '#EE1D74' : '#fff', fFg: fChips.length ? '#fff' : '#17151A',
+      sheet: this.state.sheet ?? !!p.showFilterSheet, openSheet: () => this.setState({ sheet: true }), closeSheet: () => this.setState({ sheet: false }),
+      setQty: (id, n) => { const c = { ...cart }; if (n <= 0) delete c[id]; else c[id] = n; this.setState({ cart: c }); },
+    };
+  }
+}
+</script>
+</body>
+</html>

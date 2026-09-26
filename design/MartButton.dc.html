@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet"><style>@keyframes mart-spin{to{transform:rotate(360deg)}}</style></helmet>
+<button type="button" onClick="{{ onClick }}" disabled="{{ isDisabled }}" title="{{ reason }}" style="position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;box-sizing:border-box;height:{{ h }}px;min-height:{{ h }}px;padding:0 {{ px }}px;width:{{ w }};border-radius:999px;border:{{ border }};background:{{ bg }};color:{{ fg }};font-family:Onest,system-ui,sans-serif;font-size:{{ fs }}px;font-weight:600;line-height:1;cursor:{{ cursor }};opacity:{{ op }};transition:background .15s ease,transform .1s ease;white-space:nowrap;outline:none;box-shadow:{{ ring }}" style-hover="background:{{ bgHover }}" style-active="background:{{ bgActive }};transform:scale(.99)">
+  <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:999px;background:{{ bg }}"><span style="width:20px;height:20px;border-radius:50%;border:2.5px solid currentColor;border-right-color:transparent;animation:mart-spin .7s linear infinite"></span></span></sc-if>
+  <sc-if value="{{ showKaspi }}" hint-placeholder-val="{{ false }}"><img src="./assets/kaspi-pay.svg" alt="Kaspi Pay" style="height:{{ kaspiH }}px;display:block;margin:0 -{{ px }}px;border-radius:999px"></sc-if>
+  <sc-if value="{{ showLabel }}" hint-placeholder-val="{{ true }}"><span>{{ label }}</span></sc-if>
+  <sc-if value="{{ hasAmount }}" hint-placeholder-val="{{ false }}"><span style="width:1px;height:16px;background:currentColor;opacity:.35"></span><span style="font-weight:500;font-variant-numeric:tabular-nums">{{ amount }}</span></sc-if>
+</button>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:320,&quot;height&quot;:80},
+&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;В корзину&quot;,&quot;tsType&quot;:&quot;string&quot;},
+&quot;amount&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Split CTA&quot;},
+&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;primary&quot;,&quot;options&quot;:[&quot;primary&quot;,&quot;secondary&quot;,&quot;ghost&quot;,&quot;danger&quot;,&quot;kaspi&quot;],&quot;tsType&quot;:&quot;'primary'|'secondary'|'ghost'|'danger'|'kaspi'&quot;},
+&quot;size&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:56,&quot;options&quot;:[36,40,44,56],&quot;tsType&quot;:&quot;36|40|44|56&quot;},
+&quot;full&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},
+&quot;disabled&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;State&quot;},
+&quot;loading&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;State&quot;},
+&quot;focused&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;State&quot;},
+&quot;reason&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;State&quot;},
+&quot;onClick&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const variant = p.variant ?? 'primary';
+    const size = Number(p.size ?? 56);
+    const disabled = !!p.disabled, loading = !!p.loading;
+    const map = {
+      primary:   { bg: '#EE1D74', bgHover: '#D6136A', bgActive: '#BF0F5E', fg: '#FFFFFF', border: '1.5px solid transparent' },
+      secondary: { bg: '#FDF0F6', bgHover: '#FBDCEA', bgActive: '#F7B4D1', fg: '#EE1D74', border: '1.5px solid transparent' },
+      ghost:     { bg: 'transparent', bgHover: '#F7F7F8', bgActive: '#EEEDF1', fg: '#17151A', border: '1.5px solid #E3E2E7' },
+      danger:    { bg: '#FDEDED', bgHover: '#FADADA', bgActive: '#F5C2C2', fg: '#E23D3D', border: '1.5px solid transparent' },
+      kaspi:     { bg: '#F14635', bgHover: '#DC3B2B', bgActive: '#C63424', fg: '#FFFFFF', border: '1.5px solid transparent' },
+    };
+    const v = map[variant] || map.primary;
+    const dis = disabled ? { bg: '#EEEDF1', bgHover: '#EEEDF1', bgActive: '#EEEDF1', fg: '#9E9BA6', border: '1.5px solid transparent' } : v;
+    const px = size >= 56 ? 28 : size >= 44 ? 20 : 16;
+    const fs = size >= 56 ? 16 : size >= 44 ? 15 : 14;
+    return {
+      h: size, px, fs, w: p.full ? '100%' : 'auto',
+      bg: dis.bg, bgHover: dis.bgHover, bgActive: dis.bgActive, fg: dis.fg, border: dis.border,
+      cursor: disabled ? 'not-allowed' : loading ? 'progress' : 'pointer', op: 1,
+      isDisabled: disabled || loading, loading,
+      ring: p.focused ? '0 0 0 3px #FFFFFF, 0 0 0 5px #EE1D74' : 'none',
+      label: p.label ?? 'Кнопка', showLabel: variant !== 'kaspi' || !!p.label,
+      showKaspi: variant === 'kaspi', kaspiH: size,
+      hasAmount: variant !== 'kaspi' && p.amount != null && p.amount !== '', amount: p.amount,
+      reason: disabled && p.reason ? p.reason : undefined,
+      onClick: p.onClick,
+    };
+  }
+}
+</script>
+</body>
+</html>

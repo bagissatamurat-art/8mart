@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet"></helmet>
+<div style="display:inline-flex;align-items:center;box-sizing:border-box;height:{{ h }}px;border-radius:999px;background:{{ bg }};color:{{ fg }};font-family:Onest,system-ui,sans-serif;font-weight:600;font-size:{{ fs }}px;width:{{ w }};opacity:{{ op }}">
+  <button type="button" onClick="{{ dec }}" disabled="{{ disabled }}" aria-label="Меньше" style="width:{{ h }}px;height:{{ h }}px;border:0;background:transparent;color:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:999px;padding:0" style-hover="background:rgba(0,0,0,.06)"><span style="width:12px;height:2px;background:currentColor;border-radius:1px;display:block"></span></button>
+  <span style="flex:1;text-align:center;min-width:24px;font-variant-numeric:tabular-nums">{{ qty }}</span>
+  <button type="button" onClick="{{ inc }}" disabled="{{ incDisabled }}" aria-label="Больше" style="width:{{ h }}px;height:{{ h }}px;border:0;background:transparent;color:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:999px;padding:0;position:relative;opacity:{{ incOp }}" style-hover="background:rgba(0,0,0,.06)"><span style="width:12px;height:2px;background:currentColor;border-radius:1px;display:block"></span><span style="width:2px;height:12px;background:currentColor;border-radius:1px;display:block;position:absolute"></span></button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:200,&quot;height&quot;:60},
+&quot;qty&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:1,&quot;min&quot;:0,&quot;max&quot;:99,&quot;tsType&quot;:&quot;number&quot;},
+&quot;max&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:99,&quot;tsType&quot;:&quot;number&quot;},
+&quot;size&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:44,&quot;options&quot;:[36,44],&quot;tsType&quot;:&quot;36|44&quot;},
+&quot;tone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;primary&quot;,&quot;options&quot;:[&quot;primary&quot;,&quot;neutral&quot;],&quot;tsType&quot;:&quot;'primary'|'neutral'&quot;},
+&quot;full&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},
+&quot;disabled&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},
+&quot;onChange&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(qty:number)=&gt;void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, size = Number(p.size ?? 44), qty = Number(p.qty ?? 1), max = p.max ?? 99;
+    const tone = p.tone ?? 'primary';
+    const disabled = !!p.disabled;
+    return {
+      h: size, fs: size >= 44 ? 16 : 14, w: p.full ? '100%' : 'auto',
+      bg: disabled ? '#EEEDF1' : tone === 'primary' ? '#EE1D74' : '#F7F7F8',
+      fg: disabled ? '#9E9BA6' : tone === 'primary' ? '#FFFFFF' : '#17151A',
+      op: 1, qty, disabled, incDisabled: disabled || qty >= max, incOp: qty >= max ? .4 : 1,
+      dec: () => p.onChange && p.onChange(qty - 1), inc: () => p.onChange && p.onChange(Math.min(max, qty + 1)),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+# Проверка и веб-версия при каждом push в main:
+# analyze + test + build web → GitHub Pages; отчёты (analyze.txt, test.txt, build.txt) — в ветку ci-report.
+# Секреты репозитория: MAPBOX_ACCESS_TOKEN, DADATA_API_KEY (Settings → Secrets and variables → Actions).
+name: Flutter
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Платформа web
+        run: |
+          flutter create . --org kz.mart8 --platforms web
+          rm -f test/widget_test.dart   # шаблонный тест flutter create, у нас своё приложение
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - name: Анализ
+        run: |
+          flutter analyze --no-fatal-infos > analyze.txt 2>&1 || true
+          cat analyze.txt
+      - name: Тесты
+        run: |
+          flutter test > test.txt 2>&1 || true
+          cat test.txt
+      - name: Сборка web
+        run: |
+          echo '{"MAPBOX_ACCESS_TOKEN":"${{ secrets.MAPBOX_ACCESS_TOKEN }}","DADATA_API_KEY":"${{ secrets.DADATA_API_KEY }}"}' > env.json
+          code=0
+          flutter build web --release --base-href "/${{ github.event.repository.name }}/" --dart-define-from-file=env.json > build.txt 2>&1 || code=$?
+          cat build.txt
+          exit $code
+      - name: Отчёт в ветку ci-report
+        if: always()
+        run: |
+          mkdir -p /tmp/r
+          cp analyze.txt test.txt build.txt /tmp/r/ 2>/dev/null || true
+          printf 'commit: %s\ndate: %s\n' "${{ github.sha }}" "$(date -u +%FT%TZ)" > /tmp/r/README.md
+          cd /tmp/r
+          git init -q && git checkout -q -b ci-report && git add .
+          git -c user.name=ci -c user.email=ci@8mart.kz commit -qm "report ${{ github.sha }}"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-report
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.d.outputs.page_url }}
+    steps:
+      - id: d
+        uses: actions/deploy-pages@v4

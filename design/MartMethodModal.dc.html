@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>@keyframes sgspin{to{transform:rotate(360deg)}}</style><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"></helmet>
+<div style="position:absolute;inset:0;background:rgba(23,21,26,.45);display:flex;align-items:{{ align }};justify-content:center;padding:{{ pad }};box-sizing:border-box;font-family:Onest,system-ui,sans-serif;color:#17151A;z-index:20">
+  <div style="position:relative;width:100%;max-width:{{ maxW }};height:{{ boxH }};background:#FFFFFF;border-radius:{{ radius }};overflow:hidden;display:flex;flex-direction:{{ dir }}">
+    <sc-if value="{{ closable }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ onClose }}" aria-label="Закрыть" style="position:absolute;right:16px;top:16px;width:40px;height:40px;border-radius:50%;border:0;background:#fff;box-shadow:0 4px 12px rgba(23,21,26,.15);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:5"><span style="position:relative;width:14px;height:14px;display:block"><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#17151A;transform:rotate(45deg)"></span><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#17151A;transform:rotate(-45deg)"></span></span></button></sc-if>
+
+    <div style="position:relative;flex:{{ mapFlex }};height:{{ mapH }};min-height:0;background:#EEEDF1">
+      <iframe ref="{{ frameRef }}" src="{{ mapSrc }}" title="Карта" style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>
+      <div style="position:absolute;left:16px;top:16px;display:flex;gap:8px;z-index:4">
+        <div style="position:relative">
+          <button type="button" onClick="{{ toggleCities }}" style="display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:999px;border:0;background:#fff;box-shadow:0 4px 12px rgba(23,21,26,.15);font:inherit;font-size:15px;font-weight:600;cursor:pointer;color:#17151A"><span style="width:8px;height:8px;border-radius:50%;background:#EE1D74"></span>{{ cityName }}<span style="width:7px;height:7px;border-right:2px solid #6B6873;border-bottom:2px solid #6B6873;transform:rotate(45deg);margin-top:-3px"></span></button>
+          <sc-if value="{{ citiesOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;left:0;top:52px;width:240px;max-height:320px;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 8px 24px rgba(23,21,26,.16);padding:6px;display:flex;flex-direction:column;gap:2px;z-index:6">
+              <sc-for list="{{ cities }}" as="c" hint-placeholder-count="4"><button type="button" onClick="{{ c.pick }}" style="display:flex;align-items:center;justify-content:space-between;height:44px;padding:0 12px;border-radius:10px;border:0;background:{{ c.bg }};font:inherit;font-size:15px;font-weight:{{ c.fw }};color:#17151A;cursor:pointer;text-align:left" style-hover="background:#F7F7F8">{{ c.name }}<sc-if value="{{ c.sel }}" hint-placeholder-val="{{ false }}"><span style="width:10px;height:6px;border-left:2px solid #EE1D74;border-bottom:2px solid #EE1D74;transform:rotate(-45deg);margin-top:-3px"></span></sc-if></button></sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="width:{{ panelW }};flex:{{ panelFlex }};min-height:0;display:flex;flex-direction:column;gap:16px;padding:{{ panelPad }};box-sizing:border-box;background:#fff;overflow:hidden">
+      <div style="display:flex;flex-direction:column;gap:4px;padding-right:{{ headPr }}"><h2 style="margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em">{{ title }}</h2><p style="margin:0;font-size:13px;color:#6B6873;line-height:1.4">{{ subtitle }}</p></div>
+      <sc-if value="{{ showTabs }}" hint-placeholder-val="{{ true }}"><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:999px;background:#F7F7F8">
+        <button type="button" onClick="{{ pickDelivery }}" style="height:40px;border-radius:999px;border:0;background:{{ bgD }};color:{{ fgD }};font:inherit;font-size:15px;font-weight:600;cursor:pointer;box-shadow:{{ shD }}">Доставка</button>
+        <button type="button" onClick="{{ pickPickup }}" style="height:40px;border-radius:999px;border:0;background:{{ bgP }};color:{{ fgP }};font:inherit;font-size:15px;font-weight:600;cursor:pointer;box-shadow:{{ shP }}">Самовывоз</button>
+      </div></sc-if>
+      <sc-if value="{{ addrMode }}" hint-placeholder-val="{{ false }}"><dc-import name="MartInput" label="Название" value="{{ addrTitle }}" on-change="{{ setAddrTitle }}" hint="Например, Дом или Объект" hint-size="100%,56px"></dc-import></sc-if>
+
+      <sc-if value="{{ isDelivery }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:12px;overflow:auto;flex:1;min-height:0;margin:0 -4px;padding:0 4px">
+          <div style="display:flex;flex-direction:column;gap:6px;flex:none">
+            <dc-import name="MartInput" label="Улица, дом" required="{{ true }}" value="{{ street }}" on-change="{{ setStreet }}" on-focus="{{ sgFocus }}" on-blur="{{ sgBlur }}" on-key-down="{{ sgKey }}" auto-complete="off" error="{{ streetError }}" hint-size="100%,56px"></dc-import>
+            <sc-if value="{{ sgOpen }}" hint-placeholder-val="{{ false }}">
+              <div role="listbox" style="display:flex;flex-direction:column;padding:6px;border-radius:16px;background:#fff;border:1px solid #E3E2E7;box-shadow:0 8px 24px rgba(23,21,26,.10)">
+                <sc-if value="{{ sgLoading }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;font-size:14px;color:#6B6873"><span style="width:14px;height:14px;border-radius:50%;border:2px solid #E3E2E7;border-top-color:#EE1D74;box-sizing:border-box;animation:sgspin .7s linear infinite"></span>Ищем адрес…</div></sc-if>
+                <sc-if value="{{ sgEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:10px 12px;font-size:14px;line-height:1.4;color:#6B6873">{{ sgEmptyText }}</div></sc-if>
+                <sc-for list="{{ sgItems }}" as="s" hint-placeholder-count="0">
+                  <button type="button" role="option" onMouseDown="{{ s.down }}" onClick="{{ s.pick }}" onMouseEnter="{{ s.hover }}" style="display:flex;align-items:center;gap:12px;min-height:{{ sgRowH }};padding:8px 12px;border-radius:10px;border:0;background:{{ s.bg }};font:inherit;color:#17151A;cursor:pointer;text-align:left">
+                    <span style="width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #A9A6B0;box-sizing:border-box;flex:none;position:relative"><span style="position:absolute;left:3px;top:3px;width:6px;height:6px;border-radius:50%;background:#A9A6B0"></span></span>
+                    <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:15px;font-weight:600;line-height:1.3">{{ s.title }}</span><sc-if value="{{ s.hasSub }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:#6B6873;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.sub }}</span></sc-if></span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><dc-import name="MartInput" label="Подъезд" value="{{ entrance }}" on-change="{{ setEntrance }}" hint-size="100%,56px"></dc-import><dc-import name="MartInput" label="Квартира, офис" value="{{ flat }}" on-change="{{ setFlat }}" hint-size="100%,56px"></dc-import></div>
+          <div style="font-size:13px;color:#6B6873;line-height:1.4">Доставка {{ feeText }}, бесплатно от {{ freeText }} · 60–90 мин</div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isPickup }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-height:0">
+          <sc-if value="{{ noPoints }}" hint-placeholder-val="{{ false }}"><div style="padding:14px 16px;border-radius:16px;background:#FFF7E8;font-size:14px;line-height:1.4">В городе {{ cityName }} пока нет точек самовывоза — выберите доставку или другой город</div></sc-if>
+          <sc-if value="{{ manyPoints }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;color:#6B6873;padding:0 2px;flex:none"><span>{{ pointsCountText }}</span><span>{{ sortHint }}</span></div>
+          </sc-if>
+          <sc-if value="{{ noGeo }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ askGeo }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;border:1.5px dashed #E3E2E7;background:#fff;font:inherit;font-size:14px;color:#17151A;cursor:pointer;text-align:left;flex:none" style-hover="background:#F7F7F8"><span style="width:16px;height:16px;border:2px solid #EE1D74;border-radius:50%;box-sizing:border-box;position:relative;flex:none"><span style="position:absolute;left:3px;top:3px;width:6px;height:6px;border-radius:50%;background:#EE1D74"></span></span><span><b style="font-weight:600">Показать ближайшие</b><span style="color:#6B6873"> — разрешите геолокацию</span></span></button></sc-if>
+          <div ref="{{ listRef }}" style="display:flex;flex-direction:column;gap:8px;overflow:auto;flex:1;min-height:0;margin:0 -4px;padding:0 4px">
+          <sc-for list="{{ stores }}" as="s" hint-placeholder-count="3">
+            <button type="button" data-store="{{ s.id }}" onClick="{{ s.pick }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:16px;border:1.5px solid {{ s.bc }};background:{{ s.bg }};text-align:left;font:inherit;cursor:pointer;color:#17151A;flex:none" style-hover="background:#F7F7F8"><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="display:flex;align-items:center;gap:8px"><span style="font-size:15px;font-weight:600">{{ s.name }}</span><sc-if value="{{ s.nearest }}" hint-placeholder-val="{{ false }}"><span style="padding:2px 6px;border-radius:999px;background:#EAF7F0;color:#1DA765;font-size:11px;font-weight:600">Ближайшая</span></sc-if></span><span style="font-size:13px;color:#6B6873">{{ s.meta }}</span></span><span style="width:20px;height:20px;border-radius:50%;border:2px solid {{ s.bc }};box-sizing:border-box;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:10px;height:10px;border-radius:50%;background:{{ s.dot }}"></span></span></button>
+          </sc-for>
+          </div>
+        </div>
+      </sc-if>
+      <div style="margin-top:auto;flex:none;padding-top:4px"><dc-import name="MartButton" label="{{ ctaLabel }}" size="56" full="{{ true }}" disabled="{{ ctaDisabled }}" reason="{{ ctaReason }}" on-click="{{ confirm }}" hint-size="100%,56px"></dc-import></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:700},
+&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;desktop&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;mobile&quot;],&quot;tsType&quot;:&quot;'desktop'|'mobile'&quot;},
+&quot;tab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;delivery&quot;,&quot;options&quot;:[&quot;delivery&quot;,&quot;pickup&quot;],&quot;tsType&quot;:&quot;'delivery'|'pickup'&quot;},
+&quot;city&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;astana&quot;,&quot;options&quot;:[&quot;astana&quot;,&quot;almaty&quot;,&quot;shymkent&quot;,&quot;karaganda&quot;],&quot;tsType&quot;:&quot;string&quot;},
+&quot;street&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},
+&quot;userGeo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;State&quot;},
+&quot;pinState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:null,&quot;options&quot;:[null,&quot;idle&quot;,&quot;moving&quot;,&quot;done&quot;],&quot;tsType&quot;:&quot;'idle'|'moving'|'done'&quot;,&quot;section&quot;:&quot;State&quot;},
+&quot;closable&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},
+&quot;onConfirm&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(v:{method:string,city:string,address:string,entrance:string,flat:string})=&gt;void&quot;},&quot;onClose&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;}}">
+class Component extends DCLogic {
+  state = { tab: undefined, city: undefined, street: undefined, entrance: this.props.entrance ?? '', flat: this.props.flat ?? '', store: undefined, citiesOpen: false, pin: 'idle', pinStreet: '', D: null, ready: false };
+  frameRef = React.createRef(); listRef = React.createRef(); mapId = Math.random().toString(36).slice(2, 8); mapWin = null;
+  scrollTo(id) { const l = this.listRef.current; if (!l) return; const el = l.querySelector(`[data-store="${id}"]`); if (el) l.scrollTop = el.offsetTop - l.offsetTop - 8; }
+  componentDidMount() {
+    import('./data.js').then(D => this.setState({ D }));
+    this.onMsg = (e) => { const m = e.data || {}; if (m.src !== '8mart-map') return;
+      if (m.type === 'ready') { if (m.id !== this.mapId) return; this.mapWin = e.source; this.setState({ ready: true }); this.sync(true); return; }
+      if (e.source !== this.mapWin) return;
+      if (m.type === 'moving') this.setState({ pin: 'moving' });
+      if (m.type === 'address') this.setState({ pin: 'done', pinStreet: m.street, street: m.street || this.state.street });
+      if (m.type === 'pick') { this.setState({ store: m.id }); setTimeout(() => this.scrollTo(m.id), 50); }
+      if (m.type === 'geo') this.setState({ geo: { lat: m.lat, lng: m.lng } }); };
+    window.addEventListener('message', this.onMsg);
+  }
+  componentWillUnmount() { window.removeEventListener('message', this.onMsg); clearTimeout(this.sgT); }
+  sgSearch(q) {
+    clearTimeout(this.sgT); const req = ++this.sgReq;
+    if (q.trim().length < 3) { this.setState({ sgList: [], sgLoading: false, sgErr: false, sgDone: false }); return; }
+    this.setState({ sgLoading: true, sgDone: false });
+    this.sgT = setTimeout(async () => {
+      const D = this.state.D, cityId = this.state.city ?? this.props.city ?? 'astana';
+      const c = (D && D.CITIES.find(x => x.id === cityId)) || { name: 'Астана', lat: 51.1282, lng: 71.4307 };
+      try {
+        const G = this.geo || (this.geo = await import('./geo.js'));
+        const list = await G.suggestAddress(q, c); if (req !== this.sgReq) return;
+        this.setState({ sgList: list, sgLoading: false, sgErr: false, sgDone: true, sgIdx: -1 });
+      } catch (e) { if (req === this.sgReq) this.setState({ sgList: [], sgLoading: false, sgErr: true, sgDone: true }); }
+    }, 300);
+  }
+  sgPick(s) {
+    const street = s.needHouse ? s.label + ', ' : s.label;
+    this.sgReq++; clearTimeout(this.sgT);
+    this.setState({ street, sgList: [], sgDone: false, sgLoading: false, sgIdx: -1, pin: 'done', sgHide: !s.needHouse });
+    this.mapWin && this.mapWin.postMessage({ src: '8mart-parent', lat: s.lat, lng: s.lng, zoom: s.needHouse ? 16 : 17, quiet: s.label }, '*');
+  }
+  sgReq = 0;
+  componentDidUpdate(_, prev) { if (prev.tab !== this.state.tab || prev.city !== this.state.city || prev.store !== this.state.store || prev.D !== this.state.D) this.sync(prev.city !== this.state.city || prev.tab !== this.state.tab); }
+  sync(recenter) {
+    if (!this.mapWin) { const el = document.querySelector(`iframe[src*="id=${this.mapId}"]`); if (el) this.mapWin = el.contentWindow; }
+    const win = this.mapWin, D = this.state.D; if (!win || !D) return; const f = { contentWindow: win };
+    const tab = this.state.tab ?? this.props.tab ?? 'delivery', cityId = this.state.city ?? this.props.city ?? 'astana';
+    const city = D.CITIES.find(c => c.id === cityId) || D.CITIES[0];
+    const points = D.PICKUP_POINTS.filter(p => p.city === city.id);
+    const msg = { src: '8mart-parent', mode: tab, points, selected: this.state.store ?? null };
+    if (recenter) { if (tab === 'pickup' && points.length) msg.fit = true; else { msg.lat = city.lat; msg.lng = city.lng; msg.zoom = 15; } }
+    else if (tab === 'pickup' && this.state.store) { const s = points.find(x => x.id === this.state.store); if (s) { msg.lat = s.lat; msg.lng = s.lng; msg.zoom = 15; } }
+    f.contentWindow.postMessage(msg, '*');
+  }
+  renderVals() {
+    const p = this.props, D = this.state.D, st = this.state;
+    const tab = st.tab ?? p.tab ?? 'delivery', cityId = st.city ?? p.city ?? 'astana';
+    const mobile = (p.mode ?? 'desktop') === 'mobile';
+    const cities = D ? D.CITIES : [], city = cities.find(c => c.id === cityId) || { name: 'Астана', lat: 51.1282, lng: 71.4307 };
+    const points = D ? D.PICKUP_POINTS.filter(x => x.city === cityId) : [];
+    const store = st.store ?? p.store ?? null;
+    const street = st.street ?? p.street ?? '';
+    const money = (n) => D ? D.money(n).replace('тг.', 'тг') : '';
+    const isD = tab === 'delivery';
+    const pinState = p.pinState ?? st.pin;
+    const ok = isD ? street.trim().length > 2 : !!store && points.some(x => x.id === store);
+    const search = st.search || '', geo = st.geo || (p.userGeo ? { lat: city.lat, lng: city.lng } : null);
+    const km = (a, b) => { const R = 6371, dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180, h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
+    let filtered = points.filter(x => !search || x.name.toLowerCase().includes(search.toLowerCase()));
+    filtered = filtered.map(x => ({ ...x, km: geo ? km(geo, x) : null, dist: geo ? (km(geo, x) < 1 ? Math.round(km(geo, x) * 1000) + ' м' : km(geo, x).toFixed(1).replace('.', ',') + ' км') : null }));
+    filtered.sort((a, b) => geo ? a.km - b.km : a.name.localeCompare(b.name, 'ru'));
+    return {
+      align: mobile ? 'flex-end' : 'center', pad: mobile ? '0' : '24px', radius: mobile ? '24px 24px 0 0' : '24px',
+      maxW: mobile ? '100%' : '960px', boxH: mobile ? '92%' : '600px', dir: mobile ? 'column' : 'row', panelW: mobile ? '100%' : '380px', headPr: mobile ? '0' : '48px',
+      mapFlex: mobile ? 'none' : '1', mapH: mobile ? '46%' : 'auto', panelFlex: mobile ? '1' : 'none', panelPad: mobile ? '16px 16px 20px' : '24px',
+      closable: p.closable ?? true, onClose: p.onClose,
+      frameRef: this.frameRef, mapSrc: this.mapSrc || (this.mapSrc = `./map.html?mode=${tab}&lat=${city.lat}&lng=${city.lng}&zoom=15&id=${this.mapId}${mobile ? '&compact=1' : ''}`),
+      cityName: city.name, citiesOpen: st.citiesOpen, toggleCities: () => this.setState({ citiesOpen: !st.citiesOpen }),
+      cities: cities.map(c => ({ name: c.name, sel: c.id === cityId, fw: c.id === cityId ? 600 : 400, bg: c.id === cityId ? '#FDF0F6' : 'transparent', pick: () => this.setState({ city: c.id, citiesOpen: false, store: null, street: '', pin: 'idle', sgList: [], sgDone: false }, () => this.sync(true)) })),
+      isDelivery: isD, isPickup: !isD,
+      bgD: isD ? '#fff' : 'transparent', fgD: isD ? '#17151A' : '#6B6873', shD: isD ? '0 1px 2px rgba(23,21,26,.08)' : 'none',
+      bgP: !isD ? '#fff' : 'transparent', fgP: !isD ? '#17151A' : '#6B6873', shP: !isD ? '0 1px 2px rgba(23,21,26,.08)' : 'none',
+      pickDelivery: () => this.setState({ tab: 'delivery' }, () => this.sync(true)), pickPickup: () => this.setState({ tab: 'pickup' }, () => this.sync(true)),
+      street, setStreet: (v) => { this.setState({ street: v, sgHide: false }); this.sgSearch(v); }, streetError: p.streetError ?? '',
+      ...(() => {
+        const list = st.sgList || [], q = street.trim(), idx = st.sgIdx ?? -1;
+        const open = !!st.sgFocus && !st.sgHide && q.length >= 3 && (st.sgLoading || st.sgDone);
+        return {
+          sgOpen: open, sgLoading: !!st.sgLoading && !list.length, sgEmpty: !st.sgLoading && st.sgDone && !list.length,
+          sgEmptyText: st.sgErr ? 'Подсказки недоступны — укажите дом пином на карте' : `Не нашли «${q}» — поставьте пин на карте, адрес подставится`,
+          sgRowH: mobile ? '56px' : '48px',
+          sgItems: list.map((s, i) => ({ ...s, hasSub: !!s.sub, bg: i === idx ? '#F7F7F8' : 'transparent', down: (e) => e.preventDefault(), hover: () => this.setState({ sgIdx: i }), pick: () => this.sgPick(s) })),
+          sgFocus: () => { clearTimeout(this.sgBlurT); this.setState({ sgFocus: true }); },
+          sgBlur: () => { this.sgBlurT = setTimeout(() => this.setState({ sgFocus: false, sgIdx: -1 }), 150); },
+          sgKey: (e) => {
+            if (!open || !list.length) return;
+            if (e.key === 'ArrowDown') { e.preventDefault(); this.setState({ sgIdx: (idx + 1) % list.length }); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); this.setState({ sgIdx: idx <= 0 ? list.length - 1 : idx - 1 }); }
+            else if (e.key === 'Enter' && idx >= 0) { e.preventDefault(); this.sgPick(list[idx]); }
+            else if (e.key === 'Escape') { e.preventDefault(); this.setState({ sgHide: true }); }
+          },
+        };
+      })(),
+      entrance: st.entrance, setEntrance: (v) => this.setState({ entrance: v }), flat: st.flat, setFlat: (v) => this.setState({ flat: v }),
+      feeText: D ? money(D.DELIVERY.fee) : '', freeText: D ? money(D.DELIVERY.freeFrom) : '',
+      noPoints: D && points.length === 0,
+      manyPoints: points.length > 4, search, setSearch: (e) => this.setState({ search: e.target.value }),
+      searchEmpty: points.length > 0 && filtered.length === 0,
+      pointsCountText: `${filtered.length} ${D ? D.plural(filtered.length, 'точка', 'точки', 'точек') : ''}`, sortHint: geo ? 'сначала ближние' : 'по алфавиту',
+      noGeo: !geo && points.length > 0, askGeo: () => { this.mapWin && this.mapWin.postMessage({ src: '8mart-parent', locate: true }, '*'); },
+      listRef: this.listRef,
+      stores: filtered.map((s, i) => ({ ...s, nearest: !!geo && i === 0 && !search, meta: s.dist != null ? `${s.dist} · ${s.hours}` : s.hours, bc: store === s.id ? '#EE1D74' : '#E3E2E7', bg: store === s.id ? '#FDF0F6' : '#fff', dot: store === s.id ? '#EE1D74' : 'transparent', pick: () => this.setState({ store: s.id }, () => this.sync(false)) })),
+      title: p.title ?? 'Как получить заказ?', subtitle: p.subtitle ?? 'Цены и наличие зависят от филиала', showTabs: !p.addressOnly, addrMode: !!p.addressOnly,
+      addrTitle: st.addrTitle ?? p.addressTitle ?? '', setAddrTitle: (v) => this.setState({ addrTitle: v }),
+      ctaLabel: p.ctaLabel ?? (isD ? 'Доставить сюда' : 'Заберу здесь'), ctaDisabled: !ok, ctaReason: isD ? 'Укажите улицу и дом' : 'Выберите точку на карте или в списке',
+      confirm: () => p.onConfirm && p.onConfirm({ method: tab, city: city.name, address: isD ? street : (points.find(s => s.id === store) || {}).name, entrance: st.entrance, flat: st.flat, title: st.addrTitle ?? p.addressTitle ?? '' }),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#E6E6EA;font-family:Onest,system-ui,sans-serif;color:#17151A}a{color:#EE1D74}a:hover{color:#D6136A}@keyframes mart-pulse{0%,100%{opacity:.5}50%{opacity:1}}</style></helmet>
+<section style="display:flex;flex-direction:column;gap:48px;padding:48px;width:max-content">
+  <div style="display:flex;gap:48px;align-items:flex-start">
+
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Каталог · 1440</div>
+    <div id="7a" data-screen-label="Каталог 1440" style="position:relative;width:1440px;min-height:900px;background:#F2F2F4;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;gap:16px">
+      <dc-import name="MartHeader" mode="desktop" method="{{ method }}" address="{{ address }}" cart-count="{{ cartCount }}" cart-amount-text="{{ cartAmountText }}" on-method="{{ openMethodD }}" hint-size="100%,80px"></dc-import>
+      <div style="display:grid;grid-template-columns:260px minmax(0,1fr) 340px;gap:16px;padding:0 40px 40px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <aside style="background:#fff;border-radius:24px;padding:12px;display:flex;flex-direction:column;gap:2px">
+            <button type="button" onClick="{{ d.goRoot }}" style="display:flex;align-items:center;height:44px;padding:0 10px;border-radius:14px;border:0;background:{{ d.rootBg }};font:inherit;font-size:15px;font-weight:{{ d.rootFw }};color:#17151A;cursor:pointer;text-align:left" style-hover="background:#F7F7F8">Все категории</button>
+            <sc-for list="{{ d.side }}" as="c" hint-placeholder-count="3">
+              <button type="button" onClick="{{ c.pick }}" style="display:flex;align-items:center;gap:12px;height:48px;padding:0 10px;border-radius:14px;border:0;background:{{ c.bg }};font:inherit;font-size:15px;font-weight:{{ c.fw }};color:#17151A;cursor:pointer;text-align:left" style-hover="background:#F7F7F8"><sc-if value="{{ c.hasImg }}" hint-placeholder-val="{{ true }}"><img src="{{ c.img }}" alt="" style="width:36px;height:36px;border-radius:10px;object-fit:cover;background:#F7F7F8;flex:none"></sc-if><sc-if value="{{ c.noImg }}" hint-placeholder-val="{{ false }}"><span style="width:36px;height:36px;border-radius:10px;background:repeating-linear-gradient(135deg,#F2F2F4 0 8px,#F7F7F8 8px 16px);flex:none;display:block"></span></sc-if>{{ c.name }}</button>
+              <sc-if value="{{ c.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;padding:2px 0 6px 58px">
+                <sc-for list="{{ c.subs }}" as="s" hint-placeholder-count="4"><button type="button" onClick="{{ s.pick }}" style="display:flex;align-items:center;height:36px;padding:0 8px;border-radius:10px;border:0;background:transparent;font:inherit;font-size:14px;font-weight:{{ s.fw }};color:{{ s.fg }};cursor:pointer;text-align:left" style-hover="background:#F7F7F8">{{ s.name }}</button></sc-for>
+              </div></sc-if>
+            </sc-for>
+          </aside>
+          <sc-if value="{{ d.showFilters }}" hint-placeholder-val="{{ true }}">
+            <aside style="background:#fff;border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:16px">
+              <div style="display:flex;align-items:center;justify-content:space-between"><b style="font-size:18px">Фильтры</b><sc-if value="{{ d.hasChips }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ d.resetAll }}" style="border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;color:#EE1D74;cursor:pointer;padding:0">Сбросить</button></sc-if></div>
+              <dc-import name="MartFilters" value="{{ d.filters }}" groups="{{ d.groups }}" on-change="{{ d.setFilters }}" result-count="{{ d.total }}" show-actions="{{ false }}" show-toggles="{{ false }}" hint-size="100%,300px"></dc-import>
+            </aside>
+          </sc-if>
+        </div>
+
+        <main style="display:flex;flex-direction:column;gap:20px;min-width:0">
+          <nav style="display:flex;align-items:center;gap:8px;font-size:14px;color:#6B6873;flex-wrap:wrap">
+            <sc-for list="{{ d.crumbs }}" as="b" hint-placeholder-count="3"><sc-if value="{{ b.sep }}" hint-placeholder-val="{{ true }}"><span>·</span></sc-if><sc-if value="{{ b.isLink }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ b.go }}" style="border:0;background:transparent;padding:0;font:inherit;font-size:14px;color:#6B6873;cursor:pointer" style-hover="color:#17151A">{{ b.label }}</button></sc-if><sc-if value="{{ b.isText }}" hint-placeholder-val="{{ false }}"><span style="color:#17151A">{{ b.label }}</span></sc-if></sc-for>
+          </nav>
+          <div style="display:flex;align-items:baseline;gap:12px"><h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.02em">{{ d.title }}</h1><span style="font-size:16px;color:#9E9BA6">{{ d.countText }}</span></div>
+
+          <sc-if value="{{ d.isRoot }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+              <sc-for list="{{ d.rootTiles }}" as="t" hint-placeholder-count="3"><button type="button" onClick="{{ t.pick }}" style="display:flex;flex-direction:column;gap:12px;padding:8px 8px 16px;border-radius:24px;border:0;background:#fff;font:inherit;color:#17151A;cursor:pointer;text-align:left;transition:box-shadow .15s ease" style-hover="box-shadow:0 8px 24px rgba(23,21,26,.08)"><sc-if value="{{ t.hasImg }}" hint-placeholder-val="{{ true }}"><img src="{{ t.img }}" alt="" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:18px;background:#F7F7F8;display:block"></sc-if><sc-if value="{{ t.noImg }}" hint-placeholder-val="{{ false }}"><span style="width:100%;aspect-ratio:4/3;border-radius:18px;background:repeating-linear-gradient(135deg,#F2F2F4 0 12px,#F7F7F8 12px 24px);display:block"></span></sc-if><span style="display:flex;flex-direction:column;gap:4px;padding:0 8px"><b style="font-size:18px;font-weight:700">{{ t.name }}</b><span style="font-size:13px;color:#6B6873">{{ t.meta }}</span></span></button></sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ d.isCat }}" hint-placeholder-val="{{ false }}">
+            <sc-if value="{{ d.catEmpty }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:80px 24px;text-align:center;background:#fff;border-radius:24px"><b style="font-size:18px">Товаров пока нет</b><span style="font-size:14px;color:#6B6873">Загляните в другие категории</span><button type="button" onClick="{{ d.goRoot }}" style="margin-top:8px;height:44px;padding:0 18px;border-radius:999px;border:0;background:#F7F7F8;font:inherit;font-size:15px;font-weight:600;color:#17151A;cursor:pointer">Все категории</button></div></sc-if>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+              <sc-for list="{{ d.subTiles }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.pick }}" style="display:flex;flex-direction:column;gap:10px;padding:8px 8px 14px;border-radius:20px;border:0;background:#fff;font:inherit;color:#17151A;cursor:pointer;text-align:left;transition:box-shadow .15s ease" style-hover="box-shadow:0 8px 24px rgba(23,21,26,.08)">
+                <sc-if value="{{ t.hasImg }}" hint-placeholder-val="{{ true }}"><img src="{{ t.img }}" alt="" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;background:#F7F7F8;display:block"></sc-if>
+                <sc-if value="{{ t.isAll }}" hint-placeholder-val="{{ false }}"><span style="width:100%;aspect-ratio:4/3;border-radius:14px;background:#FDF0F6;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#EE1D74">Все товары</span></sc-if>
+                <sc-if value="{{ t.noImg }}" hint-placeholder-val="{{ false }}"><span style="width:100%;aspect-ratio:4/3;border-radius:14px;background:repeating-linear-gradient(135deg,#F2F2F4 0 10px,#F7F7F8 10px 20px);display:block"></span></sc-if>
+                <span style="display:flex;flex-direction:column;gap:2px;padding:0 6px"><b style="font-size:16px;font-weight:600">{{ t.name }}</b><span style="font-size:13px;color:#6B6873">{{ t.meta }}</span></span>
+              </button></sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ d.isList }}" hint-placeholder-val="{{ true }}">
+            <sc-if value="{{ d.hasSubChips }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:8px;flex-wrap:wrap"><sc-for list="{{ d.subChips }}" as="c" hint-placeholder-count="5"><dc-import name="MartChip" label="{{ c.name }}" selected="{{ c.sel }}" on-click="{{ c.pick }}" hint-size="90px,36px"></dc-import></sc-for></div></sc-if>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;min-width:0"><sc-for list="{{ d.chips }}" as="c" hint-placeholder-count="0"><dc-import name="MartChip" label="{{ c.label }}" removable="{{ true }}" on-click="{{ c.remove }}" hint-size="100px,36px"></dc-import></sc-for></div>
+              <div style="position:relative;flex:none">
+                <button type="button" onClick="{{ d.toggleSort }}" style="display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;border:0;background:#fff;font:inherit;font-size:14px;font-weight:500;cursor:pointer;color:#17151A">{{ d.sortLabel }}<span style="width:7px;height:7px;border-right:2px solid #6B6873;border-bottom:2px solid #6B6873;transform:rotate(45deg);margin-top:-3px"></span></button>
+                <sc-if value="{{ d.sortOpen }}" hint-placeholder-val="{{ false }}"><div role="listbox" style="position:absolute;right:0;top:44px;width:240px;background:#fff;border-radius:16px;box-shadow:0 8px 24px rgba(23,21,26,.16);padding:6px;display:flex;flex-direction:column;gap:2px;z-index:10">
+                  <sc-for list="{{ d.sorts }}" as="s" hint-placeholder-count="5"><button type="button" role="option" onClick="{{ s.pick }}" style="display:flex;align-items:center;justify-content:space-between;height:44px;padding:0 12px;border-radius:10px;border:0;background:{{ s.bg }};font:inherit;font-size:15px;font-weight:{{ s.fw }};color:#17151A;cursor:pointer;text-align:left" style-hover="background:#F7F7F8">{{ s.label }}<sc-if value="{{ s.sel }}" hint-placeholder-val="{{ false }}"><span style="width:10px;height:6px;border-left:2px solid #EE1D74;border-bottom:2px solid #EE1D74;transform:rotate(-45deg);margin-top:-3px"></span></sc-if></button></sc-for>
+                </div></sc-if>
+              </div>
+            </div>
+            <sc-if value="{{ d.listLoading }}" hint-placeholder-val="{{ false }}"><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px"><sc-for list="{{ d.skelAll }}" as="s" hint-placeholder-count="8"><div style="height:300px;border-radius:20px;background:#fff;padding:8px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;animation:mart-pulse 1.4s ease infinite"><div style="aspect-ratio:1/1;border-radius:14px;background:#F2F2F4"></div><div style="height:16px;width:50%;border-radius:6px;background:#F2F2F4"></div><div style="height:14px;width:80%;border-radius:6px;background:#F2F2F4"></div></div></sc-for></div></sc-if>
+            <sc-if value="{{ d.listResults }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:stretch"><sc-for list="{{ d.items }}" as="it" hint-placeholder-count="8"><dc-import name="MartProductCard" product="{{ it.p }}" qty="{{ it.qty }}" on-qty="{{ d.setQty }}" on-open="{{ d.open }}" hint-size="100%,320px"></dc-import></sc-for></div>
+              <sc-if value="{{ d.hasMore }}" hint-placeholder-val="{{ false }}"><div ref="{{ d.sentRef }}" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px"><sc-for list="{{ d.skelMore }}" as="s" hint-placeholder-count="4"><div style="height:300px;border-radius:20px;background:#fff;padding:8px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;animation:mart-pulse 1.4s ease infinite"><div style="aspect-ratio:1/1;border-radius:14px;background:#F2F2F4"></div><div style="height:16px;width:50%;border-radius:6px;background:#F2F2F4"></div><div style="height:14px;width:80%;border-radius:6px;background:#F2F2F4"></div></div></sc-for></div></sc-if>
+              <sc-if value="{{ d.hasEnd }}" hint-placeholder-val="{{ false }}"><span style="font-size:14px;color:#9E9BA6;text-align:center;padding:8px 0">Это все товары</span></sc-if>
+            </sc-if>
+            <sc-if value="{{ d.listEmpty }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:80px 24px;text-align:center;background:#fff;border-radius:24px"><b style="font-size:18px">Ничего не нашли</b><span style="font-size:14px;color:#6B6873">{{ d.emptyText }}</span><sc-if value="{{ d.hasChips }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ d.resetAll }}" style="margin-top:8px;height:44px;padding:0 18px;border-radius:999px;border:0;background:#F7F7F8;font:inherit;font-size:15px;font-weight:600;color:#17151A;cursor:pointer">Сбросить фильтры</button></sc-if></div></sc-if>
+          </sc-if>
+        </main>
+
+        <div style="position:sticky;top:16px"><dc-import name="MartMiniCart" cart="{{ cartObj }}" method="{{ miniMethod }}" on-change="{{ d.setQty }}" hint-size="100%,440px"></dc-import></div>
+      </div>
+
+      <sc-if value="{{ d.qv.open }}" hint-placeholder-val="{{ false }}"><dc-import name="MartProductView" mode="desktop" product-id="{{ d.qvId }}" cart="{{ cartObj }}" method="{{ method }}" on-qty="{{ d.setQty }}" on-close="{{ d.qv.close }}" hint-size="100%,100%"></dc-import></sc-if>
+      <sc-if value="{{ methodD }}" hint-placeholder-val="{{ false }}"><dc-import name="MartMethodModal" mode="desktop" on-confirm="{{ confirmMethod }}" on-close="{{ closeMethod }}" hint-size="100%,100%"></dc-import></sc-if>
+    </div></div>
+
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Каталог · 390</div>
+    <div id="7b" data-screen-label="Каталог 390" style="position:relative;width:390px;height:844px;background:#F2F2F4;border-radius:8px;overflow:hidden;display:flex;flex-direction:column">
+      <div style="height:44px;background:#fff;flex:none"></div>
+      <div style="background:#fff;border-radius:0 0 24px 24px;padding:8px 16px 14px;display:flex;flex-direction:column;gap:12px;flex:none">
+        <sc-if value="{{ m.isRoot }}" hint-placeholder-val="{{ false }}"><h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em">Каталог</h1><a href="05 Поиск.dc.html" style="display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;border-radius:999px;background:#F7F7F8;text-decoration:none;color:#9E9BA6;font-size:15px"><span style="width:14px;height:14px;border:2px solid #9E9BA6;border-radius:50%;box-sizing:border-box;position:relative;flex:none"><span style="position:absolute;right:-5px;bottom:-4px;width:6px;height:2px;background:#9E9BA6;transform:rotate(45deg)"></span></span>Найти товар</a></sc-if>
+        <sc-if value="{{ m.notRoot }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:8px"><button type="button" onClick="{{ m.back }}" aria-label="Назад" style="width:40px;height:40px;border-radius:50%;border:0;background:#F7F7F8;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;padding:0"><span style="width:9px;height:9px;border-left:2px solid #17151A;border-bottom:2px solid #17151A;transform:rotate(45deg);margin-left:3px"></span></button><h1 style="margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.title }}</h1><span style="font-size:14px;color:#9E9BA6;flex:none">{{ m.countText }}</span></div></sc-if>
+        <sc-if value="{{ m.isList }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px">
+          <button type="button" onClick="{{ m.openFilters }}" style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;border:1.5px solid {{ m.fBc }};background:{{ m.fBg }};color:{{ m.fFg }};font:inherit;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;flex:none">Фильтры<sc-if value="{{ m.hasChips }}" hint-placeholder-val="{{ false }}"><span style="min-width:18px;height:18px;border-radius:9px;background:#fff;color:#EE1D74;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;box-sizing:border-box">{{ m.chipsCount }}</span></sc-if></button>
+          <button type="button" onClick="{{ m.openSort }}" style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;border:1.5px solid #E3E2E7;background:#fff;color:#17151A;font:inherit;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;flex:none">{{ m.sortShort }}<span style="width:6px;height:6px;border-right:2px solid #6B6873;border-bottom:2px solid #6B6873;transform:rotate(45deg);margin-top:-3px"></span></button>
+          <sc-for list="{{ m.subChips }}" as="c" hint-placeholder-count="4"><div style="flex:none"><dc-import name="MartChip" label="{{ c.name }}" selected="{{ c.sel }}" on-click="{{ c.pick }}" hint-size="90px,36px"></dc-import></div></sc-for>
+        </div></sc-if>
+      </div>
+      <div ref="{{ m.scRef }}" style="flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px">
+        <sc-if value="{{ m.isRoot }}" hint-placeholder-val="{{ false }}">
+          <sc-for list="{{ m.rootTiles }}" as="t" hint-placeholder-count="3"><button type="button" onClick="{{ t.pick }}" style="display:flex;align-items:center;gap:14px;padding:10px 16px 10px 10px;border-radius:20px;border:0;background:#fff;font:inherit;color:#17151A;cursor:pointer;text-align:left;flex:none"><sc-if value="{{ t.hasImg }}" hint-placeholder-val="{{ true }}"><img src="{{ t.img }}" alt="" style="width:72px;height:72px;border-radius:14px;object-fit:cover;background:#F7F7F8;flex:none"></sc-if><sc-if value="{{ t.noImg }}" hint-placeholder-val="{{ false }}"><span style="width:72px;height:72px;border-radius:14px;background:repeating-linear-gradient(135deg,#F2F2F4 0 8px,#F7F7F8 8px 16px);flex:none;display:block"></span></sc-if><span style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0"><b style="font-size:17px;font-weight:700">{{ t.name }}</b><span style="font-size:13px;color:#6B6873">{{ t.meta }}</span></span><span style="width:8px;height:8px;border-right:2px solid #9E9BA6;border-bottom:2px solid #9E9BA6;transform:rotate(-45deg);flex:none"></span></button></sc-for>
+        </sc-if>
+        <sc-if value="{{ m.isCat }}" hint-placeholder-val="{{ false }}">
+          <sc-if value="{{ m.catEmpty }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:64px 16px;text-align:center"><b style="font-size:17px">Товаров пока нет</b><span style="font-size:14px;color:#6B6873">Загляните в другие категории</span></div></sc-if>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;flex:none">
+            <sc-for list="{{ m.subTiles }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.pick }}" style="display:flex;flex-direction:column;gap:8px;padding:6px 6px 12px;border-radius:18px;border:0;background:#fff;font:inherit;color:#17151A;cursor:pointer;text-align:left">
+              <sc-if value="{{ t.hasImg }}" hint-placeholder-val="{{ true }}"><img src="{{ t.img }}" alt="" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;background:#F7F7F8;display:block"></sc-if>
+              <sc-if value="{{ t.isAll }}" hint-placeholder-val="{{ false }}"><span style="width:100%;aspect-ratio:4/3;border-radius:12px;background:#FDF0F6;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#EE1D74">Все товары</span></sc-if>
+              <sc-if value="{{ t.noImg }}" hint-placeholder-val="{{ false }}"><span style="width:100%;aspect-ratio:4/3;border-radius:12px;background:repeating-linear-gradient(135deg,#F2F2F4 0 10px,#F7F7F8 10px 20px);display:block"></span></sc-if>
+              <span style="display:flex;flex-direction:column;gap:2px;padding:0 6px"><b style="font-size:15px;font-weight:600;line-height:1.25">{{ t.name }}</b><span style="font-size:12px;color:#6B6873">{{ t.meta }}</span></span>
+            </button></sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ m.isList }}" hint-placeholder-val="{{ true }}">
+          <sc-if value="{{ m.hasChips }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:6px;flex-wrap:wrap;flex:none"><sc-for list="{{ m.chips }}" as="c" hint-placeholder-count="0"><dc-import name="MartChip" label="{{ c.label }}" removable="{{ true }}" on-click="{{ c.remove }}" hint-size="100px,36px"></dc-import></sc-for></div></sc-if>
+          <sc-if value="{{ m.listLoading }}" hint-placeholder-val="{{ false }}"><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;flex:none"><sc-for list="{{ m.skelAll }}" as="s" hint-placeholder-count="4"><div style="height:290px;border-radius:20px;background:#fff;padding:8px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;animation:mart-pulse 1.4s ease infinite"><div style="aspect-ratio:1/1;border-radius:14px;background:#F2F2F4"></div><div style="height:16px;width:50%;border-radius:6px;background:#F2F2F4"></div><div style="height:14px;width:80%;border-radius:6px;background:#F2F2F4"></div></div></sc-for></div></sc-if>
+          <sc-if value="{{ m.listResults }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:stretch;flex:none"><sc-for list="{{ m.items }}" as="it" hint-placeholder-count="4"><dc-import name="MartProductCard" product="{{ it.p }}" qty="{{ it.qty }}" on-qty="{{ m.setQty }}" on-open="{{ m.open }}" hint-size="100%,300px"></dc-import></sc-for></div>
+            <sc-if value="{{ m.hasMore }}" hint-placeholder-val="{{ false }}"><div ref="{{ m.sentRef }}" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;flex:none"><sc-for list="{{ m.skelMore }}" as="s" hint-placeholder-count="2"><div style="height:290px;border-radius:20px;background:#fff;padding:8px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;animation:mart-pulse 1.4s ease infinite"><div style="aspect-ratio:1/1;border-radius:14px;background:#F2F2F4"></div><div style="height:16px;width:50%;border-radius:6px;background:#F2F2F4"></div><div style="height:14px;width:80%;border-radius:6px;background:#F2F2F4"></div></div></sc-for></div></sc-if>
+            <sc-if value="{{ m.hasEnd }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#9E9BA6;text-align:center;padding:8px 0;flex:none">Это все товары</span></sc-if>
+          </sc-if>
+          <sc-if value="{{ m.listEmpty }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:64px 16px;text-align:center;flex:none"><b style="font-size:17px">Ничего не нашли</b><span style="font-size:14px;color:#6B6873">{{ m.emptyText }}</span><sc-if value="{{ m.hasChips }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ m.resetAll }}" style="margin-top:8px;height:44px;padding:0 18px;border-radius:999px;border:0;background:#fff;font:inherit;font-size:15px;font-weight:600;color:#17151A;cursor:pointer">Сбросить фильтры</button></sc-if></div></sc-if>
+        </sc-if>
+      </div>
+      <dc-import name="MartTabBar" active="catalog" cart-count="{{ cartCount }}" hint-size="100%,84px"></dc-import>
+
+      <sc-if value="{{ m.sheetFilters }}" hint-placeholder-val="{{ false }}"><div onClick="{{ m.closeSheet }}" style="position:absolute;inset:0;background:rgba(23,21,26,.45);display:flex;align-items:flex-end;z-index:20">
+        <div onClick="{{ m.stop }}" style="width:100%;max-height:88%;background:#fff;border-radius:24px 24px 0 0;padding:20px 16px 24px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;overflow:auto">
+          <div style="display:flex;align-items:center;justify-content:space-between"><b style="font-size:20px;font-weight:800;letter-spacing:-.02em">Фильтры</b><button type="button" onClick="{{ m.closeSheet }}" aria-label="Закрыть" style="width:40px;height:40px;border-radius:50%;border:0;background:#F7F7F8;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0"><span style="position:relative;width:14px;height:14px;display:block"><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#17151A;transform:rotate(45deg)"></span><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#17151A;transform:rotate(-45deg)"></span></span></button></div>
+          <dc-import name="MartFilters" value="{{ m.filters }}" groups="{{ m.groups }}" on-change="{{ m.setFilters }}" result-count="{{ m.total }}" result-text="{{ m.totalText }}" show-toggles="{{ false }}" on-apply="{{ m.closeSheet }}" hint-size="100%,360px"></dc-import>
+        </div>
+      </div></sc-if>
+      <sc-if value="{{ m.sheetSort }}" hint-placeholder-val="{{ false }}"><div onClick="{{ m.closeSheet }}" style="position:absolute;inset:0;background:rgba(23,21,26,.45);display:flex;align-items:flex-end;z-index:20">
+        <div onClick="{{ m.stop }}" style="width:100%;background:#fff;border-radius:24px 24px 0 0;padding:20px 16px 24px;box-sizing:border-box;display:flex;flex-direction:column;gap:8px">
+          <b style="font-size:20px;font-weight:800;letter-spacing:-.02em;padding:0 4px 8px">Сортировка</b>
+          <sc-for list="{{ m.sorts }}" as="s" hint-placeholder-count="5"><button type="button" onClick="{{ s.pick }}" style="display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 14px;border-radius:16px;border:0;background:{{ s.bg }};font:inherit;font-size:16px;font-weight:{{ s.fw }};color:#17151A;cursor:pointer;text-align:left">{{ s.label }}<span style="width:20px;height:20px;border-radius:50%;border:2px solid {{ s.rc }};box-sizing:border-box;display:flex;align-items:center;justify-content:center"><span style="width:10px;height:10px;border-radius:50%;background:{{ s.dot }}"></span></span></button></sc-for>
+        </div>
+      </div></sc-if>
+      <sc-if value="{{ m.qv.open }}" hint-placeholder-val="{{ false }}"><dc-import name="MartProductView" mode="mobile" product-id="{{ m.qvId }}" cart="{{ cartObj }}" method="{{ method }}" on-qty="{{ m.setQty }}" on-close="{{ m.qv.close }}" hint-size="100%,100%"></dc-import></sc-if>
+      <sc-if value="{{ methodM }}" hint-placeholder-val="{{ false }}"><dc-import name="MartMethodModal" mode="mobile" on-confirm="{{ confirmMethod }}" on-close="{{ closeMethod }}" hint-size="100%,100%"></dc-import></sc-if>
+    </div></div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;level&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;list&quot;,&quot;options&quot;:[&quot;root&quot;,&quot;cat&quot;,&quot;list&quot;],&quot;tsType&quot;:&quot;'root'|'cat'|'list'&quot;,&quot;section&quot;:&quot;Сценарий&quot;},&quot;category&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;stroymaterialy&quot;,&quot;options&quot;:[&quot;stroymaterialy&quot;,&quot;tsvety&quot;,&quot;instrumenty&quot;,&quot;dlya-doma&quot;,&quot;podarki&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Сценарий&quot;},&quot;sub&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Сценарий&quot;},&quot;listState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;results&quot;,&quot;options&quot;:[&quot;results&quot;,&quot;loading&quot;,&quot;empty&quot;],&quot;tsType&quot;:&quot;'results'|'loading'|'empty'&quot;,&quot;section&quot;:&quot;Сценарий&quot;},&quot;showQuick&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Сценарий&quot;},&quot;method&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;delivery&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;delivery&quot;,&quot;pickup&quot;],&quot;tsType&quot;:&quot;'none'|'delivery'|'pickup'&quot;,&quot;section&quot;:&quot;Сценарий&quot;}}">
+class Component extends DCLogic {
+  state = { D: null, nav: { d: {}, m: {} }, cart: null, method: undefined, address: undefined, methodModal: null, favs: null };
+  io = {}; sentEl = {}; refCb = {}; hasMore = {}; timers = {};
+  componentDidMount() { import('./data.js').then(D => { this.setState({ D, favs: D.getFavorites() }); this.offF = D.onFavorites(f => this.setState({ favs: f })); }); }
+  componentWillUnmount() { this.offF && this.offF(); Object.values(this.io).forEach(o => o.disconnect()); Object.values(this.timers).forEach(clearTimeout); }
+  base(k, s) {
+    const p = this.props, D = s.D;
+    return { level: p.level ?? 'list', cat: p.category ?? 'stroymaterialy', sub: p.sub || null, sort: 'popular', filters: {}, shown: D ? D.PAGE_SIZE : 8, loading: false, sortOpen: false, sheet: null,
+      qv: p.showQuick ? ((p.category ?? 'stroymaterialy') === 'tsvety' ? 'f1' : 'b4') : null, qvSize: null, ...(s.nav[k] || {}) };
+  }
+  set(k, patch) { this.setState(s => ({ nav: { ...s.nav, [k]: { ...this.base(k, s), ...patch } } })); }
+  sentRef(k) { return this.refCb[k] || (this.refCb[k] = (el) => { this.sentEl[k] = el; this.watch(k); }); }
+  watch(k) {
+    if (this.io[k]) this.io[k].disconnect();
+    const el = this.sentEl[k]; if (!el || typeof IntersectionObserver === 'undefined') return;
+    this.io[k] = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) this.more(k); }, { rootMargin: '120px' });
+    this.io[k].observe(el);
+  }
+  more(k) {
+    const n = this.base(k, this.state); if (n.loading || !this.hasMore[k]) return;
+    this.set(k, { loading: true }); clearTimeout(this.timers[k]);
+    this.timers[k] = setTimeout(() => { const c = this.base(k, this.state), D = this.state.D; this.set(k, { loading: false, shown: c.shown + (D ? D.PAGE_SIZE : 8) }); setTimeout(() => this.watch(k), 60); }, 700);
+  }
+  renderVals() {
+    const p = this.props, st = this.state, D = st.D;
+    const P = D ? D.PRODUCTS : [], CATS = D ? D.CATEGORIES : [], money = (n) => D ? D.money(n) : '';
+    const pl = (n, a, b, c) => D ? D.plural(n, a, b, c) : '';
+    const goods = (n) => `${n} ${pl(n, 'товар', 'товара', 'товаров')}`;
+    const method = st.method !== undefined ? st.method : (p.method === 'none' ? null : (p.method ?? 'delivery'));
+    const address = st.address ?? (method === 'delivery' ? 'Кабанбай батыра, 11' : method === 'pickup' ? 'пр. Мангилик Ел, 55' : '');
+    const cart = st.cart ?? { b1: 2, b6: 1, b4: 1 };
+    const item = (id) => D ? D.cartItem(id) : null;
+    const setQty = (k) => (id, q) => { if (!method && q > 0) { this.setState({ methodModal: k }); return; } const c = { ...(this.state.cart ?? cart) }; if (q <= 0) delete c[id]; else c[id] = q; this.setState({ cart: c }); };
+    const favs = st.favs || [];
+    const inCat = (c) => P.filter(x => (c.sub || []).some(s => s.slug === x.cat));
+    const listState = p.listState ?? 'results';
+    const disc = (x) => x.oldPrice && x.price ? 1 - x.price / x.oldPrice : 0;
+    const build = (k) => {
+      const n = this.base(k, st), mobile = k === 'm', level = n.level, PS = D ? D.PAGE_SIZE : 8;
+      const cat = CATS.find(c => c.slug === n.cat) || CATS[0] || { slug: '', name: '', sub: [] };
+      const subs = cat.sub || [], sub = subs.find(s => s.slug === n.sub) || null;
+      const scope = inCat(cat).filter(x => !sub || x.cat === sub.slug);
+      const defs = D ? (D.CAT_FILTERS[cat.slug] || []) : [];
+      const F = n.filters || {};
+      const val = (x, attr) => { const v = x[attr]; return Array.isArray(v) ? v : v ? [v] : []; };
+      const groups = defs.map(g => { const cnt = {}; scope.forEach(x => val(x, g.attr).forEach(v => { cnt[v] = (cnt[v] || 0) + 1; })); return { key: g.key, title: g.title, items: Object.entries(cnt) }; }).filter(g => g.items.length > 1 || (F[g.key] || []).length);
+      let list = scope.filter(x => (!F.min || (x.price != null && x.price >= +F.min)) && (!F.max || (x.price != null && x.price <= +F.max)) && defs.every(g => !(F[g.key] || []).length || val(x, g.attr).some(v => F[g.key].includes(v))));
+      const pr = (x) => x.price == null ? Infinity : x.price;
+      if (n.sort === 'cheap') list = [...list].sort((a, b) => pr(a) - pr(b));
+      if (n.sort === 'expensive') list = [...list].sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
+      if (n.sort === 'sale') list = [...list].sort((a, b) => disc(b) - disc(a));
+      if (n.sort === 'bonus') list = [...list].sort((a, b) => (b.bonus || 0) - (a.bonus || 0));
+      const loadingAll = listState === 'loading', empty = listState === 'empty' || list.length === 0;
+      const more = !empty && !loadingAll && n.shown < list.length; this.hasMore[k] = more;
+      const reset = { shown: PS, loading: false };
+      const go = (patch) => { this.set(k, { ...reset, sortOpen: false, sheet: null, qv: null, ...patch }); if (mobile && this.scM) this.scM.scrollTop = 0; };
+      const chips = [];
+      if (F.min || F.max) chips.push({ label: `${F.min ? 'от ' + F.min : ''}${F.min && F.max ? ' ' : ''}${F.max ? 'до ' + F.max : ''} тг`, remove: () => this.set(k, { ...reset, filters: { ...F, min: '', max: '' } }) });
+      defs.forEach(g => (F[g.key] || []).forEach(v => chips.push({ label: v, remove: () => this.set(k, { ...reset, filters: { ...F, [g.key]: F[g.key].filter(x => x !== v) } }) })));
+      const firstImg = (slug) => (P.find(x => x.cat === slug) || {}).img;
+      const crumbsRaw = [['Главная', () => { window.location.href = encodeURI('01 Главная и каталог.dc.html'); }], ['Каталог', level !== 'root' ? () => go({ level: 'root' }) : null]];
+      if (level !== 'root') crumbsRaw.push([cat.name, level === 'list' && subs.length ? () => go({ level: 'cat' }) : null]);
+      if (level === 'list' && sub) crumbsRaw.push([sub.name, null]);
+      const sorts = D ? D.SORTS : [], sortCur = sorts.find(s => s[0] === n.sort) || ['popular', 'Сначала популярные'];
+      const qvP = n.qv ? P.find(x => x.id === n.qv) : null;
+      const qv = (() => {
+        if (!qvP) return { open: false };
+        const vs = qvP.variants || null, v = vs ? (vs.find(x => x.id === n.qvSize) || vs[0]) : null;
+        const colors = qvP.colors || null, color = colors ? (colors.includes(n.qvColor) ? n.qvColor : colors[0]) : null;
+        const id = v ? v.id + (color ? '|' + color : '') : qvP.id, price = v ? v.price : qvP.price, img = v ? v.img : qvP.img, q = cart[id] || 0;
+        const s = subs.find(x => x.slug === qvP.cat) || {}, fav = favs.includes(qvP.id);
+        const specs = (vs ? [] : [['Фасовка', qvP.pack]]).concat([['Раздел', s.name || cat.name]]).filter(r => r[1]).map(r => ({ k: r[0], v: r[1] }));
+        return { open: true, name: qvP.name, img, catName: s.name || cat.name, priceText: price == null ? 'Цена уточняется' : money(price), priceFs: price == null ? '20px' : '28px', priceFsM: price == null ? '18px' : '24px',
+          hasOld: !v && !!qvP.oldPrice, oldText: money(qvP.oldPrice), discText: qvP.oldPrice ? '−' + Math.round(disc(qvP) * 100) + '%' : '',
+          hasBonus: !!qvP.bonus, bonusText: qvP.bonus && D ? D.bonusText(qvP.bonus) + ' за 1 шт' : '',
+          hasVariants: !!vs, variants: (vs || []).map(x => { const on = v && x.id === v.id; return { size: x.size, price: money(x.price), bc: on ? '#EE1D74' : '#E3E2E7', bg: on ? '#FDF0F6' : '#fff', fw: on ? 700 : 500, pick: () => this.set(k, { qvSize: x.id }) }; }),
+          hasColors: !!colors && colors.length > 1, colorName: color || '', colors: (colors || []).map(cn => { const on = cn === color, sw = { 'Розовый': '#F4A6C0', 'Красный': '#D7263D', 'Белый': '#FFFFFF', 'Микс': 'conic-gradient(#F4A6C0 0 25%,#FFFFFF 0 50%,#9EC5F0 0 75%,#F7D774 0)', 'Голубой': '#9EC5F0', 'Жёлтый': '#F7D774' }[cn] || '#EEEDF1';
+            return { name: cn, sw, ring: on ? '0 0 0 2px #fff, 0 0 0 4px #EE1D74' : 'inset 0 0 0 1px #E3E2E7', pick: () => this.set(k, { qvColor: cn }) }; }),
+          specs, canAdd: price != null && q === 0, inCart: price != null && q > 0, noPrice: price == null, qty: q, amount: price != null ? money(price) : '', sumText: price != null && q ? money(price * q) : '',
+          add: () => setQty(k)(id, 1), change: (x) => setQty(k)(id, x),
+          favFill: fav ? '#EE1D74' : 'none', favStroke: fav ? '#EE1D74' : '#6B6873', favLabel: fav ? 'Убрать из избранного' : 'В избранное', toggleFav: () => D && D.setFavorite(qvP.id, !fav),
+          close: () => this.set(k, { qv: null, qvSize: null, qvColor: null }), stop: (e) => e.stopPropagation() };
+      })();
+      const back = () => go(level === 'list' && subs.length ? { level: 'cat' } : { level: 'root' });
+      return {
+        isRoot: level === 'root', notRoot: level !== 'root', isCat: level === 'cat', isList: level === 'list',
+        title: level === 'root' ? 'Каталог' : level === 'list' && sub ? sub.name : cat.name,
+        countText: level === 'list' && !loadingAll ? goods(list.length) : '',
+        goRoot: () => go({ level: 'root' }), back, rootBg: level === 'root' ? '#FDF0F6' : 'transparent', rootFw: level === 'root' ? 700 : 500,
+        crumbs: crumbsRaw.map((c, i) => ({ label: c[0], isLink: !!c[1], isText: !c[1], sep: i > 0, go: c[1] })),
+        side: CATS.map(c => { const on = c.slug === cat.slug && level !== 'root'; return { name: c.name, img: c.img, hasImg: !!c.img, noImg: !c.img, bg: on ? '#FDF0F6' : 'transparent', fw: on ? 700 : 500, open: on && c.sub.length > 0,
+          pick: () => go({ level: 'cat', cat: c.slug, sub: null, filters: {} }),
+          subs: c.sub.map(s => { const a = on && level === 'list' && n.sub === s.slug; return { name: s.name, fg: a ? '#EE1D74' : '#17151A', fw: a ? 600 : 400, pick: () => go({ level: 'list', cat: c.slug, sub: s.slug, filters: {} }) }; }) }; }),
+        rootTiles: CATS.map(c => { const cn = inCat(c).length; return { name: c.name, img: c.img, hasImg: !!c.img, noImg: !c.img, meta: c.sub.length ? `${c.sub.length} ${pl(c.sub.length, 'раздел', 'раздела', 'разделов')} · ${goods(cn)}` : 'Товаров пока нет', pick: () => go({ level: 'cat', cat: c.slug, sub: null, filters: {} }) }; }),
+        catEmpty: level === 'cat' && subs.length === 0,
+        subTiles: subs.length ? [{ name: 'Все товары', isAll: true, hasImg: false, noImg: false, meta: goods(inCat(cat).length), pick: () => go({ level: 'list', sub: null }) }].concat(subs.map(s => { const c = P.filter(x => x.cat === s.slug).length, img = firstImg(s.slug); return { name: s.name, img, hasImg: !!img, noImg: !img, isAll: false, meta: c ? goods(c) : 'Пока пусто', pick: () => go({ level: 'list', sub: s.slug }) }; })) : [],
+        hasSubChips: subs.length > 0,
+        subChips: subs.length ? [{ name: 'Все', sel: !sub, pick: () => go({ sub: null }) }].concat(subs.map(s => ({ name: s.name, sel: n.sub === s.slug, pick: () => go({ sub: s.slug }) }))) : [],
+        showFilters: level === 'list',
+        filters: Object.assign({ min: '', max: '' }, ...defs.map(g => ({ [g.key]: [] })), F), groups,
+        setFilters: (v) => this.set(k, { ...reset, filters: v }), resetAll: () => this.set(k, { ...reset, filters: {} }),
+        chips, hasChips: chips.length > 0, chipsCount: chips.length, total: list.length, totalText: goods(list.length),
+        fBc: chips.length ? '#EE1D74' : '#E3E2E7', fBg: chips.length ? '#EE1D74' : '#fff', fFg: chips.length ? '#fff' : '#17151A',
+        sortLabel: sortCur[1], sortShort: sortCur[0] === 'popular' ? 'Популярные' : sortCur[1].replace('Сначала ', '').replace(/^./, c => c.toUpperCase()), sortOpen: n.sortOpen, toggleSort: () => this.set(k, { sortOpen: !n.sortOpen }),
+        sorts: sorts.map(([id, label]) => { const sel = id === n.sort; return { label, sel, fw: sel ? 600 : 400, bg: sel ? '#FDF0F6' : 'transparent', rc: sel ? '#EE1D74' : '#E3E2E7', dot: sel ? '#EE1D74' : 'transparent', pick: () => { this.set(k, { ...reset, sort: id, sortOpen: false, sheet: null }); if (mobile && this.scM) this.scM.scrollTop = 0; } }; }),
+        listLoading: loadingAll, listResults: !empty && !loadingAll, listEmpty: empty && !loadingAll,
+        emptyText: chips.length ? 'Попробуйте изменить или сбросить фильтры' : 'В этом разделе пока нет товаров',
+        items: list.slice(0, n.shown).map(x => ({ p: x, qty: cart[x.id] || 0 })), hasMore: more, hasEnd: !more && !empty && !loadingAll && list.length > PS,
+        skelAll: mobile ? [1, 2, 3, 4] : [1, 2, 3, 4, 5, 6, 7, 8], skelMore: mobile ? [1, 2] : [1, 2, 3, 4], sentRef: this.sentRef(k),
+        qvId: n.qv, setQty: setQty(k), open: (x) => this.set(k, { qv: x.id, qvSize: null, qvColor: null }), qv,
+        sheetFilters: n.sheet === 'filters', sheetSort: n.sheet === 'sort', openFilters: () => this.set(k, { sheet: 'filters' }), openSort: () => this.set(k, { sheet: 'sort' }), closeSheet: () => this.set(k, { sheet: null }), stop: (e) => e.stopPropagation(),
+        scRef: mobile ? (this.scRefCb || (this.scRefCb = (el) => { this.scM = el; })) : null,
+      };
+    };
+    const lines = Object.keys(cart).map(id => { const x = item(id); return x ? { p: x, qty: cart[id], sum: money((x.price || 0) * cart[id]), change: (q) => setQty('d')(id, q) } : null; }).filter(Boolean);
+    const amount = lines.reduce((s, l) => s + (l.p.price || 0) * l.qty, 0), count = lines.reduce((s, l) => s + l.qty, 0);
+    const fee = D ? (method === 'pickup' || amount >= D.DELIVERY.freeFrom ? 0 : D.DELIVERY.fee) : 0;
+    return {
+      d: build('d'), m: build('m'), cartObj: cart, miniMethod: method || 'delivery',
+      method, address, openMethodD: () => this.setState({ methodModal: 'd' }), methodD: st.methodModal === 'd', methodM: st.methodModal === 'm',
+      closeMethod: () => this.setState({ methodModal: null }), confirmMethod: (v) => this.setState({ method: v.method, address: (v.city ? v.city + ', ' : '') + (v.address || ''), methodModal: null }),
+      cartEmpty: count === 0, cartHas: count > 0, cartCount: count, cartTitle: D ? D.itemsTitle(count) : '', cartLines: lines,
+      cartAmountText: money(amount), cartFeeText: fee === 0 ? 'Бесплатно' : money(fee), feeColor: fee === 0 ? '#1DA765' : '#17151A', totalText: money(amount + fee),
+      showProgress: !!D && method !== 'pickup' && amount < D.DELIVERY.freeFrom, progress: D ? Math.min(100, Math.round(amount / D.DELIVERY.freeFrom * 100)) + '%' : '0%',
+      leftText: D ? money(Math.max(0, D.DELIVERY.freeFrom - amount)).replace('тг.', 'тг') : '',
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+{
+  "@@locale": "ru",
+  "tabHome": "Главная",
+  "tabCatalog": "Каталог",
+  "tabCart": "Корзина",
+  "tabProfile": "Профиль",
+  "searchHint": "Искать в 8mart",
+  "howToGet": "Как получить заказ?",
+  "delivery": "Доставка",
+  "pickup": "Самовывоз",
+  "change": "Изменить",
+  "toCart": "В корзину",
+  "checkout": "Оформить",
+  "pay": "Оплатить",
+  "continueShopping": "Продолжить покупки",
+  "cartTitle": "Корзина",
+  "clear": "Очистить",
+  "cartEmpty": "В корзине пусто",
+  "cartEmptyHint": "Стройматериалы и цветы привезём за 60–90 минут",
+  "toCatalog": "В каталог",
+  "itemsCount": "{count, plural, one{{count} товар} few{{count} товара} many{{count} товаров} other{{count} товара}}",
+  "@itemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "soldOutAlert": "Часть товаров раскупили. Удалите их, чтобы оформить заказ",
+  "removeAll": "Удалить все",
+  "soldOut": "Раскупили",
+  "notCounted": "не учитывается",
+  "notInStock": "Нет в наличии в вашем филиале",
+  "goods": "Товары",
+  "total": "Итого",
+  "free": "Бесплатно",
+  "untilFree": "До бесплатной доставки {amount}",
+  "@untilFree": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bonusAfter": "+{n} бонусов начислим после получения заказа",
+  "@bonusAfter": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "splitTitle": "Как привезти заказ",
+  "splitSub": "Тяжёлые товары возим Газелью — только на следующий день",
+  "splitTwo": "Двумя доставками",
+  "splitTogether": "Всё вместе завтра",
+  "splitTitlePickup": "Как забрать заказ",
+  "splitTwoPickup": "Забрать в два приёма",
+  "splitTogetherPickup": "Всё завтра со склада",
+  "courier": "Курьер",
+  "cargo": "Газель",
+  "store": "Точка",
+  "warehouse": "Склад",
+  "shipmentN": "Доставка {i} из {n}",
+  "@shipmentN": {
+    "placeholders": {
+      "i": {
+        "type": "int"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "pickupN": "Самовывоз {i} из {n}",
+  "@pickupN": {
+    "placeholders": {
+      "i": {
+        "type": "int"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "todayCourier": "Сегодня, за 60–90 минут",
+  "tomorrowCargo": "Завтра, 9:00–21:00",
+  "todayPickup": "Сегодня, через 30 минут",
+  "tomorrowPickup": "Завтра с 9:00",
+  "liftToFloor": "Подъём на этаж",
+  "recipient": "Получатель",
+  "name": "Имя",
+  "phone": "Телефон",
+  "comment": "Комментарий",
+  "entrance": "Подъезд",
+  "floor": "Этаж",
+  "flat": "Кв.",
+  "whenDeliver": "Когда доставить",
+  "payment": "Оплата",
+  "kaspiSub": "Оплата в приложении Kaspi",
+  "cardOnline": "Картой онлайн",
+  "savedCards": "Сохранённые карты",
+  "newCard": "Новой картой",
+  "newCardSub": "На защищённой странице банка",
+  "offerAgree": "Согласен с условиями оферты и возврата",
+  "errRequired": "Обязательное поле",
+  "errPhone": "Введите номер полностью",
+  "blockedOffer": "Примите условия оферты",
+  "blockedSoldOut": "Удалите раскупленные товары",
+  "blockedMethod": "Выберите способ получения",
+  "blockedName": "Укажите имя получателя",
+  "loginTitle": "Вход",
+  "loginSub": "Пришлём код в WhatsApp",
+  "getCode": "Получить код",
+  "codeTitle": "Введите код",
+  "codeSent": "Отправили в WhatsApp на {phone}",
+  "@codeSent": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "codeWrong": "Неверный код",
+  "pasteCode": "Скопировали код?",
+  "paste": "Вставить",
+  "noWhatsapp": "Нет WhatsApp? Войти через Telegram",
+  "tgTitle": "Вход через Telegram",
+  "tgSteps": "Откройте бота → «Старт» → «Поделиться номером». Мы ждём подтверждение",
+  "openTelegram": "Открыть Telegram",
+  "whatsYourName": "Как вас зовут?",
+  "faceIdOffer": "Входить по Face ID?",
+  "faceIdSub": "Не нужно ждать код при следующем входе",
+  "enable": "Включить",
+  "notNow": "Не сейчас",
+  "offline": "Нет интернета — показываем сохранённый каталог",
+  "addedToCart": "Добавили в корзину",
+  "open": "Открыть",
+  "orderNo": "Заказ №{no}",
+  "@orderNo": {
+    "placeholders": {
+      "no": {
+        "type": "String"
+      }
+    }
+  },
+  "stAccepted": "Заказ принят",
+  "stAssembling": "Собираем заказ",
+  "stCourier": "Курьер в пути",
+  "stCargo": "Газель в пути",
+  "stReady": "Готов к выдаче",
+  "stDelivered": "Доставлен",
+  "stIssued": "Выдан",
+  "stCancelled": "Заказ отменён",
+  "cancelOrder": "Отменить заказ",
+  "keepOrder": "Не отменять",
+  "support": "Написать в поддержку",
+  "refund": "Вернём {amount} в течение 1–3 рабочих дней",
+  "@refund": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "settings": "Настройки",
+  "language": "Язык",
+  "theme": "Тема",
+  "themeSystem": "Как в системе",
+  "themeLight": "Светлая",
+  "themeDark": "Тёмная",
+  "notifications": "Уведомления",
+  "biometrics": "Вход по Face ID / отпечатку",
+  "pushAsk": "Сообщать о статусе заказа?",
+  "pushAskSub": "Пришлём уведомление, когда курьер выедет и когда заказ будет у вас",
+  "allow": "Разрешить",
+  "catalogTitle": "Каталог",
+  "allProducts": "Все товары",
+  "filters": "Фильтры",
+  "sort": "Сортировка",
+  "sortPopular": "Сначала популярные",
+  "sortCheap": "Сначала дешевле",
+  "sortExpensive": "Сначала дороже",
+  "sortSale": "Со скидкой",
+  "sortBonus": "С бонусами",
+  "priceFrom": "Цена от, тг",
+  "priceTo": "до, тг",
+  "onlySale": "Только со скидкой",
+  "reset": "Сбросить",
+  "nothingFound": "Ничего не нашли",
+  "nothingFoundHint": "Ослабьте фильтры или поищите иначе",
+  "endOfList": "Это все товары",
+  "recent": "Недавние",
+  "popularQueries": "Часто ищут",
+  "inCategories": "В категориях",
+  "cancel": "Отмена",
+  "clearHistory": "Очистить",
+  "myOrders": "Мои заказы",
+  "favorites": "Избранное",
+  "addresses": "Адреса",
+  "paymentMethods": "Способы оплаты",
+  "promocodes": "Промокоды",
+  "bonuses": "Бонусы",
+  "personalData": "Личные данные",
+  "emptyYet": "Пока пусто",
+  "activeOrder": "Активный заказ",
+  "history": "История",
+  "repeat": "Повторить",
+  "details": "Подробнее",
+  "addedFromOrder": "Товары из заказа добавлены в корзину",
+  "addAddress": "Добавить адрес",
+  "mainLabel": "Основной",
+  "makeMain": "Сделать основным",
+  "delete": "Удалить",
+  "addressTitle": "Название",
+  "street": "Улица, дом",
+  "done": "Готово",
+  "deleteAddressQ": "Удалить адрес?",
+  "kaspiNoBind": "Оплата в приложении Kaspi, привязка не нужна",
+  "cardsByGateway": "Новая карта сохраняется при оплате на защищённой странице банка — мы видим только последние 4 цифры",
+  "copy": "Копировать",
+  "copied": "Промокод скопирован",
+  "promoExpired": "Истёк",
+  "promoUsed": "Использован",
+  "onAccount": "На счёте",
+  "changePhone": "Сменить телефон",
+  "deleteAccount": "Удалить аккаунт",
+  "deleteAccountText": "История заказов, адреса, карты и бонусы удалятся без возможности восстановления",
+  "accountDeleted": "Аккаунт удалён. Будем рады видеть вас снова",
+  "save": "Сохранить",
+  "logout": "Выйти",
+  "newPhone": "Новый телефон",
+  "noInternet": "Нет интернета",
+  "noInternetHint": "Проверьте подключение — каталог появится, как только сеть вернётся",
+  "retry": "Повторить попытку",
+  "updateTitle": "Обновите приложение",
+  "updateText": "Эта версия больше не поддерживается. Обновление займёт минуту",
+  "update": "Обновить",
+  "favoritesEmptyHint": "Нажмите на сердце на карточке товара",
+  "ordersEmptyHint": "Здесь появятся ваши заказы",
+  "supportPhone": "Позвонить",
+  "accrued": "Начислено",
+  "orderCancelled": "Отменён",
+  "orderDone": "Выполнен",
+  "showN": "{count, plural, one{Показать {count} товар} few{Показать {count} товара} many{Показать {count} товаров} other{Показать {count} товара}}",
+  "@showN": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "allResults": "Все результаты · {count}",
+  "@allResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bonusRules": "1 бонус = 1 тг. Начисляем после получения заказа, у каждого товара своё количество. Списать можно до {pct}% суммы товаров",
+  "@bonusRules": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "validUntil": "{cond} · {until}",
+  "@validUntil": {
+    "placeholders": {
+      "cond": {
+        "type": "String"
+      },
+      "until": {
+        "type": "String"
+      }
+    }
+  },
+  "documents": "Документы",
+  "aboutApp": "О приложении",
+  "version": "Версия {v}",
+  "pushOrders": "Статус заказа",
+  "pushOrdersSub": "Сборка, курьер, доставка, возврат денег. Рекомендуем не выключать",
+  "pushPromo": "Акции и скидки",
+  "pushPromoSub": "Промокоды, распродажи, подборки — не чаще раза в неделю",
+  "pushBonus": "Бонусы",
+  "pushBonusSub": "Начисление бонусов после получения заказа",
+  "pushCart": "Забытая корзина",
+  "pushCartSub": "Напомним о товарах в корзине через сутки",
+  "pushSystemOff": "Уведомления выключены в настройках телефона",
+  "openSettings": "Открыть настройки",
+  "docOffer": "Публичная оферта",
+  "docPrivacy": "Политика конфиденциальности",
+  "docDelivery": "Условия доставки и возврата",
+  "docBonus": "Правила бонусной программы",
+  "docPd": "Согласие на обработку персональных данных",
+  "docLicenses": "Лицензии открытого ПО",
+  "rateApp": "Оценить приложение",
+  "langRu": "Русский",
+  "langKk": "Қазақша",
+  "@version": {
+    "placeholders": {
+      "v": {
+        "type": "String"
+      }
+    }
+  },
+  "dealsShelf": "Выгодная полка",
+  "seeAll": "Все",
+  "chipAll": "Все",
+  "findProduct": "Найти товар",
+  "noGoodsYet": "Товаров пока нет",
+  "noGoodsHint": "Загляните в другие категории",
+  "resetFilters": "Сбросить фильтры",
+  "banner": "баннер",
+  "sectionsCount": "{count, plural, one{{count} раздел} few{{count} раздела} many{{count} разделов} other{{count} раздела}}",
+  "@sectionsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "promoLabel": "Промокод",
+  "promoApply": "Применить",
+  "promoApplied": "Промокод применён",
+  "promoErrNotFound": "Промокод не найден",
+  "promoErrExpired": "Срок действия промокода истёк",
+  "promoErrMinSum": "Промокод действует от {amount}",
+  "removeFromCart": "Удалить из корзины",
+  "perPiece": "за шт",
+  "untilFreeCourier": "До бесплатной доставки курьером {amount}",
+  "bonusCount": "{count, plural, one{+{count} бонус} few{+{count} бонуса} many{+{count} бонусов} other{+{count} бонуса}}",
+  "@promoErrMinSum": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "@untilFreeCourier": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "@bonusCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "checkoutTitle": "Оформление",
+  "dayLabel": "День",
+  "intervalLabel": "Интервал",
+  "byBonus": "Бонусами",
+  "spendBonus": "Списать {amount}",
+  "spendBonusSub": "На счёте {balance} · до {pct}% суммы товаров",
+  "liftSubCalc": "{fee} за единицу за этаж · {units} шт., {floor} этаж — {sum}",
+  "liftSubNoFloor": "Укажите этаж — посчитаем стоимость",
+  "offerPrefix": "Согласен с ",
+  "offerLink": "условиями оферты",
+  "offerSuffix": " и возврата",
+  "@spendBonus": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "@spendBonusSub": {
+    "placeholders": {
+      "balance": {
+        "type": "String"
+      },
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "@liftSubCalc": {
+    "placeholders": {
+      "fee": {
+        "type": "String"
+      },
+      "units": {
+        "type": "int"
+      },
+      "floor": {
+        "type": "int"
+      },
+      "sum": {
+        "type": "String"
+      }
+    }
+  },
+  "share": "Поделиться",
+  "yourWay": "Ваш способ",
+  "descTitle": "Описание",
+  "readMore": "Читать полностью",
+  "collapse": "Свернуть",
+  "specsTitle": "Характеристики",
+  "allSpecs": "Все характеристики · {n}",
+  "inCartBtn": "В корзине",
+  "perUnit": "за {pack}",
+  "@allSpecs": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@perUnit": {
+    "placeholders": {
+      "pack": {
+        "type": "String"
+      }
+    }
+  },
+  "searchedBefore": "Вы искали",
+  "nothingFoundFor": "Ничего не нашли по «{q}»",
+  "nothingFoundSearchHint": "Проверьте написание или попробуйте общее слово: «цемент», «краска», «розы»",
+  "byRelevance": "По релевантности",
+  "@nothingFoundFor": {
+    "placeholders": {
+      "q": {
+        "type": "String"
+      }
+    }
+  }
+}

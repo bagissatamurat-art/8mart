@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#F2F2F4;color:#17151A;font-family:Onest,system-ui,sans-serif}a{color:#EE1D74}a:hover{color:#D6136A}</style></helmet>
+<div style="max-width:1200px;margin:0 auto;padding:40px 24px 80px;display:flex;flex-direction:column;gap:48px">
+  <header style="display:flex;flex-direction:column;gap:8px"><img src="./assets/logo.svg" alt="8mart" style="height:30px;width:auto;align-self:flex-start"><h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.02em">UI Kit</h1><p style="margin:0;color:#6B6873;font-size:15px">Единый источник правды для экранов 8mart. Шрифт Onest, шаг отступов 4, высоты контролов 36 / 40 / 44 / 56.</p></header>
+
+  <section style="display:flex;flex-direction:column;gap:16px"><h2 style="margin:0;font-size:22px;font-weight:700">Цвета</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#EE1D74"></div><b style="font-size:13px">primary</b><span style="font-size:12px;color:#6B6873">#EE1D74</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#D6136A"></div><b style="font-size:13px">primary-hover</b><span style="font-size:12px;color:#6B6873">#D6136A</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#BF0F5E"></div><b style="font-size:13px">primary-active</b><span style="font-size:12px;color:#6B6873">#BF0F5E</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#F7B4D1"></div><b style="font-size:13px">primary-200</b><span style="font-size:12px;color:#6B6873">#F7B4D1</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#FBDCEA"></div><b style="font-size:13px">primary-100</b><span style="font-size:12px;color:#6B6873">#FBDCEA</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#FDF0F6"></div><b style="font-size:13px">primary-50</b><span style="font-size:12px;color:#6B6873">#FDF0F6</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#17151A"></div><b style="font-size:13px">ink-1</b><span style="font-size:12px;color:#6B6873">#17151A</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#6B6873"></div><b style="font-size:13px">ink-2</b><span style="font-size:12px;color:#6B6873">#6B6873</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#9E9BA6"></div><b style="font-size:13px">ink-3</b><span style="font-size:12px;color:#6B6873">#9E9BA6</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#F2F2F4;border:1px solid #E3E2E7"></div><b style="font-size:13px">surface-page</b><span style="font-size:12px;color:#6B6873">#F2F2F4</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#FFFFFF;border:1px solid #E3E2E7"></div><b style="font-size:13px">surface-card</b><span style="font-size:12px;color:#6B6873">#FFFFFF</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#F7F7F8;border:1px solid #E3E2E7"></div><b style="font-size:13px">surface-subtle</b><span style="font-size:12px;color:#6B6873">#F7F7F8</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#E3E2E7"></div><b style="font-size:13px">border</b><span style="font-size:12px;color:#6B6873">#E3E2E7</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#EEEDF1"></div><b style="font-size:13px">divider</b><span style="font-size:12px;color:#6B6873">#EEEDF1</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#1DA765"></div><b style="font-size:13px">success</b><span style="font-size:12px;color:#6B6873">#1DA765</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#F59E0B"></div><b style="font-size:13px">warning</b><span style="font-size:12px;color:#6B6873">#F59E0B</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#E23D3D"></div><b style="font-size:13px">danger</b><span style="font-size:12px;color:#6B6873">#E23D3D</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:12px;background:#F14635"></div><b style="font-size:13px">kaspi</b><span style="font-size:12px;color:#6B6873">#F14635</span></div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px"><h2 style="margin:0;font-size:22px;font-weight:700">Типографика · Onest</h2>
+    <div style="background:#fff;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:16px"><span style="width:110px;font-size:12px;color:#9E9BA6">display 40/800</span><span style="font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.1">Доставим за 60–90 мин</span></div>
+      <div style="display:flex;align-items:baseline;gap:16px"><span style="width:110px;font-size:12px;color:#9E9BA6">h1 32/800</span><span style="font-size:32px;font-weight:800;letter-spacing:-.02em;line-height:1.15">Корзина · 3 товара</span></div>
+      <div style="display:flex;align-items:baseline;gap:16px"><span style="width:110px;font-size:12px;color:#9E9BA6">h2 24/700</span><span style="font-size:24px;font-weight:700;line-height:1.2">Хлеб и выпечка</span></div>
+      <div style="display:flex;align-items:baseline;gap:16px"><span style="width:110px;font-size:12px;color:#9E9BA6">h3 18/600</span><span style="font-size:18px;font-weight:600;line-height:1.3">Способ получения</span></div>
+      <div style="display:flex;align-items:baseline;gap:16px"><span style="width:110px;font-size:12px;color:#9E9BA6">body 16/400</span><span style="font-size:16px;line-height:1.45">Бесплатная доставка от 20 000 тг, иначе 1 000 тг</span></div>
+      <div style="display:flex;align-items:baseline;gap:16px"><span style="width:110px;font-size:12px;color:#9E9BA6">small 14/400</span><span style="font-size:14px;line-height:1.4;color:#6B6873">Цены и наличие зависят от филиала</span></div>
+      <div style="display:flex;align-items:baseline;gap:16px"><span style="width:110px;font-size:12px;color:#9E9BA6">caption 12/500</span><span style="font-size:12px;font-weight:500;color:#9E9BA6">110 г · Товар дня</span></div>
+      <div style="display:flex;align-items:baseline;gap:16px"><span style="width:110px;font-size:12px;color:#9E9BA6">price 16/700</span><span style="font-size:16px;font-weight:700">4 090 тг. <s style="font-weight:400;color:#9E9BA6;font-size:13px">4 590 тг.</s></span></div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px"><h2 style="margin:0;font-size:22px;font-weight:700">Радиусы · Тени · Motion</h2>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div style="width:120px;height:80px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#6B6873">r-8 бейдж</div>
+      <div style="width:120px;height:80px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#6B6873">r-12 фото</div>
+      <div style="width:120px;height:80px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#6B6873">r-16 инпут</div>
+      <div style="width:120px;height:80px;border-radius:20px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#6B6873">r-20 карточка</div>
+      <div style="width:120px;height:80px;border-radius:24px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#6B6873">r-24 панель</div>
+      <div style="width:120px;height:80px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#6B6873">pill кнопки</div>
+      <div style="width:120px;height:80px;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(23,21,26,.06);display:flex;align-items:center;justify-content:center;font-size:12px;color:#6B6873">shadow-1</div>
+      <div style="width:120px;height:80px;border-radius:20px;background:#fff;box-shadow:0 8px 24px rgba(23,21,26,.08);display:flex;align-items:center;justify-content:center;font-size:12px;color:#6B6873">shadow-2</div>
+      <div style="width:120px;height:80px;border-radius:20px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#6B6873;text-align:center">150 ms ease<br>hover/focus</div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px"><h2 style="margin:0;font-size:22px;font-weight:700">Кнопка · MartButton</h2>
+    <div style="background:#fff;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <dc-import name="MartButton" label="Primary" size="56" hint-size="140px,56px"></dc-import>
+        <dc-import name="MartButton" label="Secondary" variant="secondary" size="56" hint-size="140px,56px"></dc-import>
+        <dc-import name="MartButton" label="Ghost" variant="ghost" size="56" hint-size="120px,56px"></dc-import>
+        <dc-import name="MartButton" label="Удалить" variant="danger" size="56" hint-size="140px,56px"></dc-import>
+        <dc-import name="MartButton" variant="kaspi" size="56" hint-size="280px,56px"></dc-import>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <dc-import name="MartButton" label="56" size="56" hint-size="90px,56px"></dc-import>
+        <dc-import name="MartButton" label="44" size="44" hint-size="80px,44px"></dc-import>
+        <dc-import name="MartButton" label="40" size="40" hint-size="70px,40px"></dc-import>
+        <dc-import name="MartButton" label="36" size="36" hint-size="70px,36px"></dc-import>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <dc-import name="MartButton" label="Оформить" amount="4 090 тг." size="56" hint-size="220px,56px"></dc-import>
+        <dc-import name="MartButton" label="Focus" size="56" focused="{{ true }}" hint-size="120px,56px"></dc-import>
+        <dc-import name="MartButton" label="Оформить" amount="4 090 тг." size="56" disabled="{{ true }}" reason="Примите условия оферты" hint-size="220px,56px"></dc-import>
+        <dc-import name="MartButton" label="Оформить" size="56" loading="{{ true }}" hint-size="160px,56px"></dc-import>
+      </div>
+      <p style="margin:0;font-size:13px;color:#6B6873">Основной CTA всегда «текст · разделитель · сумма». Kaspi — официальный SVG кнопки как есть (без суммы), радиус pill; логотип Kaspi (assets/kaspi-logo.svg) — в способах оплаты. Disabled с причиной в title.</p>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px"><h2 style="margin:0;font-size:22px;font-weight:700">Инпут · MartInput</h2>
+    <div style="background:#fff;border-radius:20px;padding:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;align-items:start">
+      <dc-import name="MartInput" label="Имя" hint-size="100%,56px"></dc-import>
+      <dc-import name="MartInput" label="Имя" value="Айгерим" focused="{{ true }}" hint-size="100%,56px"></dc-import>
+      <dc-import name="MartInput" label="Телефон" type="phone" required="{{ true }}" value="+7 (700) 133-90-71" hint-size="100%,56px"></dc-import>
+      <dc-import name="MartInput" label="Телефон" type="phone" required="{{ true }}" value="+7 (700) 1" error="Введите номер полностью" hint-size="100%,80px"></dc-import>
+      <dc-import name="MartInput" label="Квартира" value="14" disabled="{{ true }}" hint-size="100%,56px"></dc-import>
+      <dc-import name="MartInput" label="Код из SMS" type="code" value="4 8 2" hint="Отправили на +7 (700) 133-90-71" hint-size="100%,80px"></dc-import>
+      <dc-import name="MartInput" label="Комментарий курьеру" type="textarea" hint-size="100%,84px"></dc-import>
+      <dc-import name="MartInput" label="Комментарий курьеру" type="textarea" value="Позвоните за 10 минут, домофон не работает" focused="{{ true }}" hint-size="100%,84px"></dc-import>
+    </div>
+    <p style="margin:0;font-size:13px;color:#6B6873">Плавающий лейбл, высота 56 (textarea 84), кольцо фокуса кастомное. Очистка × — только в фокусе и когда заполнено; у телефона очистки нет. Обязательное — красная *.</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px"><h2 style="margin:0;font-size:22px;font-weight:700">Промокод · MartPromo</h2>
+    <div style="background:#fff;border-radius:20px;padding:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;align-items:start">
+      <dc-import name="MartPromo" status="idle" hint-size="100%,56px"></dc-import>
+      <dc-import name="MartPromo" status="applied" code="MART10" discount-text="−1 278 тг." hint-size="100%,56px"></dc-import>
+      <dc-import name="MartPromo" status="notFound" value="MART50" hint-size="100%,80px"></dc-import>
+      <dc-import name="MartPromo" status="expired" value="SPRING" hint-size="100%,80px"></dc-import>
+      <dc-import name="MartPromo" status="minSum" value="BIG20" min-sum="15000" hint-size="100%,80px"></dc-import>
+      <dc-import name="MartPromo" status="loading" value="MART10" hint-size="100%,56px"></dc-import>
+    </div>
+  </section>
+  <section style="display:flex;flex-direction:column;gap:16px"><h2 style="margin:0;font-size:22px;font-weight:700">Отправления · MartShipmentHead, MartSplitChoice</h2>
+    <div style="background:#fff;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:24px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px">
+        <dc-import name="MartShipmentHead" kind="courier" label="Доставка 1 из 2" when="Сегодня, за 60–90 минут" meta="Курьер · 2 товара" fee-text="1 000 тг." hint-size="100%,72px"></dc-import>
+        <dc-import name="MartShipmentHead" kind="cargo" label="Доставка 2 из 2" when="Завтра, 9:00–21:00" meta="Газель · 125 кг · разгрузка у подъезда" fee-text="3 000 тг." hint-size="100%,72px"></dc-import>
+        <dc-import name="MartShipmentHead" kind="cargo" method="pickup" label="Самовывоз 2 из 2" when="Завтра с 9:00" meta="Склад, ш. Коргалжын, 3 · поможем погрузить" fee-text="Бесплатно" hint-size="100%,72px"></dc-import>
+      </div>
+      <dc-import name="MartSplitChoice" hint-size="100%,130px"></dc-import>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px"><h2 style="margin:0;font-size:22px;font-weight:700">Счётчик · MartStepper</h2>
+    <div style="background:#fff;border-radius:20px;padding:24px;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+      <dc-import name="MartStepper" qty="1" size="44" hint-size="120px,44px"></dc-import>
+      <dc-import name="MartStepper" qty="2" size="44" tone="neutral" hint-size="120px,44px"></dc-import>
+      <dc-import name="MartStepper" qty="3" size="36" hint-size="100px,36px"></dc-import>
+      <dc-import name="MartStepper" qty="5" max="5" size="36" tone="neutral" hint-size="100px,36px"></dc-import>
+      <dc-import name="MartStepper" qty="1" size="44" disabled="{{ true }}" hint-size="120px,44px"></dc-import>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px"><h2 style="margin:0;font-size:22px;font-weight:700">Чипы · MartChip</h2>
+    <div style="background:#fff;border-radius:20px;padding:24px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <dc-import name="MartChip" label="Все" selected="{{ true }}" hint-size="70px,36px"></dc-import>
+      <dc-import name="MartChip" label="Гортензии" hint-size="110px,36px"></dc-import>
+      <dc-import name="MartChip" label="Розы" count="12" hint-size="90px,36px"></dc-import>
+      <dc-import name="MartChip" label="Без сахара" removable="{{ true }}" hint-size="130px,36px"></dc-import>
+      <dc-import name="MartChip" label="Много белка" disabled="{{ true }}" hint-size="130px,36px"></dc-import>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px"><h2 style="margin:0;font-size:22px;font-weight:700">Фильтры · MartFilters</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;align-items:start">
+      <div style="background:#fff;border-radius:24px;padding:20px"><dc-import name="MartFilters" result-count="12" hint-size="100%,520px"></dc-import></div>
+      <div style="background:#fff;border-radius:24px;padding:20px"><dc-import name="MartFilters" value="{{ fActive }}" result-count="4" hint-size="100%,560px"></dc-import></div>
+    </div>
+    <p style="margin:0;font-size:13px;color:#6B6873">Desktop — панель под категориями, применяется сразу; активные фильтры дублируются чипами над сеткой. Mobile — кнопка «Фильтры» открывает нижний лист с CTA «Показать · N товаров».</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px"><h2 style="margin:0;font-size:22px;font-weight:700">Карточка товара · MartProductCard</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px">
+      <dc-import name="MartProductCard" product="{{ p1 }}" hint-size="100%,320px"></dc-import>
+      <dc-import name="MartProductCard" product="{{ p2 }}" qty="2" hint-size="100%,320px"></dc-import>
+      <dc-import name="MartProductCard" product="{{ p3 }}" hint-size="100%,320px"></dc-import>
+      <dc-import name="MartProductCard" product="{{ p1 }}" sold-out="{{ true }}" hint-size="100%,320px"></dc-import>
+      <dc-import name="MartProductCard" product="{{ p4 }}" hint-size="100%,320px"></dc-import>
+    </div>
+    <p style="margin:0;font-size:13px;color:#6B6873">Состояния: default · в корзине (счётчик) · без скидки · раскупили · цена не задана (цветы на сайте — 0 тг.).</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px"><h2 style="margin:0;font-size:22px;font-weight:700">Бейджи и алерты</h2>
+    <div style="background:#fff;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span style="padding:4px 8px;border-radius:999px;background:#EE1D74;color:#fff;font-size:12px;font-weight:600">−21%</span>
+        <span style="padding:4px 8px;border-radius:999px;background:#F7F7F8;color:#17151A;font-size:12px;font-weight:500">Товар дня</span>
+        <span style="padding:4px 8px;border-radius:999px;background:#F7F7F8;color:#17151A;font-size:12px;font-weight:500">3 за 2</span>
+        <span style="padding:4px 8px;border-radius:999px;background:#17151A;color:#fff;font-size:12px;font-weight:600">Раскупили</span>
+        <span style="padding:4px 8px;border-radius:999px;background:#EAF7F0;color:#1DA765;font-size:12px;font-weight:600">Доставка бесплатно</span>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:16px;background:#FDEDED;color:#17151A;font-size:14px;line-height:1.4"><span style="width:20px;height:20px;border-radius:50%;background:#E23D3D;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">!</span><span>Часть товаров раскупили. Удалите их, чтобы оформить заказ</span></div>
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:16px;background:#FFF7E8;color:#17151A;font-size:14px;line-height:1.4"><span style="width:20px;height:20px;border-radius:50%;background:#F59E0B;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">!</span><span>Цены и наличие зависят от филиала — выберите способ получения</span></div>
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:16px;background:#EAF7F0;color:#17151A;font-size:14px;line-height:1.4"><span style="width:20px;height:20px;border-radius:50%;background:#1DA765;flex:none"></span><span>До бесплатной доставки осталось 7 220 тг</span></div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { D: null };
+  componentDidMount() { import('./data.js').then(D => this.setState({ D })); }
+  renderVals() {
+    const P = this.state.D ? this.state.D.PRODUCTS : [];
+    const by = (id) => P.find(x => x.id === id);
+    return { fActive: { min: '2000', max: '', brands: ['Knauf'], packs: ['25 кг'], inStock: true, sale: false }, p1: by('b1'), p2: by('b4'), p3: by('b2'), p4: by('f1') };
+  }
+}
+</script>
+</body>
+</html>

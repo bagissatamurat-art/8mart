@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet"></helmet>
+<div style="display:flex;flex-direction:column;gap:8px;font-family:Onest,system-ui,sans-serif;width:100%">
+  <sc-if value="{{ applied }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;justify-content:space-between;box-sizing:border-box;height:56px;padding:0 8px 0 16px;border-radius:16px;background:#EAF7F0;border:1.5px solid #B7E4CC">
+      <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#1DA765;font-weight:600">Промокод применён</span><span style="font-size:15px;font-weight:600;color:#17151A;letter-spacing:.04em">{{ code }}</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px;font-weight:600;color:#1DA765">{{ discountText }}</span>
+        <button type="button" onClick="{{ remove }}" aria-label="Убрать промокод" style="width:36px;height:36px;border-radius:50%;border:0;background:#FFFFFF;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0"><span style="position:relative;width:14px;height:14px;display:block"><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#6B6873;border-radius:1px;transform:rotate(45deg)"></span><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#6B6873;border-radius:1px;transform:rotate(-45deg)"></span></span></button></div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ editing }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;gap:8px;align-items:flex-start">
+      <div style="flex:1;min-width:0"><dc-import name="MartInput" label="Промокод" value="{{ value }}" error="{{ errorText }}" on-change="{{ setValue }}" hint-size="100%,56px"></dc-import></div>
+      <dc-import name="MartButton" label="Применить" variant="secondary" size="56" disabled="{{ applyDisabled }}" loading="{{ loading }}" on-click="{{ apply }}" hint-size="140px,56px"></dc-import>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:100},
+&quot;status&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;idle&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;loading&quot;,&quot;applied&quot;,&quot;notFound&quot;,&quot;expired&quot;,&quot;minSum&quot;],&quot;tsType&quot;:&quot;'idle'|'loading'|'applied'|'notFound'|'expired'|'minSum'&quot;},
+&quot;value&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},
+&quot;code&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;MART10&quot;,&quot;tsType&quot;:&quot;string&quot;},
+&quot;discountText&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;−10%&quot;,&quot;tsType&quot;:&quot;string&quot;},
+&quot;minSum&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:5000,&quot;tsType&quot;:&quot;number&quot;},
+&quot;onApply&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(code:string)=&gt;void&quot;},
+&quot;onRemove&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;}}">
+class Component extends DCLogic {
+  state = { value: '', D: null };
+  componentDidMount() { import('./data.js').then(D => this.setState({ D })); }
+  renderVals() {
+    const p = this.props, D = this.state.D;
+    const status = p.status ?? 'idle'; // idle | loading | applied | notFound | expired | minSum
+    const value = this.state.value || p.value || '';
+    const errs = D ? D.PROMO_ERRORS : {};
+    const errorText = status === 'notFound' ? errs.notFound : status === 'expired' ? errs.expired : status === 'minSum' ? (errs.minSum ? errs.minSum(p.minSum ?? 5000) : '') : '';
+    return {
+      applied: status === 'applied', editing: status !== 'applied', loading: status === 'loading',
+      code: p.code ?? value.toUpperCase() ?? 'CODE', discountText: p.discountText ?? '',
+      value, errorText: errorText || '', applyDisabled: !value,
+      setValue: (v) => this.setState({ value: v }),
+      apply: () => p.onApply && p.onApply(value), remove: () => p.onRemove && p.onRemove(),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>@keyframes authspin{to{transform:rotate(360deg)}}</style></helmet>
+<div style="display:flex;flex-direction:column;gap:20px;width:100%;box-sizing:border-box;font-family:Onest,system-ui,sans-serif;color:#17151A">
+  <sc-if value="{{ isPhone }}" hint-placeholder-val="{{ true }}">
+    <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:6px"><h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em">Вход или регистрация</h2><p style="margin:0;font-size:14px;color:#6B6873;line-height:1.4">Отправим код в WhatsApp. Заказы и адреса сохранятся в профиле</p></div></sc-if>
+    <sc-if value="{{ isChange }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:6px"><h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em">Новый номер</h2><p style="margin:0;font-size:14px;color:#6B6873;line-height:1.4">Отправим код в WhatsApp на новый номер. Заказы и адреса останутся в профиле</p></div></sc-if>
+    <dc-import name="MartInput" label="Телефон" type="phone" required="{{ true }}" value="{{ phone }}" on-change="{{ setPhone }}" error="{{ phoneError }}" hint-size="100%,56px"></dc-import>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <dc-import name="MartButton" label="Получить код в WhatsApp" size="56" full="{{ true }}" disabled="{{ phoneDisabled }}" loading="{{ sending }}" reason="Введите номер полностью" on-click="{{ sendCode }}" hint-size="100%,56px"></dc-import>
+      <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:12px;font-size:13px;color:#9E9BA6"><span style="flex:1;height:1px;background:#EEEDF1"></span>или<span style="flex:1;height:1px;background:#EEEDF1"></span></div>
+      <dc-import name="MartButton" label="Войти через Telegram" variant="ghost" size="56" full="{{ true }}" on-click="{{ openTg }}" hint-size="100%,56px"></dc-import></sc-if>
+    </div>
+    <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}"><p style="margin:0;font-size:12px;color:#9E9BA6;line-height:1.4;text-align:center">Продолжая, вы соглашаетесь с <a href="#" style="color:#6B6873">условиями</a> и <a href="#" style="color:#6B6873">политикой обработки данных</a></p></sc-if>
+  </sc-if>
+  <sc-if value="{{ isCode }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:6px"><h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em">Код из WhatsApp</h2><p style="margin:0;font-size:14px;color:#6B6873;line-height:1.4">Отправили сообщение на {{ phone }} · <button type="button" onClick="{{ back }}" style="border:0;background:transparent;padding:0;font:inherit;font-size:14px;font-weight:600;color:#EE1D74;cursor:pointer">Изменить</button></p></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="position:relative">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+          <sc-for list="{{ cells }}" as="c" hint-placeholder-count="4"><div style="height:64px;border-radius:16px;border:1.5px solid {{ c.bc }};background:{{ c.bg }};box-shadow:{{ c.ring }};display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:{{ c.fg }};transition:all .15s ease">{{ c.ch }}<sc-if value="{{ c.caret }}" hint-placeholder-val="{{ false }}"><span style="width:2px;height:28px;background:#EE1D74;border-radius:1px"></span></sc-if></div></sc-for>
+        </div>
+        <input ref="{{ codeRef }}" value="{{ code }}" onChange="{{ setCode }}" onFocus="{{ codeFocus }}" onBlur="{{ codeBlur }}" disabled="{{ codeLocked }}" inputMode="numeric" autoComplete="one-time-code" autoFocus="{{ true }}" maxLength="4" aria-label="Код из WhatsApp" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;font-size:16px;color:transparent;caret-color:transparent;background:transparent;cursor:text">
+      </div>
+      <sc-if value="{{ hasCodeError }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#E23D3D;padding:0 4px">{{ codeError }}</span></sc-if>
+      <sc-if value="{{ isOk }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#1DA765;padding:0 4px;font-weight:600">Код подтверждён</span></sc-if>
+      <sc-if value="{{ isVerifying }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:8px;font-size:13px;color:#6B6873;padding:0 4px"><span style="width:12px;height:12px;border-radius:50%;border:2px solid #E3E2E7;border-top-color:#EE1D74;box-sizing:border-box;animation:authspin .7s linear infinite"></span>Проверяем код…</span></sc-if>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <sc-if value="{{ canResend }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ resend }}" style="height:44px;border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;color:#EE1D74;cursor:pointer">Отправить код ещё раз</button></sc-if>
+      <sc-if value="{{ waiting }}" hint-placeholder-val="{{ true }}"><span style="height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#9E9BA6">Новый код через {{ timer }}</span></sc-if>
+      <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ openTg }}" style="height:44px;border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;color:#6B6873;cursor:pointer">Нет WhatsApp? Войти через Telegram</button></sc-if>
+      <span style="font-size:12px;color:#9E9BA6;text-align:center">Прототип: верный код — 1234</span>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isTg }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:6px"><h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em">Вход через Telegram</h2><p style="margin:0;font-size:14px;color:#6B6873;line-height:1.4">Бот попросит поделиться номером — так мы найдём ваш профиль</p></div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <sc-for list="{{ tgSteps }}" as="t" hint-placeholder-count="3"><div style="display:flex;align-items:flex-start;gap:12px;font-size:15px;line-height:1.4"><span style="width:28px;height:28px;border-radius:50%;background:{{ t.bg }};color:{{ t.fg }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none">{{ t.n }}</span><span style="padding-top:3px">{{ t.text }}</span></div></sc-for>
+    </div>
+    <sc-if value="{{ showQr }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:center;gap:16px;padding:16px;border-radius:20px;border:1px solid #E3E2E7">
+        <img src="{{ qrSrc }}" alt="QR-код для входа через Telegram" width="132" height="132" style="width:132px;height:132px;display:block;flex:none;border-radius:8px;background:#F7F7F8">
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:0"><b style="font-size:15px;font-weight:600;line-height:1.3">Отсканируйте камерой телефона</b><span style="font-size:13px;color:#6B6873;line-height:1.4">Откроется бот <span style="color:#17151A;font-weight:500">@{{ tgBot }}</span> — дальше всё в Telegram</span></div>
+      </div>
+    </sc-if>
+    <a href="{{ tgLink }}" target="_blank" rel="noopener" onClick="{{ tgOpened }}" style="text-decoration:none;display:block"><dc-import name="MartButton" label="{{ tgBtnLabel }}" variant="{{ tgBtnVariant }}" size="56" full="{{ true }}" hint-size="100%,56px"></dc-import></a>
+    <sc-if value="{{ tgWaiting }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;justify-content:center;gap:10px;height:44px;border-radius:14px;background:#F7F7F8;font-size:14px;color:#6B6873"><span style="width:14px;height:14px;border-radius:50%;border:2px solid #E3E2E7;border-top-color:#EE1D74;box-sizing:border-box;animation:authspin .7s linear infinite"></span>Ждём подтверждения в боте…</div></sc-if>
+    <sc-if value="{{ tgOk }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;justify-content:center;gap:10px;height:44px;border-radius:14px;background:#EAF7F0;font-size:14px;font-weight:600;color:#1DA765">Номер подтверждён · {{ phone }}</div></sc-if>
+    <button type="button" onClick="{{ back }}" style="height:44px;border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;color:#6B6873;cursor:pointer">Войти по коду в WhatsApp</button>
+  </sc-if>
+  <sc-if value="{{ isName }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:6px"><h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em">Как вас зовут?</h2><p style="margin:0;font-size:14px;color:#6B6873;line-height:1.4">Чтобы курьер знал, к кому обращаться</p></div>
+    <dc-import name="MartInput" label="Имя" required="{{ true }}" value="{{ name }}" on-change="{{ setName }}" hint-size="100%,56px"></dc-import>
+    <dc-import name="MartButton" label="Продолжить" size="56" full="{{ true }}" disabled="{{ nameDisabled }}" reason="Укажите имя" on-click="{{ finish }}" hint-size="100%,56px"></dc-import>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:480},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;desktop&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;mobile&quot;],&quot;tsType&quot;:&quot;'desktop'|'mobile'&quot;},&quot;purpose&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;login&quot;,&quot;options&quot;:[&quot;login&quot;,&quot;changePhone&quot;],&quot;tsType&quot;:&quot;'login'|'changePhone'&quot;},
+&quot;step&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;phone&quot;,&quot;options&quot;:[&quot;phone&quot;,&quot;code&quot;,&quot;tg&quot;,&quot;name&quot;],&quot;tsType&quot;:&quot;'phone'|'code'|'tg'|'name'&quot;},&quot;phone&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;code&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;codeError&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:null,&quot;options&quot;:[null,&quot;wrong&quot;,&quot;expired&quot;],&quot;tsType&quot;:&quot;null|'wrong'|'expired'&quot;,&quot;section&quot;:&quot;State&quot;},&quot;phoneError&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;State&quot;},&quot;timer&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:null,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;State&quot;},&quot;newUser&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onDone&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(u:{phone:string,name:string|null})=&gt;void&quot;}}">
+class Component extends DCLogic {
+  state = { step: undefined, phone: undefined, code: undefined, name: '', sending: false, phase: 'idle', codeError: undefined, timer: 45, focus: false, tg: 'idle', D: null };
+  codeRef = React.createRef();
+  componentDidMount() { import('./data.js').then(D => this.setState({ D })); this.t = setInterval(() => this.setState(s => ({ timer: Math.max(0, s.timer - 1) })), 1000); this.focusCode(); }
+  componentWillUnmount() { clearInterval(this.t); clearTimeout(this.vT); clearTimeout(this.tgT); }
+  componentDidUpdate(_, prev) { if (prev.step !== this.state.step) this.focusCode(); }
+  focusCode(n = 0) { setTimeout(() => { const el = this.codeRef.current; if (el && !el.disabled) el.focus(); else if (n < 20) this.focusCode(n + 1); }, 50); }
+  step() { return this.state.step ?? this.props.step ?? 'phone'; }
+  complete(phone, name) {
+    const p = this.props;
+    if (p.purpose === 'changePhone') { p.onDone && p.onDone({ phone, name: null }); return; }
+    if (p.newUser ?? true) this.setState({ step: 'name', phone, phase: 'idle', tg: 'idle' });
+    else p.onDone && p.onDone({ phone, name: null });
+  }
+  verify(code, phone) {
+    this.setState({ phase: 'verifying' });
+    clearTimeout(this.vT);
+    this.vT = setTimeout(() => {
+      const D = this.state.D;
+      if (code === '1234') { this.setState({ phase: 'ok' }); this.vT = setTimeout(() => this.complete(phone), 700); }
+      else { this.setState({ phase: 'idle', codeError: D ? D.FORM_ERRORS.code : 'Неверный код' }, () => this.focusCode()); }
+    }, 600);
+  }
+  renderVals() {
+    const p = this.props, D = this.state.D, st = this.state;
+    const step = this.step();
+    const phone = st.phone ?? p.phone ?? (step === 'tg' ? '+7 (700) 133-90-71' : '');
+    const code = st.code ?? p.code ?? '';
+    const complete = D ? D.phoneComplete(phone) : phone.length >= 18;
+    const propErr = p.codeError === 'wrong' ? (D ? D.FORM_ERRORS.code : '') : p.codeError === 'expired' ? (D ? D.FORM_ERRORS.codeExpired : '') : '';
+    const codeError = st.codeError !== undefined ? st.codeError : propErr;
+    const ok = st.phase === 'ok', busy = st.phase !== 'idle';
+    const cells = [0, 1, 2, 3].map(i => {
+      const ch = code[i] || '', active = st.focus && !busy && i === Math.min(code.length, 3) && (i === code.length || code.length === 4);
+      const caret = active && !ch && !codeError;
+      return { ch, caret, fg: ok ? '#1DA765' : '#17151A', bg: ok ? '#EAF7F0' : '#fff',
+        bc: ok ? '#1DA765' : codeError ? '#E23D3D' : active ? '#EE1D74' : '#E3E2E7',
+        ring: active && !codeError ? '0 0 0 3px rgba(238,29,116,.18)' : 'none' };
+    });
+    const timer = p.timer ?? st.timer;
+    const tg = st.tg;
+    const tgSteps = [['1', (p.mode ?? 'desktop') === 'desktop' ? 'Отсканируйте QR или откройте бота' : 'Откройте бота 8mart в Telegram'], ['2', 'Нажмите «Старт»'], ['3', 'Нажмите «Поделиться номером»']].map(([n, text], i) => ({ n, text, bg: tg === 'ok' ? '#EAF7F0' : '#FDF0F6', fg: tg === 'ok' ? '#1DA765' : '#EE1D74' }));
+    return {
+      isLogin: p.purpose !== 'changePhone', isChange: p.purpose === 'changePhone',
+      isPhone: step === 'phone', isCode: step === 'code', isName: step === 'name', isTg: step === 'tg',
+      phone, setPhone: (v) => this.setState({ phone: v, codeError: undefined }), phoneError: p.phoneError ?? '', phoneDisabled: !complete, sending: st.sending,
+      sendCode: () => { this.setState({ sending: true }); setTimeout(() => this.setState({ sending: false, step: 'code', code: '', codeError: '', phase: 'idle', timer: 45 }, () => this.focusCode()), 600); },
+      codeRef: this.codeRef, code, cells, codeLocked: busy,
+      codeFocus: () => this.setState({ focus: true }), codeBlur: () => this.setState({ focus: false }),
+      setCode: (e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 4); this.setState({ code: v, codeError: '' }); if (v.length === 4) this.verify(v, phone); },
+      hasCodeError: !!codeError && !busy, codeError, isVerifying: st.phase === 'verifying', isOk: ok,
+      back: () => { clearTimeout(this.tgT); this.setState({ step: 'phone', codeError: undefined, tg: 'idle', phase: 'idle' }); },
+      canResend: timer === 0, waiting: timer > 0, timer: `0:${String(timer).padStart(2, '0')}`,
+      resend: () => { this.setState({ timer: 45, code: '', codeError: '' }); this.focusCode(); },
+      openTg: () => this.setState({ step: 'tg', tg: 'idle' }),
+      ...(() => { const desktop = (p.mode ?? 'desktop') === 'desktop', bot = D && D.TG_BOT ? D.TG_BOT : { username: 'mart8_auth_bot', link: (t) => 'https://t.me/mart8_auth_bot?start=' + t };
+        const link = bot.link(this.tgToken || (this.tgToken = 'auth_' + Math.random().toString(36).slice(2, 10)));
+        return { showQr: desktop && tg !== 'ok', qrSrc: 'https://api.qrserver.com/v1/create-qr-code/?size=264x264&margin=0&color=17151A&data=' + encodeURIComponent(link), tgBot: bot.username, tgLink: link,
+          tgBtnLabel: desktop ? 'Открыть Telegram на компьютере' : 'Открыть Telegram', tgBtnVariant: desktop ? 'ghost' : 'primary' }; })(),
+      tgSteps, tgWaiting: tg === 'waiting', tgOk: tg === 'ok',
+      tgOpened: (e) => { e.preventDefault(); this.setState({ tg: 'waiting' }); clearTimeout(this.tgT);
+        this.tgT = setTimeout(() => { const ph = phone || '+7 (700) 133-90-71'; this.setState({ tg: 'ok', phone: ph }); this.tgT = setTimeout(() => this.complete(ph), 900); }, 2500); },
+      name: st.name, setName: (v) => this.setState({ name: v }), nameDisabled: st.name.trim().length < 2, finish: () => p.onDone && p.onDone({ phone, name: st.name }),
+    };
+  }
+}
+</script>
+</body>
+</html>

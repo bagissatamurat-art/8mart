@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#E6E6EA;font-family:Onest,system-ui,sans-serif;color:#17151A}a{color:#EE1D74}a:hover{color:#D6136A}</style></helmet>
+<section style="display:flex;flex-direction:column;gap:32px;padding:48px;width:max-content">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:900px">
+    <h1 style="margin:0;font-size:40px;font-weight:800;letter-spacing:-.02em">8mart · App UI Kit</h1>
+    <p style="margin:0;font-size:16px;line-height:1.5;color:#6B6873;text-wrap:pretty">Источник правды для Flutter-приложения (iOS + Android, один дизайн). Токены светлой и тёмной темы, компоненты с размерами касания. Имена справа — классы в <b style="color:#17151A">flutter_8mart/lib/ui</b>. Отличия от сайта — в APP_AUDIT.md.</p>
+  </div>
+
+  <div style="display:flex;gap:40px;align-items:flex-start">
+    <sc-for list="{{ themes }}" as="t" hint-placeholder-count="2">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:13px;color:#6B6873;font-weight:600">{{ t.title }}</div>
+      <div data-screen-label="{{ t.title }}" style="width:390px;background:{{ t.bg }};border-radius:24px;padding:20px 16px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;color:{{ t.ink1 }}">
+
+        <div style="background:{{ t.surface }};border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px">
+          <b style="font-size:16px">Цвета · MartColors</b>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+            <sc-for list="{{ t.swatches }}" as="s" hint-placeholder-count="16"><div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="height:40px;border-radius:10px;background:{{ s.c }};box-shadow:inset 0 0 0 1px {{ t.border }}"></span><span style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.n }}</span><span style="font-size:10px;color:{{ t.ink3 }}">{{ s.c }}</span></div></sc-for>
+          </div>
+        </div>
+
+        <div style="background:{{ t.surface }};border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:8px">
+          <b style="font-size:16px">Типографика · MartText</b>
+          <span style="font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.15">h1 28/800</span>
+          <span style="font-size:22px;font-weight:800;letter-spacing:-.02em">h2 22/800</span>
+          <span style="font-size:18px;font-weight:700">h3 18/700</span>
+          <span style="font-size:16px;line-height:1.45">body 16/400 — Привезём за 60–90 минут</span>
+          <span style="font-size:14px;color:{{ t.ink2 }}">small 14/400 — 2 товара · 4 090 тг.</span>
+          <span style="font-size:12px;font-weight:500;color:{{ t.ink3 }}">caption 12/500</span>
+          <span style="font-size:16px;font-weight:700">price 16/700 — 4 090 тг.</span>
+        </div>
+
+        <div style="background:{{ t.surface }};border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:16px">Кнопки · MartButton</b><span style="font-size:11px;color:{{ t.ink3 }}">56 / 44 / 36</span></div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:10px;height:56px;border-radius:999px;background:{{ t.primary }};color:#fff;font-size:16px;font-weight:600">Оформить<span style="width:1px;height:16px;background:#fff;opacity:.35"></span><span style="font-weight:500">24 070 тг.</span></div>
+          <img src="./assets/kaspi-pay.svg" alt="Kaspi Pay" style="height:56px;width:100%;object-fit:cover;border-radius:999px;display:block">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <span style="display:flex;align-items:center;justify-content:center;height:44px;border-radius:999px;background:{{ t.p50 }};color:{{ t.primary }};font-size:15px;font-weight:600">Secondary</span>
+            <span style="display:flex;align-items:center;justify-content:center;height:44px;border-radius:999px;box-shadow:inset 0 0 0 1.5px {{ t.border }};font-size:15px;font-weight:600">Ghost</span>
+            <span style="display:flex;align-items:center;justify-content:center;height:44px;border-radius:999px;background:{{ t.errBg }};color:{{ t.err }};font-size:15px;font-weight:600">Danger</span>
+            <span style="display:flex;align-items:center;justify-content:center;height:44px;border-radius:999px;background:{{ t.surface3 }};color:{{ t.ink3 }};font-size:15px;font-weight:600">Disabled</span>
+          </div>
+        </div>
+
+        <div style="background:{{ t.surface }};border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px">
+          <b style="font-size:16px">Поля · MartInput, MartCodeInput</b>
+          <div style="height:56px;border-radius:16px;background:{{ t.surface2 }};padding:8px 16px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center"><span style="font-size:12px;color:{{ t.ink2 }}">Имя <span style="color:{{ t.err }}">*</span></span><span style="font-size:16px">Айгерим</span></div>
+          <div style="height:56px;border-radius:16px;background:{{ t.surface }};box-shadow:inset 0 0 0 1.5px {{ t.primary }},0 0 0 3px {{ t.ring }};padding:8px 16px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center"><span style="font-size:12px;color:{{ t.primary }}">Телефон <span style="color:{{ t.err }}">*</span></span><span style="font-size:16px">+7 (700) 133-90-7<span style="color:{{ t.ink3 }}">_</span></span></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:16px;background:{{ t.errBg }};box-shadow:inset 0 0 0 1.5px {{ t.err }};padding:8px 16px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center"><span style="font-size:12px;color:{{ t.err }}">Телефон <span>*</span></span><span style="font-size:16px">+7 (700) 1</span></div><span style="font-size:13px;color:{{ t.err }};padding-left:4px">Введите номер полностью</span></div>
+          <div style="display:flex;gap:10px;justify-content:center;padding-top:6px"><sc-for list="{{ t.cells }}" as="c" hint-placeholder-count="4"><span style="width:56px;height:64px;border-radius:16px;background:{{ c.bg }};box-shadow:inset 0 0 0 1.5px {{ c.bc }};display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:{{ c.fg }}">{{ c.v }}</span></sc-for></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px 10px 14px;border-radius:14px;background:{{ t.p50 }}"><span style="font-size:14px">Скопировали код?</span><span style="height:36px;padding:0 14px;border-radius:999px;background:{{ t.primary }};color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center">Вставить</span></div>
+        </div>
+
+        <div style="background:{{ t.surface }};border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px">
+          <b style="font-size:16px">Чип, степпер, бонусы</b>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span style="height:36px;padding:0 14px;border-radius:999px;background:{{ t.ink1 }};color:{{ t.surface }};font-size:14px;font-weight:500;display:flex;align-items:center">Розы</span>
+            <span style="height:36px;padding:0 14px;border-radius:999px;box-shadow:inset 0 0 0 1.5px {{ t.border }};font-size:14px;font-weight:500;display:flex;align-items:center">Гортензии</span>
+            <span style="height:36px;padding:0 14px;border-radius:999px;background:{{ t.surface2 }};color:{{ t.ink3 }};font-size:14px;font-weight:500;display:flex;align-items:center">Нет в наличии</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="display:flex;align-items:center;height:40px;border-radius:999px;background:{{ t.surface2 }};width:120px;justify-content:space-between;padding:0 4px;box-sizing:border-box"><span style="width:32px;height:32px;border-radius:50%;background:{{ t.surface }};display:flex;align-items:center;justify-content:center"><span style="width:12px;height:2px;background:{{ t.ink1 }}"></span></span><b style="font-size:15px">2</b><span style="width:32px;height:32px;border-radius:50%;background:{{ t.surface }};position:relative"><span style="position:absolute;left:10px;top:15px;width:12px;height:2px;background:{{ t.ink1 }}"></span><span style="position:absolute;left:15px;top:10px;width:2px;height:12px;background:{{ t.ink1 }}"></span></span></span>
+            <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px 0 4px;border-radius:999px;background:{{ t.okBg }};color:{{ t.okText }};font-size:12px;font-weight:700"><span style="width:16px;height:16px;border-radius:50%;background:{{ t.ok }};color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center">Б</span>+87</span>
+          </div>
+        </div>
+
+        <div style="background:{{ t.surface }};border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px">
+          <b style="font-size:16px">Карточка товара · MartProductCard</b>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <sc-for list="{{ products }}" as="p" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px;padding:8px;border-radius:16px;background:{{ t.surface }};box-shadow:inset 0 0 0 1px {{ t.divider }}">
+              <div style="position:relative;aspect-ratio:1/1;border-radius:12px;background:#FFFFFF;overflow:hidden"><img src="{{ p.img }}" alt="" style="width:100%;height:100%;object-fit:contain;display:block"><span style="position:absolute;right:6px;top:6px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;font-size:15px;color:#6B6873">♡</span></div>
+              <span style="font-size:13px;line-height:1.3;height:34px;overflow:hidden">{{ p.name }}</span>
+              <b style="font-size:15px">{{ p.price }}</b>
+              <span style="height:40px;border-radius:999px;background:{{ t.p50 }};color:{{ t.primary }};font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center">В корзину</span>
+            </div></sc-for>
+          </div>
+          <span style="font-size:12px;color:{{ t.ink3 }};line-height:1.4">Фото — всегда на белой подложке, в тёмной теме тоже.</span>
+        </div>
+
+        <div style="background:{{ t.surface }};border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px">
+          <b style="font-size:16px">Отправление · MartShipmentHead</b>
+          <div style="display:flex;justify-content:space-between;gap:12px"><span style="display:flex;flex-direction:column;gap:4px"><span style="display:flex;align-items:center;gap:8px"><span style="height:22px;padding:0 8px;border-radius:999px;background:{{ t.ink1 }};color:{{ t.surface }};font-size:12px;font-weight:600;display:flex;align-items:center">Газель</span><span style="font-size:13px;color:{{ t.ink2 }}">Доставка 2 из 2</span></span><b style="font-size:16px">Завтра, 9:00–21:00</b><span style="font-size:13px;color:{{ t.ink2 }}">Газель · 125 кг · разгрузка у подъезда</span></span><span style="font-size:15px;font-weight:600;white-space:nowrap">3 000 тг.</span></div>
+        </div>
+
+        <div style="position:relative;height:220px;border-radius:20px;overflow:hidden;background:{{ t.overlay }}">
+          <div style="position:absolute;left:0;right:0;bottom:0;background:{{ t.surface }};border-radius:24px 24px 0 0;padding:8px 16px 16px;display:flex;flex-direction:column;gap:12px">
+            <span style="align-self:center;width:36px;height:5px;border-radius:3px;background:{{ t.border }}"></span>
+            <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:20px;font-weight:800">Фильтры</b><span style="width:36px;height:36px;border-radius:50%;background:{{ t.surface2 }};position:relative"><span style="position:absolute;left:11px;top:17px;width:14px;height:2px;background:{{ t.ink2 }};transform:rotate(45deg)"></span><span style="position:absolute;left:11px;top:17px;width:14px;height:2px;background:{{ t.ink2 }};transform:rotate(-45deg)"></span></span></div>
+            <span style="font-size:13px;color:{{ t.ink2 }}">MartSheet · граббер 36×5, свайп вниз закрывает, до 94 % высоты</span>
+            <span style="height:56px;border-radius:999px;background:{{ t.primary }};color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center">Показать 24 товара</span>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:{{ t.warnBg }};font-size:14px;color:{{ t.ink1 }}"><span style="width:8px;height:8px;border-radius:50%;background:{{ t.warn }}"></span>Нет интернета — показываем сохранённый каталог</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 8px 12px 16px;border-radius:16px;background:{{ t.inverse }};color:{{ t.onInverse }};font-size:14px">Добавили в корзину<span style="font-weight:600;color:{{ t.pOnInverse }};padding:0 8px">Открыть</span></div>
+        </div>
+
+        <div style="margin:0 -16px -20px;border-top:1px solid {{ t.divider }};background:{{ t.surface }};border-radius:0 0 24px 24px;display:grid;grid-template-columns:repeat(4,1fr);height:64px;align-items:center">
+          <sc-for list="{{ t.tabs }}" as="tb" hint-placeholder-count="4"><span style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:600;color:{{ tb.c }}"><span style="width:22px;height:22px;border-radius:7px;box-shadow:inset 0 0 0 2px {{ tb.c }}"></span>{{ tb.l }}</span></sc-for>
+        </div>
+      </div>
+    </div>
+    </sc-for>
+
+    <div style="width:420px;display:flex;flex-direction:column;gap:16px">
+      <div style="background:#fff;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:12px">
+        <b style="font-size:18px">Шкалы</b>
+        <sc-for list="{{ scales }}" as="s" hint-placeholder-count="6"><div style="display:grid;grid-template-columns:120px 1fr;gap:12px;font-size:14px;line-height:1.4"><span style="color:#6B6873">{{ s.k }}</span><span>{{ s.v }}</span></div></sc-for>
+      </div>
+      <div style="background:#fff;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:12px">
+        <b style="font-size:18px">Компонент → Flutter</b>
+        <sc-for list="{{ map }}" as="m" hint-placeholder-count="10"><div style="display:grid;grid-template-columns:150px 1fr;gap:12px;font-size:13px;line-height:1.4;padding-bottom:10px;border-bottom:1px solid #EEEDF1"><b style="font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:600">{{ m.w }}</b><span style="color:#6B6873">{{ m.d }}</span></div></sc-for>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const L = { bg: '#F2F2F4', surface: '#FFFFFF', surface2: '#F7F7F8', surface3: '#EEEDF1', ink1: '#17151A', ink2: '#6B6873', ink3: '#9E9BA6', border: '#E3E2E7', divider: '#EEEDF1',
+      primary: '#EE1D74', pressed: '#D6136A', p50: '#FDF0F6', p100: '#FBDCEA', ring: 'rgba(238,29,116,.18)', ok: '#1DA765', okText: '#13824D', okBg: '#EAF7F0', err: '#E23D3D', errBg: '#FDEDED',
+      warn: '#F59E0B', warnBg: '#FEF3DC', inverse: '#17151A', onInverse: '#FFFFFF', pOnInverse: '#F7B4D1', overlay: 'rgba(23,21,26,.45)' };
+    const Dk = { bg: '#0F0E11', surface: '#1B1A1F', surface2: '#25232A', surface3: '#2E2C33', ink1: '#F4F3F6', ink2: '#A9A6B1', ink3: '#75727D', border: '#34323A', divider: '#2A2830',
+      primary: '#F2438A', pressed: '#EE1D74', p50: '#3A1627', p100: '#4E1A33', ring: 'rgba(242,67,138,.28)', ok: '#2FBF78', okText: '#5BD394', okBg: '#12301F', err: '#FF5C5C', errBg: '#3A1717',
+      warn: '#FBBF24', warnBg: '#3A2E10', inverse: '#F4F3F6', onInverse: '#17151A', pOnInverse: '#D6136A', overlay: 'rgba(0,0,0,.6)' };
+    const names = [['bg', 'bg'], ['surface', 'surface'], ['surface2', 'surface2'], ['surface3', 'surface3'], ['ink1', 'ink1'], ['ink2', 'ink2'], ['ink3', 'ink3'], ['border', 'border'], ['divider', 'divider'], ['primary', 'primary'], ['pressed', 'primaryPressed'], ['p50', 'primary50'], ['ok', 'success'], ['okBg', 'successBg'], ['err', 'error'], ['warn', 'warning']];
+    const mk = (t, title) => ({ ...t, title, swatches: names.map(([k, n]) => ({ n, c: t[k] })),
+      cells: [['4', t.surface, t.border, t.ink1], ['8', t.surface, t.border, t.ink1], ['2', t.surface, t.primary, t.ink1], ['', t.surface2, 'transparent', t.ink1]].map(([v, bg, bc, fg]) => ({ v, bg, bc, fg })),
+      tabs: [['Главная', t.primary], ['Каталог', t.ink3], ['Корзина', t.ink3], ['Профиль', t.ink3]].map(([l, c]) => ({ l, c })) });
+    return {
+      themes: [mk(L, 'Светлая тема · 390'), mk(Dk, 'Тёмная тема · 390')],
+      products: [{ img: './assets/b-cement.png', name: 'Цемент М400, 50 кг', price: '2 890 тг.' }, { img: './assets/p-t4.png', name: 'Дрель-шуруповёрт аккумуляторная 18 В', price: '32 900 тг.' }],
+      scales: [
+        { k: 'Отступы', v: '4 · 8 · 12 · 16 · 20 · 24 · 32 (шаг 4)' },
+        { k: 'Радиусы', v: '8 бейдж · 12 фото · 16 поле · 20 карточка · 24 панель/шторка · pill' },
+        { k: 'Высоты', v: '36 чип · 40 степпер · 44 кнопка S / назад · 56 кнопка, поле · 64 ячейка кода, таб-бар' },
+        { k: 'Касание', v: 'не меньше 44 pt / 48 dp — зона шире визуала' },
+        { k: 'Motion', v: '150 ms easeOut — нажатия; 250 ms — шторки; 300 ms — переходы экранов' },
+        { k: 'Тени', v: 'почти нет: карточки плоские; шторка/тост — 0 8 24 rgba(23,21,26,.08)' },
+      ],
+      map: [
+        { w: 'MartColors', d: 'ThemeExtension с токенами light/dark' },
+        { w: 'MartText', d: 'TextTheme на Onest (вшит в assets/fonts)' },
+        { w: 'MartButton', d: 'primary / secondary / ghost / danger, размеры 56/44/36, amount → split CTA, loading, disabled + reason' },
+        { w: 'KaspiPayButton', d: 'официальный SVG, pill, без суммы' },
+        { w: 'MartInput', d: 'плавающий лейбл, required *, error, clear × в фокусе; phone — PhoneMaskFormatter' },
+        { w: 'MartCodeInput', d: '4 ячейки поверх скрытого TextField, oneTimeCode, вставка из буфера, success' },
+        { w: 'MartChip, MartStepper', d: 'выбор / фильтры; ± с hit-area 44' },
+        { w: 'BonusBadge', d: 'зелёная монетка «Б» +N' },
+        { w: 'MartProductCard', d: 'фото на белом, сердце, 2 строки названия, CTA / степпер' },
+        { w: 'MartCartLine', d: 'строка корзины, распродан — серая, «не учитывается»' },
+        { w: 'MartShipmentHead, SplitChoice', d: 'отправления курьер/Газель, выбор «двумя / вместе»' },
+        { w: 'OrderTimeline', d: 'шкала статуса на каждое отправление' },
+        { w: 'PaymentPicker', d: 'Kaspi / Картой → сохранённые карты + новая' },
+        { w: 'MartSheet', d: 'showMartSheet(): граббер, 94 %, keyboard insets' },
+        { w: 'MartTabBar', d: '4 вкладки + счётчик корзины, safe area снизу' },
+        { w: 'OfflineBanner, MartToast', d: 'нет сети; снекбар с действием' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

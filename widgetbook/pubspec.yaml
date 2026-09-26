@@ -1,0 +1,19 @@
+name: mart8_widgetbook
+description: Галерея компонентов 8mart (Widgetbook). Сверка с App UI Kit.dc.html.
+publish_to: none
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  widgetbook: ^3.8.0
+  mart8:
+    path: ../
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Onest
+      fonts:
+        - asset: packages/mart8/assets/fonts/Onest-Variable.ttf

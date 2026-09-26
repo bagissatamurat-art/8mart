@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#E6E6EA;font-family:Onest,system-ui,sans-serif;color:#17151A}a{color:#EE1D74}a:hover{color:#D6136A}</style></helmet>
+<section style="display:flex;flex-direction:column;gap:48px;padding:48px;width:max-content">
+  <div style="display:flex;gap:48px;align-items:flex-start">
+
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Личный кабинет · 1440</div>
+    <div id="6a" data-screen-label="Кабинет 1440" style="position:relative;width:1440px;min-height:900px;background:#F2F2F4;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;gap:16px">
+      <dc-import name="MartHeader" mode="desktop" method="delivery" address="Кабанбай батыра, 11" cart-count="{{ cartCount }}" cart-amount-text="{{ cartText }}" user-name="{{ userName }}" hint-size="100%,80px"></dc-import>
+      <div style="padding:0 40px 40px;display:grid;grid-template-columns:280px minmax(0,1fr) 340px;gap:16px;align-items:start">
+        <aside style="background:#fff;border-radius:24px;padding:12px;display:flex;flex-direction:column;gap:4px;position:sticky;top:16px">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 12px 16px">
+            <span style="width:48px;height:48px;border-radius:50%;background:#FDF0F6;color:#EE1D74;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex:none">{{ initial }}</span>
+            <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><b style="font-size:16px;font-weight:700">{{ userName }}</b><span style="font-size:13px;color:#6B6873">{{ phone }}</span></span>
+          </div>
+          <sc-for list="{{ nav }}" as="n" hint-placeholder-count="7"><button type="button" onClick="{{ n.pick }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;height:48px;padding:0 12px;border-radius:14px;border:0;background:{{ n.bg }};font:inherit;font-size:15px;font-weight:{{ n.fw }};color:#17151A;cursor:pointer;text-align:left" style-hover="background:#F7F7F8"><span>{{ n.label }}</span><sc-if value="{{ n.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;font-weight:600;color:{{ n.badgeFg }}">{{ n.badge }}</span></sc-if></button></sc-for>
+          <div style="height:1px;background:#EEEDF1;margin:8px 12px"></div>
+          <a href="#1a" style="display:flex;align-items:center;height:48px;padding:0 12px;border-radius:14px;font-size:15px;color:#6B6873;text-decoration:none" style-hover="background:#F7F7F8">Выйти</a>
+        </aside>
+        <main style="display:flex;flex-direction:column;gap:16px;min-width:0">
+          <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.02em">{{ sectionTitle }}</h1>
+          <dc-import name="MartAccount" section="{{ section }}" mode="desktop" loading="{{ loading }}" phone="{{ phone }}" status-href="{{ statusHref }}" on-reorder="{{ reorderD }}" on-change-phone="{{ changePhoneD }}" on-delete-account="{{ deleteD }}" hint-size="100%,560px"></dc-import>
+        </main>
+        <div style="position:sticky;top:16px"><dc-import name="MartMiniCart" cart="{{ miniCart }}" method="{{ miniMethod }}" on-change="{{ setMini }}" hint-size="100%,440px"></dc-import></div>
+      </div>
+      <sc-if value="{{ toastD }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:50%;bottom:32px;transform:translateX(-50%);display:flex;align-items:center;gap:16px;padding:12px 12px 12px 20px;border-radius:999px;background:#17151A;color:#fff;font-size:15px;box-shadow:0 8px 24px rgba(23,21,26,.2);z-index:25"><span>{{ toastText }}</span><a href="#2a" style="height:36px;padding:0 14px;border-radius:999px;background:#fff;color:#17151A;font-size:14px;font-weight:600;text-decoration:none;display:flex;align-items:center">В корзину</a></div></sc-if>
+      <sc-if value="{{ phoneModalD }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;background:rgba(23,21,26,.45);display:flex;align-items:center;justify-content:center;padding:24px;z-index:30">
+        <div role="dialog" aria-modal="true" style="position:relative;width:100%;max-width:440px;background:#fff;border-radius:24px;padding:28px;box-sizing:border-box">
+          <button type="button" onClick="{{ closeModal }}" aria-label="Закрыть" style="position:absolute;right:16px;top:16px;width:40px;height:40px;border-radius:50%;border:0;background:#F7F7F8;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:2"><span style="position:relative;width:14px;height:14px;display:block"><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#17151A;transform:rotate(45deg)"></span><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#17151A;transform:rotate(-45deg)"></span></span></button>
+          <dc-import name="MartAuth" purpose="changePhone" mode="desktop" on-done="{{ phoneChanged }}" hint-size="100%,260px"></dc-import>
+        </div>
+      </div></sc-if>
+      <sc-if value="{{ deleteModalD }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;background:rgba(23,21,26,.45);display:flex;align-items:center;justify-content:center;padding:24px;z-index:30">
+        <div role="dialog" aria-modal="true" style="position:relative;width:100%;max-width:440px;background:#fff;border-radius:24px;padding:28px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px">
+          <button type="button" onClick="{{ closeModal }}" aria-label="Закрыть" style="position:absolute;right:16px;top:16px;width:40px;height:40px;border-radius:50%;border:0;background:#F7F7F8;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0"><span style="position:relative;width:14px;height:14px;display:block"><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#17151A;transform:rotate(45deg)"></span><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#17151A;transform:rotate(-45deg)"></span></span></button>
+          <div style="display:flex;flex-direction:column;gap:8px;padding-right:40px"><h2 style="margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em">Удалить аккаунт?</h2><p style="margin:0;font-size:15px;color:#6B6873;line-height:1.5">{{ deleteText }}</p></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><dc-import name="MartButton" label="Отмена" variant="ghost" size="56" full="{{ true }}" on-click="{{ closeModal }}" hint-size="100%,56px"></dc-import><dc-import name="MartButton" label="Удалить" variant="danger" size="56" full="{{ true }}" loading="{{ deleting }}" on-click="{{ doDelete }}" hint-size="100%,56px"></dc-import></div>
+        </div>
+      </div></sc-if>
+    </div></div>
+
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Профиль · 390</div>
+    <div id="6b" data-screen-label="Кабинет 390 · меню" style="position:relative;width:390px;height:844px;background:#F2F2F4;border-radius:8px;overflow:hidden;display:flex;flex-direction:column">
+      <div style="height:44px;background:#fff;flex:none"></div>
+      <div style="background:#fff;border-radius:0 0 24px 24px;padding:8px 16px 20px;display:flex;align-items:center;gap:12px;flex:none">
+        <span style="width:52px;height:52px;border-radius:50%;background:#FDF0F6;color:#EE1D74;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex:none">{{ initial }}</span>
+        <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><b style="font-size:20px;font-weight:800;letter-spacing:-.02em">{{ userName }}</b><span style="font-size:14px;color:#6B6873">{{ phone }}</span></span>
+      </div>
+      <div style="flex:1;min-height:0;overflow:auto;padding:12px 16px 16px;display:flex;flex-direction:column;gap:12px">
+        <sc-if value="{{ hasActive }}" hint-placeholder-val="{{ true }}"><a href="{{ statusHref }}" style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:20px;background:#fff;border:1.5px solid #F7C6DC;text-decoration:none;color:#17151A;flex:none">
+          <span style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:13px;color:#9E9BA6">Активный заказ №{{ activeId }}</span><span style="width:8px;height:8px;border-right:2px solid #9E9BA6;border-bottom:2px solid #9E9BA6;transform:rotate(-45deg)"></span></span>
+          <span style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><b style="font-size:18px;font-weight:800">{{ activeLabel }}</b><span style="font-size:14px;color:#6B6873;white-space:nowrap">к {{ activeEta }}</span></span>
+          <span style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px"><sc-for list="{{ activeSteps }}" as="s" hint-placeholder-count="4"><span style="height:4px;border-radius:2px;background:{{ s }}"></span></sc-for></span>
+        </a></sc-if>
+        <div style="background:#fff;border-radius:20px;padding:4px;display:flex;flex-direction:column;flex:none">
+          <sc-for list="{{ navM }}" as="n" hint-placeholder-count="7"><button type="button" onClick="{{ n.pick }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;height:56px;padding:0 12px 0 14px;border-radius:16px;border:0;background:{{ n.bg }};font:inherit;font-size:16px;color:#17151A;cursor:pointer;text-align:left"><span>{{ n.label }}</span><span style="display:flex;align-items:center;gap:10px"><sc-if value="{{ n.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="font-size:14px;font-weight:600;color:{{ n.badgeFg }}">{{ n.badge }}</span></sc-if><span style="width:8px;height:8px;border-right:2px solid #9E9BA6;border-bottom:2px solid #9E9BA6;transform:rotate(-45deg)"></span></span></button></sc-for>
+        </div>
+        <a href="#1b" style="display:flex;align-items:center;height:56px;padding:0 18px;border-radius:20px;background:#fff;font-size:16px;color:#6B6873;text-decoration:none;flex:none">Выйти</a>
+      </div>
+      <dc-import name="MartTabBar" active="profile" cart-count="{{ cartCount }}" hint-size="100%,84px"></dc-import>
+      <sc-if value="{{ toastM }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:16px;right:16px;bottom:96px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 10px 10px 16px;border-radius:16px;background:#17151A;color:#fff;font-size:14px;z-index:25"><span>{{ toastText }}</span><a href="#2b" style="height:36px;padding:0 12px;border-radius:999px;background:#fff;color:#17151A;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;flex:none">В корзину</a></div></sc-if>
+    </div></div>
+
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:13px;color:#6B6873;font-weight:500">Раздел · 390</div>
+    <div id="6c" data-screen-label="Кабинет 390 · раздел" style="position:relative;width:390px;height:844px;background:#F2F2F4;border-radius:8px;overflow:hidden;display:flex;flex-direction:column">
+      <div style="height:44px;background:#fff;flex:none"></div>
+      <div style="background:#fff;border-radius:0 0 24px 24px;padding:8px 16px 16px;display:flex;align-items:center;gap:8px;flex:none"><a href="#6b" aria-label="Назад" style="width:40px;height:40px;border-radius:50%;background:#F7F7F8;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:9px;height:9px;border-left:2px solid #17151A;border-bottom:2px solid #17151A;transform:rotate(45deg);margin-left:3px"></span></a><h1 style="margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em;flex:1">{{ sectionTitle }}</h1></div>
+      <div style="flex:1;min-height:0;overflow:auto;padding:12px 16px 16px">
+        <dc-import name="MartAccount" section="{{ section }}" mode="mobile" loading="{{ loading }}" phone="{{ phone }}" status-href="{{ statusHref }}" on-reorder="{{ reorderM }}" on-change-phone="{{ changePhoneM }}" on-delete-account="{{ deleteM }}" hint-size="100%,560px"></dc-import>
+      </div>
+      <dc-import name="MartTabBar" active="profile" cart-count="{{ cartCount }}" hint-size="100%,84px"></dc-import>
+      <sc-if value="{{ toastC }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:16px;right:16px;bottom:96px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 10px 10px 16px;border-radius:16px;background:#17151A;color:#fff;font-size:14px;z-index:25"><span>{{ toastText }}</span><a href="#2b" style="height:36px;padding:0 12px;border-radius:999px;background:#fff;color:#17151A;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;flex:none">В корзину</a></div></sc-if>
+      <sc-if value="{{ phoneModalM }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;background:rgba(23,21,26,.45);display:flex;align-items:flex-end;z-index:30">
+        <div role="dialog" aria-modal="true" style="position:relative;width:100%;background:#fff;border-radius:24px 24px 0 0;padding:24px 16px 20px;box-sizing:border-box">
+          <button type="button" onClick="{{ closeModal }}" aria-label="Закрыть" style="position:absolute;right:12px;top:12px;width:44px;height:44px;border-radius:50%;border:0;background:#F7F7F8;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:2"><span style="position:relative;width:14px;height:14px;display:block"><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#17151A;transform:rotate(45deg)"></span><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#17151A;transform:rotate(-45deg)"></span></span></button>
+          <dc-import name="MartAuth" purpose="changePhone" mode="mobile" on-done="{{ phoneChanged }}" hint-size="100%,260px"></dc-import>
+        </div>
+      </div></sc-if>
+      <sc-if value="{{ deleteModalM }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;background:rgba(23,21,26,.45);display:flex;align-items:flex-end;z-index:30">
+        <div role="dialog" aria-modal="true" style="position:relative;width:100%;background:#fff;border-radius:24px 24px 0 0;padding:24px 16px 20px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px">
+          <button type="button" onClick="{{ closeModal }}" aria-label="Закрыть" style="position:absolute;right:12px;top:12px;width:44px;height:44px;border-radius:50%;border:0;background:#F7F7F8;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0"><span style="position:relative;width:14px;height:14px;display:block"><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#17151A;transform:rotate(45deg)"></span><span style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#17151A;transform:rotate(-45deg)"></span></span></button>
+          <div style="display:flex;flex-direction:column;gap:8px;padding-right:48px"><h2 style="margin:0;font-size:20px;font-weight:800;letter-spacing:-.02em">Удалить аккаунт?</h2><p style="margin:0;font-size:14px;color:#6B6873;line-height:1.5">{{ deleteText }}</p></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><dc-import name="MartButton" label="Удалить" variant="danger" size="56" full="{{ true }}" loading="{{ deleting }}" on-click="{{ doDelete }}" hint-size="100%,56px"></dc-import><dc-import name="MartButton" label="Отмена" variant="ghost" size="56" full="{{ true }}" on-click="{{ closeModal }}" hint-size="100%,56px"></dc-import></div>
+        </div>
+      </div></sc-if>
+    </div></div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;section&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;orders&quot;,&quot;options&quot;:[&quot;orders&quot;,&quot;favorites&quot;,&quot;addresses&quot;,&quot;payment&quot;,&quot;promos&quot;,&quot;bonus&quot;,&quot;profile&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Сценарий&quot;},&quot;loading&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Сценарий&quot;}}">
+class Component extends DCLogic {
+  state = { D: null, section: undefined, modal: null, toast: null, extra: 0, phone: undefined, deleting: false };
+  componentDidMount() { import('./data.js').then(D => this.setState({ D })); }
+  componentWillUnmount() { clearTimeout(this.tT); }
+  renderVals() {
+    const p = this.props, D = this.state.D, st = this.state;
+    const section = st.section ?? p.section ?? 'orders';
+    const U = D ? D.USER : { name: 'Айгерим', phone: '' };
+    const phone = st.phone ?? U.phone;
+    const B = D ? D.BONUS.balance : 0;
+    const items = [['orders', 'Мои заказы'], ['favorites', 'Избранное'], ['addresses', 'Адреса доставки'], ['payment', 'Способы оплаты'], ['promos', 'Промокоды'], ['bonus', 'Бонусы'], ['profile', 'Личные данные']];
+    const active = D ? D.ORDERS.find(o => ['accepted', 'assembling', 'onway', 'ready'].includes(o.status)) : null;
+    const badge = (id) => id === 'bonus' ? [B.toLocaleString('ru-RU'), '#17151A'] : id === 'orders' && active ? ['1 активный', '#EE1D74'] : id === 'promos' && D ? [String(D.USER_PROMOS.filter(x => x.status === 'active').length), '#6B6873'] : null;
+    const mk = (mobile) => items.map(([id, label]) => { const b = badge(id); return { label, hasBadge: !!b, badge: b ? b[0] : '', badgeFg: b ? b[1] : '', bg: !mobile && id === section ? '#FDF0F6' : 'transparent', fw: !mobile && id === section ? 600 : 400, pick: () => this.setState({ section: id }) }; });
+    const ids = active && active.method === 'pickup' ? ['accepted', 'assembling', 'ready', 'done'] : ['accepted', 'assembling', 'onway', 'done'];
+    const cur = active ? ids.indexOf(active.status) : 0;
+    const where = st.modal ? st.modal.where : null, kind = st.modal ? st.modal.kind : null;
+    const toast = (w) => (c) => { clearTimeout(this.tT); const mc = { ...(this.state.cart ?? { b1: 2, b6: 1, b4: 1 }) }; (c.items || []).forEach(it => { mc[it.id] = (mc[it.id] || 0) + (it.qty || 1); }); this.setState({ toast: w, extra: st.extra + c.count, cart: mc }); this.tT = setTimeout(() => this.setState({ toast: null }), 3500); };
+    const miniCart = st.cart ?? { b1: 2, b6: 1, b4: 1 };
+    const cartCount = Object.values(miniCart).reduce((a, b) => a + b, 0);
+    return {
+      section, sectionTitle: (items.find(x => x[0] === section) || items[0])[1], loading: !!p.loading,
+      userName: U.name, initial: (U.name || '?')[0], phone, nav: mk(false), navM: mk(true),
+      statusHref: encodeURI('03 Оформление.dc.html') + '#3a',
+      hasActive: !!active, activeId: active ? active.id : '', activeEta: active ? active.eta : '', activeLabel: active && D ? D.ORDER_STATUS[active.status].label : '',
+      activeSteps: ids.map((_, i) => i < cur ? '#1DA765' : i === cur ? '#EE1D74' : '#EEEDF1'),
+      cartCount, cartText: '', miniCart, miniMethod: 'delivery', setMini: (k, q) => { const c = { ...miniCart }; if (q <= 0) delete c[k]; else c[k] = q; this.setState({ cart: c }); },
+      reorderD: toast('d'), reorderM: toast('c'), toastD: st.toast === 'd', toastM: st.toast === 'b', toastC: st.toast === 'c',
+      toastText: 'Товары из заказа добавлены в корзину',
+      changePhoneD: () => this.setState({ modal: { where: 'd', kind: 'phone' } }), changePhoneM: () => this.setState({ modal: { where: 'm', kind: 'phone' } }),
+      deleteD: () => this.setState({ modal: { where: 'd', kind: 'delete' } }), deleteM: () => this.setState({ modal: { where: 'm', kind: 'delete' } }),
+      phoneModalD: where === 'd' && kind === 'phone', phoneModalM: where === 'm' && kind === 'phone',
+      deleteModalD: where === 'd' && kind === 'delete', deleteModalM: where === 'm' && kind === 'delete',
+      closeModal: () => this.setState({ modal: null, deleting: false }),
+      phoneChanged: (u) => this.setState({ modal: null, phone: u.phone }),
+      deleteText: 'История заказов, адреса, карты и бонусы удалятся без возможности восстановления. Активный заказ будет доставлен.',
+      deleting: st.deleting, doDelete: () => { this.setState({ deleting: true }); setTimeout(() => { this.setState({ deleting: false, modal: null }); window.location.href = encodeURI('01 Главная и каталог.dc.html') + '?deleted=1'; }, 900); },
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#E6E6EA;font-family:Onest,system-ui,sans-serif;color:#17151A}a{color:#EE1D74}a:hover{color:#D6136A}</style></helmet>
+<x-import component-from-global-scope="deck-stage" from="./deck-stage.js" width="1920" height="1080" hint-size="100%,100%">
+
+<section data-label="Обложка" data-screen-label="01" data-speaker-notes="Коротко: что показываем — дизайн мобильного приложения 8mart для iOS и Android." style="background:#EE1D74;color:#fff;box-sizing:border-box;padding:110px 120px;display:flex;justify-content:space-between;align-items:center;gap:80px;font-family:Onest,system-ui,sans-serif;overflow:hidden">
+  <div style="display:flex;flex-direction:column;gap:40px;max-width:900px">
+    <img src="./assets/logo.svg" alt="8mart" style="height:64px;width:auto;align-self:flex-start;filter:brightness(0) invert(1)">
+    <h1 style="margin:0;font-size:132px;font-weight:800;letter-spacing:-.035em;line-height:.95">Приложение 8mart</h1>
+    <p style="margin:0;font-size:40px;line-height:1.35;font-weight:500;text-wrap:pretty">Стройматериалы, инструменты, товары для дома, подарки и цветы — с доставкой за 60–90 минут. iOS и Android.</p>
+  </div>
+  <div style="display:flex;gap:28px;align-items:flex-end;flex:none;margin-bottom:-260px">
+    <img src="./shots/a-home.png" alt="" style="width:330px;border-radius:44px;box-shadow:0 30px 80px rgba(23,21,26,.35);transform:translateY(-120px)">
+    <img src="./shots/f-cart-split.png" alt="" style="width:330px;border-radius:44px;box-shadow:0 30px 80px rgba(23,21,26,.35)">
+  </div>
+</section>
+
+
+<section data-label="Путь покупки" data-screen-label="03" data-speaker-notes="Весь путь от главной до статуса — семь экранов. Способ получения спрашиваем до первой покупки, чтобы сразу показывать реальные сроки." style="background:#F2F2F4;color:#17151A;box-sizing:border-box;padding:90px 100px;display:flex;flex-direction:column;gap:56px;font-family:Onest,system-ui,sans-serif">
+  <h2 style="margin:0;font-size:72px;font-weight:800;letter-spacing:-.03em">От выбора до двери — 7 шагов</h2>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <sc-for list="{{ path }}" as="s" hint-placeholder-count="7"><div style="display:flex;flex-direction:column;gap:18px;width:218px">
+      <img src="{{ s.img }}" alt="" style="width:218px;height:472px;object-fit:cover;object-position:top;border-radius:28px;box-shadow:0 12px 32px rgba(23,21,26,.12)">
+      <span style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:44px;border-radius:50%;background:#EE1D74;color:#fff;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">{{ s.n }}</span><b style="font-size:28px">{{ s.t }}</b></span>
+    </div></sc-for>
+  </div>
+</section>
+
+<section data-label="Все экраны" data-screen-label="Все экраны" data-speaker-notes="Обзор: 30 экранов и состояний. Дальше — по разделам." style="background:#17151A;color:#fff;box-sizing:border-box;padding:80px 90px;display:flex;flex-direction:column;justify-content:center;gap:56px;font-family:Onest,system-ui,sans-serif;overflow:hidden">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:40px"><h2 style="margin:0;font-size:72px;font-weight:800;letter-spacing:-.03em">30 экранов и состояний</h2><span style="font-size:28px;color:#A9A6B1">Каталог · Доставка · Корзина · Оплата · Статус · Кабинет</span></div>
+  <div style="display:grid;grid-template-columns:repeat(15,1fr);gap:14px 12px">
+    <sc-for list="{{ all }}" as="s" hint-placeholder-count="30"><img src="{{ s.img }}" alt="{{ s.l }}" style="width:100%;aspect-ratio:390/844;object-fit:cover;object-position:top;border-radius:16px;background:#fff;display:block"></sc-for>
+  </div>
+</section>
+
+<sc-for list="{{ walls }}" as="w" hint-placeholder-count="1">
+<section data-label="{{ w.t }}" style="background:#F2F2F4;color:#17151A;box-sizing:border-box;padding:80px 90px;display:flex;flex-direction:column;gap:48px;font-family:Onest,system-ui,sans-serif">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:40px"><div style="display:flex;flex-direction:column;gap:12px"><span style="font-size:28px;font-weight:600;color:#EE1D74">{{ w.n }} · Экраны</span><h2 style="margin:0;font-size:72px;font-weight:800;letter-spacing:-.03em">{{ w.t }}</h2></div><span style="font-size:28px;line-height:1.35;color:#6B6873;max-width:720px;text-align:right">{{ w.d }}</span></div>
+  <div style="display:flex;gap:20px;justify-content:center;align-items:flex-start">
+    <sc-for list="{{ w.shots }}" as="s" hint-placeholder-count="8"><div style="display:flex;flex-direction:column;gap:16px;width:200px;flex:none">
+      <img src="{{ s.img }}" alt="" style="width:200px;height:433px;object-fit:cover;object-position:top;border-radius:26px;box-shadow:0 10px 28px rgba(23,21,26,.12);background:#fff">
+      <span style="font-size:24px;font-weight:600;line-height:1.25;text-align:center">{{ s.l }}</span>
+    </div></sc-for>
+  </div>
+</section>
+</sc-for>
+
+<sc-for list="{{ features }}" as="f" hint-placeholder-count="1">
+<section data-label="{{ f.label }}" data-speaker-notes="{{ f.note }}" style="background:{{ f.bg }};color:{{ f.fg }};box-sizing:border-box;padding:100px 120px;display:flex;align-items:center;gap:110px;font-family:Onest,system-ui,sans-serif">
+  <div style="display:flex;gap:32px;flex:none">
+    <sc-for list="{{ f.imgs }}" as="im" hint-placeholder-count="1"><img src="{{ im }}" alt="" style="width:400px;height:866px;object-fit:cover;object-position:top;border-radius:48px;box-shadow:0 24px 64px rgba(23,21,26,.18)"></sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:40px;min-width:0">
+    <span style="font-size:30px;font-weight:600;color:{{ f.accent }}">{{ f.kicker }}</span>
+    <h2 style="margin:0;font-size:76px;font-weight:800;letter-spacing:-.03em;line-height:1.05;text-wrap:pretty">{{ f.t }}</h2>
+    <div style="display:flex;flex-direction:column;gap:26px">
+      <sc-for list="{{ f.points }}" as="p" hint-placeholder-count="3"><div style="display:flex;gap:22px;align-items:flex-start"><span style="width:14px;height:14px;border-radius:50%;background:{{ f.accent }};flex:none;margin-top:16px"></span><span style="font-size:34px;line-height:1.4;color:{{ f.sub }}">{{ p }}</span></div></sc-for>
+    </div>
+  </div>
+</section>
+</sc-for>
+
+<section data-label="Тяжёлые товары" data-screen-label="Отправления" data-speaker-notes="Наша особенность: цемент и гипсокартон едут Газелью завтра, остальное — курьером сегодня. Клиент сам выбирает — двумя доставками или всё вместе." style="background:#17151A;color:#fff;box-sizing:border-box;padding:100px 120px;display:flex;flex-direction:column;gap:64px;font-family:Onest,system-ui,sans-serif">
+  <div style="display:flex;flex-direction:column;gap:20px"><span style="font-size:30px;font-weight:600;color:#F7B4D1">Особенность стройки</span><h2 style="margin:0;font-size:80px;font-weight:800;letter-spacing:-.03em;line-height:1.05;max-width:1500px">Лёгкое — сегодня курьером, тяжёлое — завтра Газелью</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:40px">
+    <sc-for list="{{ split }}" as="s" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:24px;padding:48px;border-radius:40px;background:{{ s.bg }};color:{{ s.fg }}">
+      <span style="display:flex;justify-content:space-between;align-items:baseline;gap:24px"><b style="font-size:44px">{{ s.t }}</b><span style="font-size:36px;font-weight:700">{{ s.fee }}</span></span>
+      <sc-for list="{{ s.rows }}" as="r" hint-placeholder-count="2"><div style="display:flex;gap:20px;align-items:center;padding:22px 26px;border-radius:24px;background:{{ s.rowBg }}"><span style="padding:6px 16px;border-radius:999px;background:{{ r.tagBg }};color:{{ r.tagFg }};font-size:24px;font-weight:600;flex:none">{{ r.tag }}</span><span style="font-size:30px;line-height:1.3">{{ r.t }}</span></div></sc-for>
+    </div></sc-for>
+  </div>
+</section>
+
+<section data-label="Тёмная тема и языки" data-screen-label="Тема" data-speaker-notes="Приложение подстраивается под телефон: тёмная тема и казахский язык из коробки." style="background:#0F0E11;color:#F4F3F6;box-sizing:border-box;padding:100px 120px;display:flex;align-items:center;gap:100px;font-family:Onest,system-ui,sans-serif">
+  <div style="display:flex;flex-direction:column;gap:40px;flex:1;min-width:0">
+    <span style="font-size:30px;font-weight:600;color:#F2438A">Для каждого</span>
+    <h2 style="margin:0;font-size:80px;font-weight:800;letter-spacing:-.03em;line-height:1.05">Тёмная тема, казахский и русский</h2>
+    <sc-for list="{{ access }}" as="p" hint-placeholder-count="4"><div style="display:flex;gap:22px;align-items:flex-start"><span style="width:14px;height:14px;border-radius:50%;background:#F2438A;flex:none;margin-top:16px"></span><span style="font-size:34px;line-height:1.4;color:#A9A6B1">{{ p }}</span></div></sc-for>
+  </div>
+  <div style="display:flex;gap:28px;flex:none">
+    <sc-for list="{{ themes }}" as="t" hint-placeholder-count="2"><div style="width:380px;border-radius:44px;background:{{ t.bg }};padding:28px 22px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px;box-shadow:0 24px 64px rgba(0,0,0,.4)">
+      <span style="font-size:22px;font-weight:600;color:{{ t.ink3 }}">{{ t.name }}</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <sc-for list="{{ products }}" as="p" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:10px;padding:10px;border-radius:20px;background:{{ t.surface }}"><img src="{{ p.img }}" alt="" style="width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:14px;background:#fff"><span style="font-size:17px;line-height:1.3;color:{{ t.ink1 }};height:44px;overflow:hidden">{{ p.name }}</span><b style="font-size:19px;color:{{ t.ink1 }}">{{ p.price }}</b><span style="height:40px;border-radius:999px;background:{{ t.p50 }};color:{{ t.primary }};font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ t.cta }}</span></div></sc-for>
+      </div>
+      <span style="height:60px;border-radius:999px;background:{{ t.primary }};color:#fff;font-size:21px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:12px">{{ t.checkout }}<span style="width:1px;height:18px;background:#fff;opacity:.4"></span>24 070 тг.</span>
+    </div></sc-for>
+  </div>
+</section>
+
+<section data-label="Что дальше" data-screen-label="Дальше" data-speaker-notes="Дизайн и стартовый код готовы. Дальше — решения бизнеса и подключение бэкенда." style="background:#fff;color:#17151A;box-sizing:border-box;padding:100px 120px;display:flex;flex-direction:column;gap:56px;font-family:Onest,system-ui,sans-serif">
+  <h2 style="margin:0;font-size:80px;font-weight:800;letter-spacing:-.03em">Что готово и что нужно от нас</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px">
+    <div style="display:flex;flex-direction:column;gap:22px;padding:48px;border-radius:40px;background:#EAF7F0"><b style="font-size:40px;color:#13824D">Готово</b><sc-for list="{{ ready }}" as="p" hint-placeholder-count="5"><span style="font-size:30px;line-height:1.4">✓&nbsp; {{ p }}</span></sc-for></div>
+    <div style="display:flex;flex-direction:column;gap:22px;padding:48px;border-radius:40px;background:#FDF0F6"><b style="font-size:40px;color:#D6136A">Решить</b><sc-for list="{{ decide }}" as="p" hint-placeholder-count="5"><span style="font-size:30px;line-height:1.4">·&nbsp; {{ p }}</span></sc-for></div>
+  </div>
+</section>
+
+
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const G = './shots/';
+    const R = { 's-home': 'a-home', 's-method': 'e-delivery', 's-product': 'c-product', 's-cart': 'f-cart-split', 's-auth-screen': 'j-auth', 's-checkout': 'g-checkout', 's-status': 'h-status', 's-catalog': 'b-category', 's-results': 'd-results', 's-profile': 'i-profile', 's-orders': 'i-orders' };
+    const img = (i) => G + (R[i] || i) + '.png';
+    const W = (n, t, d, list) => ({ n, t, d, shots: list.map(([f, l]) => ({ img: G + f + '.png', l })) });
+    const walls = [
+      W('01', 'Каталог и поиск', 'Главная, разделы, фильтры, поиск и карточка товара', [['a-home', 'Главная'], ['a-catalog-grid', 'Раздел'], ['b-category', 'Подкатегории'], ['b-filters', 'Фильтры'], ['d-search', 'Подсказки'], ['d-results', 'Результаты'], ['c-product-sheet', 'Быстрый просмотр'], ['c-product', 'Страница товара']]),
+      W('02', 'Доставка и корзина', 'Способ получения, отправления, распроданное, пустая корзина', [['e-delivery', 'Доставка — пин'], ['e-pickup', 'Самовывоз — точки'], ['f-cart-split', 'Две доставки'], ['f-cart-totals', 'Итоги и бонусы'], ['f-cart-soldout', 'Товар раскупили'], ['f-cart-empty', 'Пустая корзина']]),
+      W('03', 'Вход, оплата, статус', 'Код в WhatsApp, оформление, Kaspi и карты, статус и отмена', [['j-auth', 'Вход'], ['j-code', 'Код из WhatsApp'], ['g-checkout', 'Оформление'], ['g-cargo', 'Газель: день и этаж'], ['g-payment', 'Сохранённые карты'], ['h-status', 'Статус'], ['h-cancel', 'Отмена'], ['h-cancelled', 'Заказ отменён']]),
+      W('04', 'Личный кабинет', 'Заказы, избранное, адреса, оплата, промокоды, бонусы, данные', [['i-profile', 'Профиль'], ['i-orders', 'Мои заказы'], ['i-favorites', 'Избранное'], ['i-addresses', 'Адреса'], ['i-payments', 'Способы оплаты'], ['i-promos', 'Промокоды'], ['i-bonus', 'Бонусы'], ['i-personal', 'Личные данные']]),
+    ];
+    const all = walls.flatMap(w => w.shots);
+    const path = [['Главная', 's-home'], ['Способ', 's-method'], ['Товар', 's-product'], ['Корзина', 's-cart'], ['Вход', 's-auth-screen'], ['Оформление', 's-checkout'], ['Статус', 's-status']]
+      .map(([t, i], k) => ({ n: k + 1, t, img: img(i) }));
+    const L = { bg: '#fff', fg: '#17151A', sub: '#6B6873', accent: '#EE1D74' }, P = { bg: '#F2F2F4', fg: '#17151A', sub: '#6B6873', accent: '#EE1D74' };
+    const F = (theme, label, kicker, t, imgs, points, note) => ({ ...theme, label, kicker, t, imgs: imgs.map(img), points, note });
+    const features = [
+      F(L, 'Каталог', 'Каталог и поиск', 'Нужный товар — за пару касаний', ['s-catalog', 's-results'],
+        ['5 разделов: стройматериалы, инструменты, для дома, подарки, цветы', 'Фильтры и сортировка — в шторке снизу, под большой палец', 'Поиск подсказывает категории и товары с ценой по мере ввода'],
+        'Каталог разбит на 5 разделов. Поиск помнит недавние запросы.'),
+      F(P, 'Товар', 'Карточка товара', 'Сразу видно, когда привезём', ['c-product', 'c-product-sheet'],
+        ['Фото, фасовка, цена и бонусы за покупку', 'Сроки и стоимость доставки прямо в карточке — для тяжёлых товаров тоже', 'Избранное и «Поделиться»'],
+        'Главное — клиент видит сроки до того, как положил в корзину.'),
+      F(L, 'Корзина', 'Корзина', 'Честная сумма без сюрпризов', ['f-cart-split', 'f-cart-soldout'],
+        ['Доставка считается сразу: курьер, Газель, бесплатно от 20 000 тг', 'Закончившийся товар помечен и не попадает в сумму', 'Бонусы за заказ видны заранее'],
+        'Никаких сюрпризов на оплате — всё посчитано в корзине.'),
+      F(P, 'Вход', 'Вход без паролей', 'Код в WhatsApp — и готово', ['j-auth', 'j-code'],
+        ['4 цифры в WhatsApp, код подставляется сам', 'Нет WhatsApp — вход через Telegram-бота', 'Дальше — по Face ID или отпечатку'],
+        'Паролей нет вообще. Для Казахстана WhatsApp — самый привычный канал.'),
+      F(L, 'Оформление', 'Оформление и оплата', 'Kaspi в одно касание', ['g-checkout', 'g-payment'],
+        ['Kaspi Pay или карта; сохранённые карты — сразу под рукой', 'Время доставки курьера, день и интервал Газели, подъём на этаж', 'Кнопка всегда показывает итоговую сумму'],
+        'Kaspi — основной способ. Карты сохраняет банк, мы видим только последние цифры.'),
+      F(P, 'Статус', 'После оплаты', 'Клиент всегда знает, где заказ', ['h-status', 'h-cancelled'],
+        ['Шкала на каждую доставку: принят → собираем → в пути → доставлен', 'Push на каждом шаге; отменить можно, пока заказ не выехал', 'Поддержка в WhatsApp в одно касание'],
+        'Меньше звонков в поддержку — всё видно в статусе и пушах.'),
+      F(L, 'Профиль', 'Личный кабинет', 'Повторить заказ — одной кнопкой', ['s-profile', 's-orders'],
+        ['Мои заказы, избранное, адреса, карты, промокоды, бонусы', '«Повторить» — весь прошлый заказ снова в корзине', 'Бонусы не сгорают: 1 бонус = 1 тг'],
+        'Строители покупают одно и то же — «Повторить» экономит им время.'),
+    ];
+    return {
+      path, features, walls, all,
+      goals: [
+        { n: '60–90', t: 'минут до двери', d: 'Курьер по городу для всего, что помещается в легковую машину' },
+        { n: '1', t: 'касание до Kaspi', d: 'Оплата в привычном приложении, без ввода карты' },
+        { n: '0', t: 'паролей', d: 'Вход кодом в WhatsApp или через Telegram, дальше — Face ID' },
+      ],
+      split: [
+        { t: 'Двумя доставками', fee: '1 000 + 3 000 тг', bg: '#25232A', fg: '#fff', rowBg: '#2E2C33', rows: [{ tag: 'Курьер', tagBg: '#FDF0F6', tagFg: '#D6136A', t: 'Сегодня · краска, клей, инструмент' }, { tag: 'Газель', tagBg: '#fff', tagFg: '#17151A', t: 'Завтра, 9:00–21:00 · цемент, гипсокартон' }] },
+        { t: 'Всё вместе завтра', fee: '3 000 тг', bg: '#F4F3F6', fg: '#17151A', rowBg: '#fff', rows: [{ tag: 'Газель', tagBg: '#17151A', tagFg: '#fff', t: 'Завтра, 9:00–21:00 · весь заказ одной машиной' }, { tag: 'Опция', tagBg: '#EEEDF1', tagFg: '#6B6873', t: 'Подъём на этаж — считаем сразу' }] },
+      ],
+      access: ['Тема как в системе, или светлая / тёмная вручную', 'Интерфейс на казахском и русском — переключается сразу', 'Крупный текст и кнопки не меньше пальца', 'Каталог и корзина работают без интернета'],
+      products: [{ img: './assets/b-cement.png', name: 'Цемент М400, 50 кг', price: '2 890 тг.' }, { img: './assets/p-t4.png', name: 'Дрель-шуруповёрт 18 В', price: '32 900 тг.' }],
+      themes: [
+        { name: 'Светлая · Русский', bg: '#F2F2F4', surface: '#fff', ink1: '#17151A', ink3: '#9E9BA6', p50: '#FDF0F6', primary: '#EE1D74', cta: 'В корзину', checkout: 'Оформить' },
+        { name: 'Тёмная · Қазақша', bg: '#1B1A1F', surface: '#25232A', ink1: '#F4F3F6', ink3: '#75727D', p50: '#3A1627', primary: '#F2438A', cta: 'Себетке', checkout: 'Рәсімдеу' },
+      ],
+      ready: ['Дизайн всех экранов и состояний', 'UI Kit в светлой и тёмной теме', 'Стартовый код на Flutter (iOS + Android)', 'Гайд для разработчика: экраны, переходы, API', 'Push, настройки, документы — описаны', 'Бэкенд — Магжан'],
+      decide: ['Тарифы Газели и порог бесплатной доставки', 'Подключение Kaspi и банк для карт', 'Тексты оферты и политики', 'Вычитка казахского перевода'],
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet"></helmet>
+<div onClick="{{ open }}" style="display:flex;flex-direction:column;gap:10px;box-sizing:border-box;width:100%;height:100%;padding:8px;border-radius:20px;background:#FFFFFF;font-family:Onest,system-ui,sans-serif;color:#17151A;cursor:pointer;transition:box-shadow .15s ease" style-hover="box-shadow:0 8px 24px rgba(23,21,26,.08)">
+  <div style="position:relative;aspect-ratio:1/1;border-radius:14px;background:#F7F7F8;overflow:hidden">
+    <sc-if value="{{ hasImg }}" hint-placeholder-val="{{ true }}"><img src="{{ img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;opacity:{{ imgOp }}"></sc-if>
+    <sc-if value="{{ noImg }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#F2F2F4 0 10px,#F7F7F8 10px 20px);display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#9E9BA6">фото товара</span></sc-if>
+    <sc-if value="{{ hasDiscount }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;left:8px;top:8px;padding:4px 8px;border-radius:999px;background:#EE1D74;color:#fff;font-size:12px;font-weight:600;line-height:1.2">{{ discount }}</span></sc-if>
+    <sc-if value="{{ hasBadge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;left:8px;bottom:8px;padding:4px 8px;border-radius:999px;background:#FFFFFF;color:#17151A;font-size:12px;font-weight:500;line-height:1.2">{{ badge }}</span></sc-if>
+    <button type="button" onClick="{{ toggleFav }}" aria-label="{{ favLabel }}" aria-pressed="{{ fav }}" style="position:absolute;right:6px;top:6px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.92);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:2;transition:transform .12s ease" style-active="transform:scale(.9)"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="display:block"><path d="M12 20.5s-7.5-4.6-9.3-9.3C1.5 8 3.4 4.5 6.9 4.5c2 0 3.5 1.1 5.1 3 1.6-1.9 3.1-3 5.1-3 3.5 0 5.4 3.5 4.2 6.7-1.8 4.7-9.3 9.3-9.3 9.3z" fill="{{ favFill }}" stroke="{{ favStroke }}" stroke-width="1.8" stroke-linejoin="round"></path></svg></button>
+    <sc-if value="{{ soldOut }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:6px 12px;border-radius:999px;background:#17151A;color:#fff;font-size:13px;font-weight:600;white-space:nowrap">Раскупили</span></sc-if>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:2px;padding:0 4px;flex:1">
+    <div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:16px;font-weight:700;color:{{ priceColor }}">{{ price }}</span><sc-if value="{{ hasOld }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#9E9BA6;text-decoration:line-through">{{ oldPrice }}</span></sc-if></div>
+    <div style="font-size:14px;line-height:1.3;color:{{ nameColor }};display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:36px">{{ name }}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:20px"><span style="font-size:12px;color:#9E9BA6">{{ weight }}</span><sc-if value="{{ hasBonus }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:4px;padding:2px 6px 2px 3px;border-radius:999px;background:#EAF7F0;color:#13824D;font-size:12px;font-weight:600;white-space:nowrap"><span style="width:12px;height:12px;border-radius:50%;background:#1DA765;color:#fff;font-size:8px;font-weight:800;line-height:1;display:inline-flex;align-items:center;justify-content:center;flex:none;font-family:Onest,system-ui,sans-serif">Б</span>+{{ bonus }}</span></sc-if></div>
+  </div>
+  <sc-if value="{{ showPick }}" hint-placeholder-val="{{ false }}">
+    <button type="button" onClick="{{ open }}" style="height:36px;border-radius:999px;border:0;background:#F7F7F8;color:#17151A;font:inherit;font-size:14px;font-weight:600;cursor:pointer;width:100%" style-hover="background:#EEEDF1">Выбрать размер</button>
+  </sc-if>
+  <sc-if value="{{ showAdd }}" hint-placeholder-val="{{ true }}">
+    <button type="button" onClick="{{ add }}" style="height:36px;border-radius:999px;border:0;background:#F7F7F8;color:#17151A;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;width:100%" style-hover="background:#EEEDF1">В корзину</button>
+  </sc-if>
+  <sc-if value="{{ showStepper }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ stop }}"><dc-import name="MartStepper" qty="{{ qty }}" size="36" full="{{ true }}" on-change="{{ change }}" hint-size="100%,36px"></dc-import></div>
+  </sc-if>
+  <sc-if value="{{ soldOut }}" hint-placeholder-val="{{ false }}">
+    <div style="height:36px;border-radius:999px;background:#F7F7F8;color:#9E9BA6;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center">Нет в наличии</div>
+  </sc-if>
+  <sc-if value="{{ noPrice }}" hint-placeholder-val="{{ false }}">
+    <div style="height:36px;border-radius:999px;background:#F7F7F8;color:#9E9BA6;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center">Цена не задана</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:200,&quot;height&quot;:330},
+&quot;product&quot;:{&quot;editor&quot;:null,&quot;default&quot;:{&quot;id&quot;:&quot;b1&quot;,&quot;name&quot;:&quot;Цемент М400, 50 кг&quot;,&quot;weight&quot;:&quot;50 кг&quot;,&quot;price&quot;:2890,&quot;oldPrice&quot;:3290,&quot;badge&quot;:&quot;Товар дня&quot;,&quot;img&quot;:&quot;./assets/b-cement.png&quot;},&quot;tsType&quot;:&quot;Product&quot;},
+&quot;qty&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;tsType&quot;:&quot;number&quot;},
+&quot;soldOut&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},
+&quot;favorite&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},
+&quot;onFavorite&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(id:string, on:boolean)=&gt;void&quot;},
+&quot;onOpen&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(product)=&gt;void&quot;},
+&quot;onQty&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(id:string, qty:number)=&gt;void&quot;}}">
+class Component extends DCLogic {
+  state = { qty: undefined, fav: undefined, D: null };
+  componentDidMount() { import('./data.js').then(D => { this.setState({ D, favs: D.getFavorites() }); this.off = D.onFavorites(f => this.setState({ favs: f })); }); }
+  componentWillUnmount() { this.off && this.off(); }
+  renderVals() {
+    const p = this.props, D = this.state.D, pr = p.product || {};
+    const money = (n) => D ? D.money(n) : (n == null ? 'Цена уточняется' : n + ' тг.');
+    const qty = this.state.qty ?? Number(p.qty ?? 0);
+    const soldOut = !!p.soldOut;
+    const fav = this.state.favs ? this.state.favs.includes(pr.id) : !!p.favorite;
+    const set = (q) => { this.setState({ qty: Math.max(0, q) }); p.onQty && p.onQty(pr.id, Math.max(0, q)); };
+    return {
+      img: pr.img, hasImg: !!pr.img, noImg: !pr.img, name: pr.name ?? 'Товар', weight: pr.weight ?? '',
+      price: (pr.variants ? 'от ' : '') + money(pr.price), hasOld: pr.oldPrice != null && !soldOut, oldPrice: money(pr.oldPrice),
+      hasDiscount: pr.oldPrice != null && pr.price != null && !soldOut, discount: pr.oldPrice ? `−${Math.round((1 - pr.price / pr.oldPrice) * 100)}%` : '',
+      fav, favFill: fav ? '#EE1D74' : 'none', favStroke: fav ? '#EE1D74' : '#6B6873', favLabel: fav ? 'Убрать из избранного' : 'В избранное',
+      toggleFav: (e) => { e.stopPropagation(); if (D) D.setFavorite(pr.id, !fav); p.onFavorite && p.onFavorite(pr.id, !fav); },
+      hasBonus: !!pr.bonus && !soldOut, bonus: pr.bonus ? String(pr.bonus).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '',
+      hasBadge: !!pr.badge && !soldOut, badge: pr.badge,
+      soldOut, imgOp: soldOut ? .45 : 1, priceColor: soldOut ? '#9E9BA6' : '#17151A', nameColor: soldOut ? '#9E9BA6' : '#17151A',
+      showPick: !soldOut && !!pr.variants && pr.price != null, showAdd: !soldOut && !pr.variants && qty === 0 && pr.price != null, showStepper: !soldOut && !pr.variants && qty > 0 && pr.price != null, noPrice: !soldOut && pr.price == null,
+      open: () => p.onOpen && p.onOpen(pr), stop: (e) => e.stopPropagation(), qty,
+      add: (e) => { e.stopPropagation(); set(1); }, change: (q) => set(q),
+    };
+  }
+}
+</script>
+</body>
+</html>

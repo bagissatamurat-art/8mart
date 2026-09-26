@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet"></helmet>
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;font-family:Onest,system-ui,sans-serif;color:#17151A;width:100%;box-sizing:border-box">
+  <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+    <span style="display:flex;align-items:center;gap:8px"><span style="height:22px;padding:0 8px;border-radius:999px;background:{{ tagBg }};color:{{ tagFg }};font-size:12px;font-weight:600;display:inline-flex;align-items:center;white-space:nowrap">{{ tag }}</span><span style="font-size:13px;color:#6B6873">{{ label }}</span></span>
+    <b style="font-size:{{ whenSize }};font-weight:700;letter-spacing:-.01em;line-height:1.3">{{ when }}</b>
+    <span style="font-size:13px;color:#6B6873;line-height:1.4">{{ meta }}</span>
+  </div>
+  <sc-if value="{{ hasFee }}" hint-placeholder-val="{{ true }}"><span style="font-size:15px;font-weight:600;white-space:nowrap;color:{{ feeColor }};padding-top:2px">{{ feeText }}</span></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:560,&quot;height&quot;:90},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;courier&quot;,&quot;options&quot;:[&quot;courier&quot;,&quot;cargo&quot;],&quot;tsType&quot;:&quot;'courier'|'cargo'&quot;},&quot;method&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;delivery&quot;,&quot;options&quot;:[&quot;delivery&quot;,&quot;pickup&quot;],&quot;tsType&quot;:&quot;'delivery'|'pickup'&quot;},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Доставка 1 из 2&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;when&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Сегодня, за 60–90 минут&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;meta&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Курьер · 2 товара&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;feeText&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;1 000 тг.&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;compact&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, cargo = p.kind === 'cargo', pk = p.method === 'pickup';
+    return {
+      tag: pk ? (cargo ? 'Склад' : 'Точка') : (cargo ? 'Газель' : 'Курьер'), tagBg: cargo ? '#17151A' : '#FDF0F6', tagFg: cargo ? '#fff' : '#D6136A',
+      label: p.label ?? 'Доставка 1 из 2', when: p.when ?? 'Сегодня, за 60–90 минут', meta: p.meta ?? '', whenSize: p.compact ? '16px' : '18px',
+      hasFee: !!p.feeText, feeText: p.feeText ?? '', feeColor: p.feeText === 'Бесплатно' ? '#1DA765' : '#17151A',
+    };
+  }
+}
+</script>
+</body>
+</html>
