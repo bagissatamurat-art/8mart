@@ -40,6 +40,10 @@ jobs:
         run: |
           flutter test > test.txt 2>&1 || true
           cat test.txt
+      - name: Скриншоты 390×844
+        run: |
+          flutter test --update-goldens test_shots > shots.txt 2>&1 || true
+          tail -40 shots.txt
       - name: Сборка web
         run: |
           echo '{"MAPBOX_ACCESS_TOKEN":"${{ secrets.MAPBOX_ACCESS_TOKEN }}","DADATA_API_KEY":"${{ secrets.DADATA_API_KEY }}"}' > env.json
@@ -51,7 +55,8 @@ jobs:
         if: always()
         run: |
           mkdir -p /tmp/r
-          cp analyze.txt test.txt build.txt /tmp/r/ 2>/dev/null || true
+          cp analyze.txt test.txt build.txt shots.txt /tmp/r/ 2>/dev/null || true
+          mkdir -p /tmp/r/shots && cp test_shots/goldens/*.png /tmp/r/shots/ 2>/dev/null || true
           printf 'commit: %s\ndate: %s\n' "${{ github.sha }}" "$(date -u +%FT%TZ)" > /tmp/r/README.md
           cd /tmp/r
           git init -q && git checkout -q -b ci-report && git add .

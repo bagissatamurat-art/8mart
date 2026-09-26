@@ -21,8 +21,8 @@ import 'ui/ui.dart';
 /// Пути = deep links (Universal Links / App Links на 8mart.kz):
 /// /catalog/:cat?sub= категория · /search?q= поиск · /profile/:section раздел кабинета ·
 /// /p/:id товар · /order/:id статус · /auth/tg?token=&phone= возврат из Telegram-бота · /pay/return?order= возврат из Kaspi.
-GoRouter buildRouter() => GoRouter(
-      initialLocation: '/splash',
+GoRouter buildRouter({String initialLocation = '/splash'}) => GoRouter(
+      initialLocation: initialLocation,
       routes: [
         StatefulShellRoute.indexedStack(
           builder: (context, state, shell) => AppShell(shell: shell),

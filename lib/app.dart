@@ -14,13 +14,15 @@ import 'state/settings_cubit.dart';
 import 'ui/ui.dart';
 
 class MartApp extends StatefulWidget {
-  const MartApp({super.key});
+  const MartApp({super.key, this.initialLocation = '/splash'});
+  /// Для скриншот-тестов: открыть сразу нужный экран.
+  final String initialLocation;
   @override
   State<MartApp> createState() => _MartAppState();
 }
 
 class _MartAppState extends State<MartApp> {
-  final _router = buildRouter();
+  late final _router = buildRouter(initialLocation: widget.initialLocation);
 
   @override
   Widget build(BuildContext context) {
