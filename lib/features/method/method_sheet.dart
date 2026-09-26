@@ -19,13 +19,21 @@ TextStyle _f(double size, FontWeight w, Color col, {double? h, double? ls}) => T
 /// Выбор способа получения (MartMethodModal.dc.html, mobile): шторка 92 %, сверху карта 46 % (город слева, × справа),
 /// снизу панель: заголовок, свич Доставка/Самовывоз, адрес с подсказками или список точек, CTA 56.
 /// Карта — flutter_map + тайлы Mapbox (работает и в браузере). Адрес по пину — DaData geolocate / Mapbox reverse (GeoRepository).
-Future<void> openMethodSheet(BuildContext context) => showModalBottomSheet<void>(
+/// address + onSaveAddress — режим address-only (кабинет → Адреса): без свича, поле «Название», CTA «Сохранить адрес».
+Future<void> openMethodSheet(BuildContext context, {AddressDraft? address, ValueChanged<AddressDraft>? onSaveAddress}) => showModalBottomSheet<void>(
       context: context, isScrollControlled: true, useSafeArea: true, enableDrag: false, backgroundColor: Colors.transparent,
-      builder: (_) => FractionallySizedBox(heightFactor: .92, child: const _MethodSheet()),
+      builder: (_) => FractionallySizedBox(heightFactor: .92, child: _MethodSheet(address: address, onSaveAddress: onSaveAddress)),
     );
 
+class AddressDraft {
+  const AddressDraft({this.title = '', required this.street, required this.city, this.entrance = '', this.flat = ''});
+  final String title, street, city, entrance, flat;
+}
+
 class _MethodSheet extends StatefulWidget {
-  const _MethodSheet();
+  const _MethodSheet({this.address, this.onSaveAddress});
+  final AddressDraft? address;
+  final ValueChanged<AddressDraft>? onSaveAddress;
   @override
   State<_MethodSheet> createState() => _MethodSheetState();
 }
@@ -34,7 +42,8 @@ class _MethodSheetState extends State<_MethodSheet> {
   static const _geo = GeoRepository();
   final _map = MapController();
   final _street = TextEditingController();
-  final _entrance = TextEditingController(), _flat = TextEditingController();
+  final _entrance = TextEditingController(), _flat = TextEditingController(), _title = TextEditingController();
+  bool get _addrOnly => widget.onSaveAddress != null;
   final _focus = FocusNode();
   late ReceiveMethod _m;
   City _city = MockData.cities.first;
@@ -55,6 +64,15 @@ class _MethodSheetState extends State<_MethodSheet> {
     super.initState();
     final cart = context.read<CartCubit>().state;
     _m = cart.method ?? ReceiveMethod.delivery;
+    final d = widget.address;
+    if (d != null) {
+      _m = ReceiveMethod.delivery;
+      _city = MockData.cities.firstWhere((c) => c.name == d.city, orElse: () => MockData.cities.first);
+      _street.text = d.street; _pinLabel = d.street.isEmpty ? null : d.street;
+      _title.text = d.title; _entrance.text = d.entrance; _flat.text = d.flat;
+      _focus.addListener(() => setState(() => _sgOpen = _focus.hasFocus && _street.text.trim().length >= 3));
+      return;
+    }
     final i = cart.address.indexOf(', ');
     if (i > 0) {
       _city = MockData.cities.firstWhere((c) => c.name == cart.address.substring(0, i), orElse: () => MockData.cities.first);
@@ -65,7 +83,7 @@ class _MethodSheetState extends State<_MethodSheet> {
   }
 
   @override
-  void dispose() { _debounce?.cancel(); _reverseT?.cancel(); _street.dispose(); _entrance.dispose(); _flat.dispose(); _focus.dispose(); super.dispose(); }
+  void dispose() { _debounce?.cancel(); _reverseT?.cancel(); _street.dispose(); _entrance.dispose(); _flat.dispose(); _title.dispose(); _focus.dispose(); super.dispose(); }
 
   List<PickupPoint> get _points => MockData.pickupPoints.where((p) => p.city == _city.id).toList();
 
@@ -141,6 +159,11 @@ class _MethodSheetState extends State<_MethodSheet> {
   }
 
   void _confirm() {
+    if (_addrOnly) {
+      widget.onSaveAddress!(AddressDraft(title: _title.text, street: _street.text.trim().replaceAll(RegExp(r',\s*$'), ''), city: _city.name, entrance: _entrance.text, flat: _flat.text));
+      Navigator.of(context).pop();
+      return;
+    }
     final cart = context.read<CartCubit>();
     if (_m == ReceiveMethod.delivery) {
       cart.setMethod(_m, '${_city.name}, ${_street.text.trim().replaceAll(RegExp(r',\s*$'), '')}');
@@ -302,16 +325,17 @@ class _MethodSheetState extends State<_MethodSheet> {
         Expanded(child: Padding(
           padding: EdgeInsets.fromLTRB(16, 16, 16, 20 + MediaQuery.viewInsetsOf(context).bottom),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text('Как получить заказ?', style: _f(22, FontWeight.w800, c.ink1, ls: -0.44)),
+            Text(_addrOnly ? (widget.address!.street.isEmpty ? 'Новый адрес' : 'Изменить адрес') : 'Как получить заказ?', style: _f(22, FontWeight.w800, c.ink1, ls: -0.44)),
             const SizedBox(height: 4),
-            Text('Цены и наличие зависят от филиала', style: _f(13, FontWeight.w400, c.ink2, h: 1.4)),
+            Text(_addrOnly ? 'Двигайте карту или введите адрес' : 'Цены и наличие зависят от филиала', style: _f(13, FontWeight.w400, c.ink2, h: 1.4)),
             const SizedBox(height: 16),
-            Container(padding: const EdgeInsets.all(4), decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(999)),
+            if (_addrOnly) MartInput(label: 'Название', controller: _title)
+            else Container(padding: const EdgeInsets.all(4), decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(999)),
                 child: Row(children: [tab('Доставка', ReceiveMethod.delivery), const SizedBox(width: 4), tab('Самовывоз', ReceiveMethod.pickup)])),
             const SizedBox(height: 16),
             Expanded(child: isD ? delivery : pickup),
             const SizedBox(height: 16),
-            MartButton(label: isD ? 'Доставить сюда' : 'Заберу здесь', expanded: true,
+            MartButton(label: _addrOnly ? 'Сохранить адрес' : isD ? 'Доставить сюда' : 'Заберу здесь', expanded: true,
                 disabledReason: ok ? null : (isD ? 'Укажите улицу и дом' : 'Выберите точку на карте или в списке'), onPressed: _confirm),
           ]),
         )),

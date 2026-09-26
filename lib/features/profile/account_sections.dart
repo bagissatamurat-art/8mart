@@ -16,6 +16,7 @@ import '../../state/favorites_cubit.dart';
 import '../../ui/ui.dart';
 import '../common/product_grid.dart';
 import 'order_labels.dart';
+import '../method/method_sheet.dart';
 
 enum AccountSection { orders, favorites, addresses, payments, promos, bonus, personal }
 
@@ -57,9 +58,6 @@ class _AccountSectionScreenState extends State<AccountSectionScreen> {
         MartTopPanel(padding: const EdgeInsets.fromLTRB(16, 8, 16, 16), children: [MartTitleRow(title: sectionTitle(t, widget.section), onBack: () => context.go('/profile'))]),
         Expanded(child: body),
       ]),
-      bottomNavigationBar: widget.section == AccountSection.addresses && !s.loading
-          ? MartBottomBar(child: MartButton(label: t.addAddress, variant: MartButtonVariant.secondary, expanded: true, onPressed: () => openAddressSheet(context, null)))
-          : null,
     );
   }
 }
@@ -200,87 +198,108 @@ class _Addresses extends StatelessWidget {
   const _Addresses();
   @override
   Widget build(BuildContext context) {
-    final t = L10n.of(context);
     final c = context.mc;
+    final cubit = context.read<AccountCubit>();
     final list = context.watch<AccountCubit>().state.addresses;
-    if (list.isEmpty) return MartEmptyState(icon: Icons.place_outlined, title: t.emptyYet);
-    return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 24), children: [
-      for (final a in list) Padding(padding: const EdgeInsets.only(bottom: 8), child: GestureDetector(
-        onTap: () => openAddressSheet(context, a),
-        child: Container(
+    Widget act(String label, VoidCallback onTap, {bool pink = false}) => GestureDetector(behavior: HitTestBehavior.opaque, onTap: onTap,
+        child: Container(height: 40, padding: const EdgeInsets.symmetric(horizontal: 8), alignment: Alignment.center, child: Text(label, style: _fs(14, FontWeight.w600, pink ? c.primary : c.ink2))));
+    return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
+      for (final a in list) ...[
+        Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card), border: Border.all(color: a.isDefault ? c.primary100 : Colors.transparent, width: 1.5)),
+          decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card), border: Border.all(color: a.isDefault ? const Color(0xFFF7C6DC) : Colors.transparent, width: 1.5)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Expanded(child: Text(a.title, style: MartText.bodyStrong.copyWith(color: c.ink1))),
-              if (a.isDefault) Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: c.primary50, borderRadius: BorderRadius.circular(MartRadius.pill)),
-                child: Text(t.mainLabel, style: MartText.caption.copyWith(fontWeight: FontWeight.w600, color: c.primaryPressed))),
+              Text(a.title, style: _fs(16, FontWeight.w700, c.ink1)),
+              if (a.isDefault) ...[const SizedBox(width: 8), Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: c.primary50, borderRadius: BorderRadius.circular(999)),
+                  child: Text('Основной', style: _fs(12, FontWeight.w600, c.primary)))],
             ]),
             const SizedBox(height: 4),
-            Text('${a.city}, ${a.street}', style: MartText.small.copyWith(color: c.ink1)),
-            if (a.details.isNotEmpty) Text(a.details, style: MartText.caption.copyWith(fontSize: 13, color: c.ink2)),
+            Text('${a.street}, ${a.city}', style: _fs(15, FontWeight.w400, c.ink1, h: 1.4)),
+            if (a.details.isNotEmpty) ...[const SizedBox(height: 4), Text(a.details, style: _fs(13, FontWeight.w400, c.ink2))],
+            const SizedBox(height: 8),
+            Transform.translate(offset: const Offset(-8, 0), child: Wrap(spacing: 4, children: [
+              if (!a.isDefault) act('Сделать основным', () => cubit.setDefaultAddress(a.id), pink: true),
+              act('Изменить', () => openAddressSheet(context, a)),
+              act('Удалить', () => cubit.deleteAddress(a.id)),
+            ])),
           ]),
         ),
+        const SizedBox(height: 10),
+      ],
+      GestureDetector(onTap: () => openAddressSheet(context, null), child: CustomPaint(
+        foregroundPainter: _DashedBox(c.border),
+        child: SizedBox(height: 56, child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          MartPlusMinus(plus: true, color: c.primary, size: 14),
+          const SizedBox(width: 10),
+          Text('Добавить адрес', style: _fs(15, FontWeight.w600, c.ink1)),
+        ])),
       )),
     ]);
   }
 }
 
-/// Добавить / изменить адрес. В проде — та же шторка с картой, что и «Способ получения» (address-only).
-Future<void> openAddressSheet(BuildContext context, Address? a) {
-  final t = L10n.of(context);
-  final cubit = context.read<AccountCubit>();
-  final title = TextEditingController(text: a?.title ?? ''), street = TextEditingController(text: a?.street ?? ''),
-      entrance = TextEditingController(text: a?.entrance ?? ''), floor = TextEditingController(text: a?.floor ?? ''), flat = TextEditingController(text: a?.flat ?? '');
-  return showMartSheet(context, title: a == null ? t.addAddress : t.change, builder: (ctx) => StatefulBuilder(builder: (ctx, set) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-    Container(height: 140, alignment: Alignment.center, decoration: BoxDecoration(color: ctx.mc.surface2, borderRadius: BorderRadius.circular(MartRadius.field)),
-      child: Text('Mapbox · пин по центру', style: MartText.small.copyWith(color: ctx.mc.ink3))),
-    const SizedBox(height: 12),
-    MartInput(label: t.street, required: true, controller: street, onChanged: (_) => set(() {})),
-    const SizedBox(height: 8),
-    Row(children: [
-      Expanded(child: MartInput(label: t.entrance, type: MartInputType.number, controller: entrance)), const SizedBox(width: 8),
-      Expanded(child: MartInput(label: t.floor, type: MartInputType.number, controller: floor)), const SizedBox(width: 8),
-      Expanded(child: MartInput(label: t.flat, controller: flat)),
-    ]),
-    const SizedBox(height: 8),
-    MartInput(label: t.addressTitle, controller: title),
-    const SizedBox(height: 16),
-    MartButton(label: t.save, expanded: true, disabledReason: street.text.trim().isEmpty ? t.errRequired : null, onPressed: () {
-      cubit.saveAddress((a ?? Address(id: DateTime.now().microsecondsSinceEpoch.toString(), title: '', street: '', city: 'Астана'))
-          .copyWith(title: title.text.trim().isEmpty ? street.text.trim() : title.text.trim(), street: street.text.trim(), entrance: entrance.text, floor: floor.text, flat: flat.text));
-      Navigator.of(ctx).pop();
-    }),
-    if (a != null) ...[
-      if (!a.isDefault) ...[const SizedBox(height: 8), MartButton(label: t.makeMain, variant: MartButtonVariant.ghost, expanded: true, onPressed: () { cubit.setDefaultAddress(a.id); Navigator.of(ctx).pop(); })],
-      const SizedBox(height: 8),
-      MartButton(label: t.delete, variant: MartButtonVariant.danger, expanded: true, onPressed: () { cubit.deleteAddress(a.id); Navigator.of(ctx).pop(); }),
-    ],
-  ])));
+class _DashedBox extends CustomPainter {
+  _DashedBox(this.color);
+  final Color color;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()..addRRect(RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(MartRadius.card)).deflate(.75));
+    final p = Paint()..color = color..style = PaintingStyle.stroke..strokeWidth = 1.5;
+    for (final m in path.computeMetrics()) { for (double d = 0; d < m.length; d += 9) { canvas.drawPath(m.extractPath(d, d + 5), p); } }
+  }
+  @override
+  bool shouldRepaint(_DashedBox o) => o.color != color;
 }
 
-// ── Способы оплаты ──
+/// Добавить / изменить адрес — та же шторка с картой, что «Способ получения», в режиме address-only (название, «Сохранить адрес»).
+Future<void> openAddressSheet(BuildContext context, Address? a) {
+  final cubit = context.read<AccountCubit>();
+  return openMethodSheet(context, address: AddressDraft(title: a?.title ?? '', street: a?.street ?? '', city: a?.city ?? 'Астана', entrance: a?.entrance ?? '', flat: a?.flat ?? ''),
+      onSaveAddress: (d) => cubit.saveAddress((a ?? Address(id: DateTime.now().microsecondsSinceEpoch.toString(), title: '', street: '', city: d.city))
+          .copyWith(title: d.title.trim().isEmpty ? d.street : d.title.trim(), street: d.street, entrance: d.entrance, flat: d.flat)));
+}
+
+// ── Способы оплаты (MartAccount mobile): Kaspi без привязки, карты — маска от шлюза, «Основная», × удалить ──
 class _Payments extends StatelessWidget {
   const _Payments();
   @override
   Widget build(BuildContext context) {
-    final t = L10n.of(context);
     final c = context.mc;
     final cards = context.watch<AccountCubit>().state.cards;
-    return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 24), children: [
-      _card(context, MartListRow(title: 'Kaspi Pay', sub: t.kaspiNoBind, chevron: false,
-          leading: ClipRRect(borderRadius: BorderRadius.circular(6), child: SvgPicture.asset('assets/images/kaspi-logo.svg', package: MartAssets.package, width: 28, height: 28))),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4)),
-      const SizedBox(height: 8),
-      for (final k in cards) Padding(padding: const EdgeInsets.only(bottom: 8), child: _card(context, Row(children: [
-        Icon(Icons.credit_card, color: c.ink1), const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(k.title, style: MartText.bodyStrong.copyWith(color: c.ink1)),
-          Text('до ${k.exp}${k.isDefault ? ' · ${t.mainLabel.toLowerCase()}' : ''}', style: MartText.caption.copyWith(fontSize: 13, color: c.ink2)),
-        ])),
-        TextButton(onPressed: () => context.read<AccountCubit>().deleteCard(k.id), child: Text(t.delete, style: MartText.small.copyWith(color: c.error))),
-      ]))),
-      Padding(padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8), child: Text(t.cardsByGateway, style: MartText.small.copyWith(color: c.ink2))),
+    Widget row(Widget icon, Widget body, {Widget? trailing}) => Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card)),
+          child: Row(children: [icon, const SizedBox(width: 14), Expanded(child: body), if (trailing != null) trailing]),
+        );
+    return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
+      row(ClipRRect(borderRadius: BorderRadius.circular(10), child: SvgPicture.asset('assets/images/kaspi-logo.svg', package: MartAssets.package, width: 40, height: 40)),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Kaspi Pay', style: _fs(15, FontWeight.w600, c.ink1)),
+            const SizedBox(height: 2),
+            Text('Оплата в приложении Kaspi — привязывать не нужно', style: _fs(13, FontWeight.w400, c.ink2, h: 1.4)),
+          ])),
+      for (final k in cards) ...[
+        const SizedBox(height: 10),
+        row(
+          Container(width: 40, height: 40, alignment: Alignment.center, decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(10)),
+            child: Container(width: 24, height: 17, decoration: BoxDecoration(border: Border.all(color: c.ink1, width: 2), borderRadius: BorderRadius.circular(3)),
+                child: Align(alignment: const Alignment(0, -.3), child: Container(height: 2, color: c.ink1)))),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Text(k.title, style: _fs(15, FontWeight.w600, c.ink1)),
+              if (k.isDefault) ...[const SizedBox(width: 8), Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: c.primary50, borderRadius: BorderRadius.circular(999)),
+                  child: Text('Основная', style: _fs(12, FontWeight.w600, c.primary)))],
+            ]),
+            const SizedBox(height: 2),
+            Text('Действует до ${k.exp}', style: _fs(13, FontWeight.w400, c.ink2)),
+          ]),
+          trailing: Semantics(button: true, label: 'Удалить карту', child: GestureDetector(
+            onTap: () => context.read<AccountCubit>().deleteCard(k.id),
+            child: SizedBox.square(dimension: 44, child: Center(child: MartCross(size: 14, color: c.ink2))))),
+        ),
+      ],
+      Padding(padding: const EdgeInsets.fromLTRB(4, 10, 4, 0), child: Text('Новая карта сохранится при следующей оплате картой онлайн', style: _fs(13, FontWeight.w400, c.ink2, h: 1.4))),
     ]);
   }
 }
