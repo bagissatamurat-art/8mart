@@ -6,8 +6,10 @@ import '../theme/mart_tokens.dart';
 
 /// Зелёная монетка «Б» + «+N». 1 бонус = 1 тг.
 class BonusBadge extends StatelessWidget {
-  const BonusBadge({super.key, required this.amount, this.compact = false});
+  const BonusBadge({super.key, required this.amount, this.compact = false, this.label});
   final int amount;
+  /// Свой текст вместо «+N» (например, в правилах бонусов).
+  final String? label;
   final bool compact;
   @override
   Widget build(BuildContext context) {
@@ -21,7 +23,7 @@ class BonusBadge extends StatelessWidget {
         Container(width: coin, height: coin, alignment: Alignment.center, decoration: BoxDecoration(color: c.success, shape: BoxShape.circle),
           child: Text('Б', style: TextStyle(fontFamily: MartText.family, fontSize: compact ? 8 : 10, fontWeight: FontWeight.w800, color: Colors.white, height: 1))),
         const SizedBox(width: 5),
-        Text('+$amount', style: MartText.caption.copyWith(fontWeight: FontWeight.w700, color: c.successText)),
+        Text(label ?? '+$amount', style: MartText.caption.copyWith(fontWeight: FontWeight.w700, color: c.successText)),
       ]),
     );
   }

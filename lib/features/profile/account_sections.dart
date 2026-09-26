@@ -62,9 +62,6 @@ class _AccountSectionScreenState extends State<AccountSectionScreen> {
   }
 }
 
-Widget _card(BuildContext context, Widget child, {EdgeInsets padding = const EdgeInsets.all(16)}) =>
-    Container(padding: padding, decoration: BoxDecoration(color: context.mc.surface, borderRadius: BorderRadius.circular(MartRadius.card)), child: child);
-
 // ── Мои заказы (MartAccount mobile): активный — розовая рамка, «Привезём к», шкала с подписями, «Следить за заказом»; «История» — карточки с чипом статуса ──
 TextStyle _fs(double size, FontWeight w, Color col, {double? h, double? ls}) => TextStyle(fontFamily: 'Onest', fontSize: size, fontWeight: w, color: col, height: h, letterSpacing: ls);
 
@@ -188,8 +185,24 @@ class _Favorites extends StatelessWidget {
     final t = L10n.of(context);
     final ids = context.watch<FavoritesCubit>().state;
     final items = [for (final id in ids) if (MockData.byId(id) case final p?) p];
-    if (items.isEmpty) return MartEmptyState(icon: Icons.favorite_border, title: t.emptyYet, text: t.favoritesEmptyHint, action: t.toCatalog, onAction: () => context.go('/catalog'));
-    return CustomScrollView(slivers: [SliverPadding(padding: const EdgeInsets.all(16), sliver: ProductGridSliver(items: items))]);
+    final c = context.mc;
+    // Пусто (MartAccount): белая карточка — контур сердца 40, «Пока пусто», подсказка.
+    if (items.isEmpty) {
+      return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+          decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card)),
+          child: Column(children: [
+            const Icon(Icons.favorite_border, size: 40, color: Color(0xFFC9C7CE)),
+            const SizedBox(height: 8),
+            Text(t.emptyYet, style: _fs(17, FontWeight.w700, c.ink1)),
+            const SizedBox(height: 8),
+            Text('Нажмите на сердце в карточке товара, чтобы сохранить его здесь', textAlign: TextAlign.center, style: _fs(14, FontWeight.w400, c.ink2, h: 1.4)),
+          ]),
+        ),
+      ]);
+    }
+    return CustomScrollView(slivers: [SliverPadding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), sliver: ProductGridSliver(items: items))]);
   }
 }
 
@@ -240,11 +253,12 @@ class _Addresses extends StatelessWidget {
 }
 
 class _DashedBox extends CustomPainter {
-  _DashedBox(this.color);
+  _DashedBox(this.color, {this.radius = MartRadius.card});
   final Color color;
+  final double radius;
   @override
   void paint(Canvas canvas, Size size) {
-    final path = Path()..addRRect(RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(MartRadius.card)).deflate(.75));
+    final path = Path()..addRRect(RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius)).deflate(.75));
     final p = Paint()..color = color..style = PaintingStyle.stroke..strokeWidth = 1.5;
     for (final m in path.computeMetrics()) { for (double d = 0; d < m.length; d += 9) { canvas.drawPath(m.extractPath(d, d + 5), p); } }
   }
@@ -304,39 +318,53 @@ class _Payments extends StatelessWidget {
   }
 }
 
-// ── Промокоды ──
-class _Promos extends StatelessWidget {
+// ── Промокоды (MartAccount): код в пунктирной рамке · название · условие и срок · «Скопировать» → «Скопировано» ──
+class _Promos extends StatefulWidget {
   const _Promos();
   @override
+  State<_Promos> createState() => _PromosState();
+}
+
+class _PromosState extends State<_Promos> {
+  String? _copied;
+  @override
   Widget build(BuildContext context) {
-    final t = L10n.of(context);
     final c = context.mc;
     final list = context.watch<AccountCubit>().state.promos;
-    if (list.isEmpty) return MartEmptyState(icon: Icons.local_offer_outlined, title: t.emptyYet);
-    return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 24), children: [
-      for (final p in list) Padding(padding: const EdgeInsets.only(bottom: 8), child: Opacity(
-        opacity: p.status == PromoStatus.active ? 1 : .5,
-        child: _card(context, Row(children: [
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(p.title, style: MartText.bodyStrong.copyWith(color: c.ink1)),
-            Text(t.validUntil(p.cond, p.until), style: MartText.caption.copyWith(fontSize: 13, color: c.ink2)),
-            const SizedBox(height: 8),
-            Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: c.successBg, borderRadius: BorderRadius.circular(MartRadius.pill)),
-              child: Text(p.code, style: MartText.small.copyWith(fontWeight: FontWeight.w700, letterSpacing: .6, color: c.successText))),
-          ])),
-          if (p.status == PromoStatus.active)
-            MartButton(label: t.copy, variant: MartButtonVariant.ghost, size: MartButtonSize.s36, onPressed: () {
-              Clipboard.setData(ClipboardData(text: p.code));
-              showMartToast(context, t.copied);
-            })
-          else Text(p.status == PromoStatus.used ? t.promoUsed : t.promoExpired, style: MartText.small.copyWith(color: c.ink3)),
-        ])),
-      )),
+    return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
+      for (final p in list) ...[
+        Opacity(opacity: p.status == PromoStatus.active ? 1 : .5, child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card)),
+          child: Row(children: [
+            CustomPaint(foregroundPainter: _DashedBox(p.status == PromoStatus.active ? c.primary : const Color(0xFFC9C7CE), radius: 12), child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text(p.code, style: _fs(15, FontWeight.w700, p.status == PromoStatus.active ? c.primary : c.ink2, ls: .9)))),
+            const SizedBox(width: 14),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(p.title, style: _fs(15, FontWeight.w600, c.ink1)),
+              const SizedBox(height: 2),
+              Text('${p.cond} · ${p.until}', style: _fs(13, FontWeight.w400, c.ink2)),
+            ])),
+            if (p.status == PromoStatus.active) ...[
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () { Clipboard.setData(ClipboardData(text: p.code)); setState(() => _copied = p.code); },
+                child: Container(height: 40, padding: const EdgeInsets.symmetric(horizontal: 14), alignment: Alignment.center,
+                  decoration: BoxDecoration(color: _copied == p.code ? c.successBg : c.surface2, borderRadius: BorderRadius.circular(999)),
+                  child: Text(_copied == p.code ? 'Скопировано' : 'Скопировать', style: _fs(14, FontWeight.w600, _copied == p.code ? c.success : c.ink1))),
+              ),
+            ],
+          ]),
+        )),
+        const SizedBox(height: 10),
+      ],
+      Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Text('Промокод вводится в корзине или при оформлении', style: _fs(13, FontWeight.w400, c.ink2, h: 1.4))),
     ]);
   }
 }
 
-// ── Бонусы ── (правила — МОК, уточнить у бизнеса)
+// ── Бонусы (MartAccount): тёмная карточка баланса 40/800 + правила; «История» — строки с разделителями ──
 class _Bonus extends StatelessWidget {
   const _Bonus();
   @override
@@ -344,32 +372,52 @@ class _Bonus extends StatelessWidget {
     final t = L10n.of(context);
     final c = context.mc;
     final s = context.watch<AccountCubit>().state;
-    return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 24), children: [
-      _card(context, Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(t.onAccount, style: MartText.small.copyWith(color: c.ink2)),
-        Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-          Text('${s.bonusBalance}', style: MartText.h1.copyWith(fontSize: 40, color: c.ink1)),
-          const SizedBox(width: 10), BonusBadge(amount: s.bonusBalance),
+    const muted = Color(0xFFC9C7CE);
+    String grp(int n) => money(n.abs()).replaceAll(RegExp(r'\s*тг\.'), '');
+    return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
+      Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: const Color(0xFF17151A), borderRadius: BorderRadius.circular(MartRadius.card)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Ваш баланс', style: _fs(14, FontWeight.w400, muted)),
+          const SizedBox(height: 8),
+          Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+            Text(grp(s.bonusBalance), style: _fs(40, FontWeight.w800, Colors.white, ls: -0.8)),
+            const SizedBox(width: 10),
+            Text(plural(s.bonusBalance, 'бонус', 'бонуса', 'бонусов'), style: _fs(16, FontWeight.w400, muted)),
+          ]),
+          const SizedBox(height: 8),
+          Text.rich(TextSpan(text: '1 бонус = 1 тг · за товары с отметкой ', children: [
+            const WidgetSpan(alignment: PlaceholderAlignment.middle, child: BonusBadge(amount: 0, compact: true, label: '+N')),
+            TextSpan(text: ' начисляем бонусы после получения заказа · оплачивайте бонусами до ${MockData.bonusMaxPart}% суммы товаров'),
+          ]), style: _fs(14, FontWeight.w400, muted, h: 1.5)),
         ]),
-        const SizedBox(height: 8),
-        Text(t.bonusRules(MockData.bonusMaxPart), style: MartText.small.copyWith(color: c.ink2)),
-      ])),
-      const SizedBox(height: 16),
-      Text(t.history, style: MartText.title.copyWith(color: c.ink1)),
-      const SizedBox(height: 8),
-      _card(context, Column(children: [
-        for (final op in s.bonusHistory) Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Row(children: [
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(op.title, style: MartText.small.copyWith(color: c.ink1)), Text(op.date, style: MartText.caption.copyWith(color: c.ink3)),
-          ])),
-          Text(op.amount > 0 ? '+${op.amount}' : '${op.amount}', style: MartText.bodyStrong.copyWith(color: op.amount > 0 ? c.successText : c.ink2)),
-        ])),
-      ]), padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
+      ),
+      const SizedBox(height: 10),
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(t.history, style: _fs(16, FontWeight.w700, c.ink1))),
+          for (final op in s.bonusHistory) Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(border: Border(top: BorderSide(color: c.divider))),
+            child: Row(children: [
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(op.title, style: _fs(14, FontWeight.w400, c.ink1, h: 1.4)),
+                const SizedBox(height: 2),
+                Text(op.date, style: _fs(13, FontWeight.w400, c.ink3)),
+              ])),
+              const SizedBox(width: 12),
+              Text('${op.amount > 0 ? '+' : '−'}${grp(op.amount)}', style: _fs(15, FontWeight.w700, op.amount > 0 ? c.success : c.ink1)),
+            ]),
+          ),
+        ]),
+      ),
     ]);
   }
 }
 
-// ── Личные данные ──
 class _Personal extends StatefulWidget {
   const _Personal();
   @override
@@ -378,23 +426,48 @@ class _Personal extends StatefulWidget {
 
 class _PersonalState extends State<_Personal> {
   late final _name = TextEditingController(text: context.read<AuthCubit>().state.name);
+  bool _saved = false;
   @override
   Widget build(BuildContext context) {
     final t = L10n.of(context);
     final c = context.mc;
     final auth = context.watch<AuthCubit>().state;
-    return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 24), children: [
-      _card(context, Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        MartInput(label: t.name, required: true, controller: _name, onChanged: (_) => setState(() {})),
-        const SizedBox(height: 12),
-        MartButton(label: t.save, expanded: true, disabledReason: _name.text.trim().isEmpty || _name.text.trim() == auth.name ? '' : null,
-            onPressed: () { context.read<AuthCubit>().rename(_name.text); FocusScope.of(context).unfocus(); }),
-      ])),
-      const SizedBox(height: 8),
-      _card(context, MartListRow(title: t.phone, sub: auth.phone, value: t.change, valueColor: c.primary, chevron: false, onTap: () => openChangePhoneSheet(context)),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4)),
-      const SizedBox(height: 32),
-      Center(child: TextButton(onPressed: () => _confirmDelete(context), child: Text(t.deleteAccount, style: MartText.small.copyWith(color: c.ink3, decoration: TextDecoration.underline)))),
+    // Личные данные (MartAccount): карточка — «Имя», серый блок «Телефон» с «Изменить»; «Сохранить» — только если имя изменено; «Удалить аккаунт» серой ссылкой.
+    final dirty = _name.text.trim() != auth.name;
+    return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          MartInput(label: t.name, required: true, controller: _name, error: _name.text.trim().isEmpty ? 'Укажите имя' : null, onChanged: (_) => setState(() => _saved = false)),
+          const SizedBox(height: 16),
+          Container(
+            constraints: const BoxConstraints(minHeight: 56), padding: const EdgeInsets.only(left: 16, right: 8),
+            decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(MartRadius.field)),
+            child: Row(children: [
+              Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(t.phone, style: _fs(12, FontWeight.w400, c.ink2)),
+                const SizedBox(height: 2),
+                Text(auth.phone, style: _fs(16, FontWeight.w400, c.ink1)),
+              ])),
+              GestureDetector(onTap: () => openChangePhoneSheet(context), child: Container(height: 40, padding: const EdgeInsets.symmetric(horizontal: 12), alignment: Alignment.center,
+                  decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(999)), child: Text(t.change, style: _fs(14, FontWeight.w600, c.primary)))),
+            ]),
+          ),
+          if (dirty) ...[
+            const SizedBox(height: 16),
+            MartButton(label: t.save, expanded: true, disabledReason: _name.text.trim().isEmpty ? 'Укажите имя' : null,
+                onPressed: () { context.read<AuthCubit>().rename(_name.text); FocusScope.of(context).unfocus(); setState(() => _saved = true); }),
+          ],
+          if (_saved && !dirty) ...[const SizedBox(height: 16), Text('Сохранено', style: _fs(14, FontWeight.w600, c.success))],
+        ]),
+      ),
+      const SizedBox(height: 10),
+      Align(alignment: Alignment.centerLeft, child: GestureDetector(
+        onTap: () => _confirmDelete(context),
+        child: SizedBox(height: 44, child: Center(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(t.deleteAccount, style: _fs(14, FontWeight.w500, c.ink3).copyWith(decoration: TextDecoration.underline, decorationColor: c.ink3))))),
+      )),
     ]);
   }
 
@@ -438,7 +511,7 @@ Future<void> openChangePhoneSheet(BuildContext context) {
       MartCodeInput(state: code, onCompleted: (v) async {
         set(() => code = CodeState.checking);
         await Future<void>.delayed(const Duration(milliseconds: 500));
-        if (v == '0000') { set(() => code = CodeState.error); return; }
+        if (v != '1234') { set(() => code = CodeState.error); return; }
         set(() => code = CodeState.success);
         await Future<void>.delayed(const Duration(milliseconds: 400));
         if (ctx.mounted) { context.read<AuthCubit>().changePhone(phone.text); Navigator.of(ctx).pop(); }
