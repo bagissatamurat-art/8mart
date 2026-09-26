@@ -430,5 +430,61 @@
         "type": "String"
       }
     }
+  },
+  "authTitle": "Вход или регистрация",
+  "authSub": "Отправим код в WhatsApp. Заказы и адреса сохранятся в профиле",
+  "newPhoneTitle": "Новый номер",
+  "newPhoneSub": "Отправим код в WhatsApp на новый номер. Заказы и адреса останутся в профиле",
+  "getCodeWa": "Получить код в WhatsApp",
+  "enterFullPhone": "Введите номер полностью",
+  "or": "или",
+  "loginTelegram": "Войти через Telegram",
+  "termsPrefix": "Продолжая, вы соглашаетесь с ",
+  "termsLink": "условиями",
+  "termsAnd": " и ",
+  "privacyLink": "политикой обработки данных",
+  "codeWaTitle": "Код из WhatsApp",
+  "codeSentTo": "Отправили сообщение на {phone} · ",
+  "changeLink": "Изменить",
+  "codeWrongMsg": "Неверный код. Проверьте сообщение в WhatsApp",
+  "codeOk": "Код подтверждён",
+  "codeChecking": "Проверяем код…",
+  "resendCode": "Отправить код ещё раз",
+  "resendIn": "Новый код через {s}",
+  "noWaTelegram": "Нет WhatsApp? Войти через Telegram",
+  "codeProtoHint": "Прототип: верный код — 1234",
+  "tgLoginTitle": "Вход через Telegram",
+  "tgLoginSub": "Бот попросит поделиться номером — так мы найдём ваш профиль",
+  "tgStep1": "Откройте бота 8mart в Telegram",
+  "tgStep2": "Нажмите «Старт»",
+  "tgStep3": "Нажмите «Поделиться номером»",
+  "openTg": "Открыть Telegram",
+  "tgWaitingMsg": "Ждём подтверждения в боте…",
+  "tgConfirmed": "Номер подтверждён · {phone}",
+  "loginByWa": "Войти по коду в WhatsApp",
+  "nameTitle": "Как вас зовут?",
+  "nameSub": "Чтобы курьер знал, к кому обращаться",
+  "continueBtn": "Продолжить",
+  "enterName": "Укажите имя",
+  "@codeSentTo": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "@resendIn": {
+    "placeholders": {
+      "s": {
+        "type": "String"
+      }
+    }
+  },
+  "@tgConfirmed": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
   }
 }

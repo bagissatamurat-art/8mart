@@ -11,7 +11,9 @@ enum CodeState { idle, checking, error, success }
 /// вставка и автозаполнение (AutofillHints.oneTimeCode / Android SMS Retriever) работают из коробки.
 /// Проверка — автоматически на последней цифре через [onCompleted].
 class MartCodeInput extends StatefulWidget {
-  const MartCodeInput({super.key, this.length = 4, required this.onCompleted, this.state = CodeState.idle, this.controller, this.autofocus = true});
+  const MartCodeInput({super.key, this.length = 4, required this.onCompleted, this.state = CodeState.idle, this.controller, this.autofocus = true, this.onEdit});
+  /// Пользователь начал править код после ошибки — сбросить ошибку.
+  final VoidCallback? onEdit;
   final int length;
   final ValueChanged<String> onCompleted;
   final CodeState state;
@@ -37,7 +39,7 @@ class _MartCodeInputState extends State<MartCodeInput> {
     super.didUpdateWidget(old);
     if (old.state != CodeState.error && widget.state == CodeState.error) {
       HapticFeedback.mediumImpact();
-      _ctl.clear();
+      // Не стираем: пользователь видит, что ввёл; следующая цифра заменит код.
     }
   }
 
@@ -50,6 +52,7 @@ class _MartCodeInputState extends State<MartCodeInput> {
 
   void _onChanged(String v) {
     setState(() {});
+    if (widget.state == CodeState.error) widget.onEdit?.call();
     if (v.length == widget.length) widget.onCompleted(v);
   }
 
@@ -61,21 +64,28 @@ class _MartCodeInputState extends State<MartCodeInput> {
     return GestureDetector(
       onTap: _focus.requestFocus,
       child: Stack(alignment: Alignment.center, children: [
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        // Как в MartAuth.dc.html: 4 ячейки на всю ширину (зазор 10), 64, радиус 16, белые, рамка 1.5 border;
+        // активная — primary + кольцо 3; ошибка — рамка error; успех — зелёные фон, рамка и цифры. Пустая активная — розовая каретка.
+        Row(children: [
           for (var i = 0; i < widget.length; i++) ...[
             if (i > 0) const SizedBox(width: 10),
-            AnimatedContainer(
-              duration: MartMotion.press,
-              width: 56, height: MartHeight.codeCell,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: st == CodeState.success ? c.successBg : st == CodeState.error ? c.errorBg : i < v.length ? c.surface : c.surface2,
-                borderRadius: BorderRadius.circular(MartRadius.field),
-                border: Border.all(width: 1.5, color: st == CodeState.success ? c.success : st == CodeState.error ? c.error
-                    : (_focus.hasFocus && i == v.length.clamp(0, widget.length - 1)) ? c.primary : i < v.length ? c.border : Colors.transparent),
-              ),
-              child: Text(i < v.length ? v[i] : '', style: MartText.h2.copyWith(fontSize: 24, fontWeight: FontWeight.w700, color: c.ink1)),
-            ),
+            Expanded(child: () {
+              final busy = st == CodeState.checking || st == CodeState.success;
+              final active = _focus.hasFocus && !busy && i == v.length.clamp(0, widget.length - 1);
+              final ok = st == CodeState.success, err = st == CodeState.error;
+              return AnimatedContainer(
+                duration: MartMotion.press, height: MartHeight.codeCell, alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: ok ? c.successBg : c.surface,
+                  borderRadius: BorderRadius.circular(MartRadius.field),
+                  border: Border.all(width: 1.5, color: ok ? c.success : err ? c.error : active ? c.primary : c.border),
+                  boxShadow: active && !err ? [BoxShadow(color: c.focusRing, spreadRadius: 3)] : null,
+                ),
+                child: i < v.length
+                    ? Text(v[i], style: TextStyle(fontFamily: 'Onest', fontSize: 28, fontWeight: FontWeight.w700, color: ok ? c.success : c.ink1))
+                    : active && !err ? Container(width: 2, height: 28, decoration: BoxDecoration(color: c.primary, borderRadius: BorderRadius.circular(1))) : null,
+              );
+            }()),
           ],
         ]),
         Positioned.fill(

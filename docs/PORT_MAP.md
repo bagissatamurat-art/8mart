@@ -20,7 +20,7 @@
 | MartProductView (mobile) | features/product/product_view.dart | ✅ |
 | MartSearch | features/search/search_screen.dart | ✅ |
 | MartMethodModal (mobile) | features/method/method_sheet.dart — flutter_map + тайлы Mapbox, GeoRepository (DaData) | ✅ |
-| MartAuth | features/auth/auth_view.dart | ⏳ |
+| MartAuth (mobile) | features/auth/auth_view.dart + ui/widgets/mart_code_input.dart | ✅ (прототип: код 1234) |
 | MartAccount | features/profile/* | ⏳ |
 | MartFilters | catalog_screen.dart → openFiltersSheet | ⏳ |
 
