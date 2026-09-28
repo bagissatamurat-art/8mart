@@ -15,3 +15,5 @@ android/local.properties
 widgetbook/.dart_tool/
 widgetbook/build/
 test_shots/goldens/
+
+.DS_Store

@@ -61,7 +61,7 @@ test/            маска телефона, деньги, planShipments
 
 **Push** (FCM + APNs): раскомментировать firebase_* в pubspec, `flutterfire configure`. Разрешение просим на экране статуса после первого заказа (карточка уже есть — `OrderStatusScreen`). `onMessageOpenedApp` → `router.go('/order/<id>')`.
 
-**Карта**: `mapbox_maps_flutter`. Публичный токен (pk.…) передаём при сборке: `flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.…`, в коде `const String.fromEnvironment('MAPBOX_ACCESS_TOKEN')` → `MapboxOptions.setAccessToken()`. Для скачивания SDK на iOS/Android нужен ещё секретный токен Mapbox `sk.…` с правом `DOWNLOADS:READ` (в `~/.netrc` и `gradle.properties`, не в репозиторий). В `method_sheet.dart` заменить заглушку. Адреса — только через бэкенд (`/geo/suggest`, `/geo/reverse` → DaData), ключи DaData в приложение не кладём.
+**Карта**: `mapbox_maps_flutter`. Публичный токен (pk.…) передаём при сборке: `flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.…`, в коде `const String.fromEnvironment('MAPBOX_ACCESS_TOKEN')` → `MapboxOptions.setAccessToken()`. Секретный токен `sk.…` для mapbox_maps_flutter 2.x не нужен. Подключено в `method_sheet.dart` (MapWidget, пин по центру — Flutter-оверлей, точки самовывоза — PointAnnotation). Адреса — только через бэкенд (`/geo/suggest`, `/geo/reverse` → DaData), ключи DaData в приложение не кладём.
 
 **Офлайн**: корзина/избранное/настройки — hydrated_bloc; фото — `cached_network_image`; каталог — кешировать ответы API (например, `dio_cache_interceptor` + Hive). Без сети — `OfflineBanner`, оплата недоступна, цены перепроверять `POST /cart/validate` перед оплатой.
 

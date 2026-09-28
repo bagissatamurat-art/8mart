@@ -1,11 +1,13 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart' hide Path;
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mb;
 
-import '../../core/env.dart';
 import '../../core/format.dart';
 import '../../data/geo_repository.dart';
 import '../../data/mock_data.dart';
@@ -18,7 +20,7 @@ TextStyle _f(double size, FontWeight w, Color col, {double? h, double? ls}) => T
 
 /// Выбор способа получения (MartMethodModal.dc.html, mobile): шторка 92 %, сверху карта 46 % (город слева, × справа),
 /// снизу панель: заголовок, свич Доставка/Самовывоз, адрес с подсказками или список точек, CTA 56.
-/// Карта — flutter_map + тайлы Mapbox (работает и в браузере). Адрес по пину — DaData geolocate / Mapbox reverse (GeoRepository).
+/// Карта — нативный Mapbox Maps SDK (mapbox_maps_flutter), токен ставится в main.dart. Адрес по пину — DaData geolocate / Mapbox reverse (GeoRepository).
 /// address + onSaveAddress — режим address-only (кабинет → Адреса): без свича, поле «Название», CTA «Сохранить адрес».
 Future<void> openMethodSheet(BuildContext context, {AddressDraft? address, ValueChanged<AddressDraft>? onSaveAddress}) => showModalBottomSheet<void>(
       context: context, isScrollControlled: true, useSafeArea: true, enableDrag: false, backgroundColor: Colors.transparent,
@@ -40,7 +42,15 @@ class _MethodSheet extends StatefulWidget {
 
 class _MethodSheetState extends State<_MethodSheet> {
   static const _geo = GeoRepository();
-  final _map = MapController();
+  // Карта Mapbox: контроллер появляется в onMapCreated.
+  mb.MapboxMap? _mb;
+  mb.PointAnnotationManager? _pins;
+  mb.Cancelable? _pinTaps;
+  final Map<String, String> _annToPoint = {};
+  Uint8List? _imgOn, _imgOff;
+  int _pinSeq = 0;
+  bool _camDirty = false;
+  late final mb.CameraViewportState _viewport;
   final _street = TextEditingController();
   final _entrance = TextEditingController(), _flat = TextEditingController(), _title = TextEditingController();
   bool get _addrOnly => widget.onSaveAddress != null;
@@ -71,6 +81,7 @@ class _MethodSheetState extends State<_MethodSheet> {
       _street.text = d.street; _pinLabel = d.street.isEmpty ? null : d.street;
       _title.text = d.title; _entrance.text = d.entrance; _flat.text = d.flat;
       _focus.addListener(() => setState(() => _sgOpen = _focus.hasFocus && _street.text.trim().length >= 3));
+      _viewport = mb.CameraViewportState(center: _pt(_city.lat, _city.lng), zoom: 15);
       return;
     }
     final i = cart.address.indexOf(', ');
@@ -80,10 +91,12 @@ class _MethodSheetState extends State<_MethodSheet> {
     }
     if (_m == ReceiveMethod.pickup) _point = MockData.pickupPoints.where((p) => cart.address.endsWith(p.name)).firstOrNull?.id;
     _focus.addListener(() => setState(() => _sgOpen = _focus.hasFocus && _street.text.trim().length >= 3));
+    // Создаём один раз: MapWidget переприменяет viewport, если пришёл новый объект.
+    _viewport = mb.CameraViewportState(center: _pt(_city.lat, _city.lng), zoom: _m == ReceiveMethod.delivery ? 15 : 12);
   }
 
   @override
-  void dispose() { _debounce?.cancel(); _reverseT?.cancel(); _street.dispose(); _entrance.dispose(); _flat.dispose(); _title.dispose(); _focus.dispose(); super.dispose(); }
+  void dispose() { _debounce?.cancel(); _reverseT?.cancel(); _pinTaps?.cancel(); _street.dispose(); _entrance.dispose(); _flat.dispose(); _title.dispose(); _focus.dispose(); super.dispose(); }
 
   List<PickupPoint> get _points => MockData.pickupPoints.where((p) => p.city == _city.id).toList();
 
@@ -109,17 +122,72 @@ class _MethodSheetState extends State<_MethodSheet> {
     _street.value = TextEditingValue(text: text, selection: TextSelection.collapsed(offset: text.length));
     setState(() { _sgOpen = false; _sg = const []; _pinLabel = s.title; });
     if (s.needHouse) { _focus.requestFocus(); } else { _focus.unfocus(); }
-    if (s.lat != null) { _quiet = true; _map.move(LatLng(s.lat!, s.lng!), 17); }
+    if (s.lat != null) { _quiet = true; _move(s.lat!, s.lng!, 17); }
   }
 
-  // ── пин: после остановки карты — адрес по координатам ──
-  void _onMapEvent(MapEvent e) {
-    if (_m != ReceiveMethod.delivery) return;
-    if (e is MapEventMoveStart || e is MapEventFlingAnimationStart || e is MapEventDoubleTapZoomStart) {
-      if (!_moving) setState(() => _moving = true);
-    }
-    if (e is MapEventMoveEnd || e is MapEventFlingAnimationEnd || e is MapEventDoubleTapZoomEnd || (e is MapEventMove && e.source == MapEventSource.mapController)) {
-      _scheduleReverse();
+  // ── карта Mapbox ──
+  static mb.Point _pt(double lat, double lng) => mb.Point(coordinates: mb.Position(lng, lat));
+
+  Future<void> _move(double lat, double lng, double zoom) async {
+    await _mb?.flyTo(mb.CameraOptions(center: _pt(lat, lng), zoom: zoom), mb.MapAnimationOptions(duration: 600));
+  }
+
+  Future<void> _onMapCreated(mb.MapboxMap m) async {
+    _mb = m;
+    await m.gestures.updateSettings(mb.GesturesSettings(rotateEnabled: false, pitchEnabled: false));
+    await m.scaleBar.updateSettings(mb.ScaleBarSettings(enabled: false));
+    final pins = await m.annotations.createPointAnnotationManager();
+    if (!mounted) return;
+    _pins = pins;
+    _pinTaps = pins.tapEvents(onTap: _onPinTap);
+    await _syncPins();
+  }
+
+  void _onStyleLoaded(mb.StyleLoadedEventData _) {
+    _mb?.style.localizeLabels('ru', null).catchError((_) {});
+    if (_m == ReceiveMethod.pickup) { _fitPoints(); } else if (_street.text.isEmpty) { _scheduleReverse(); }
+  }
+
+  // ── пин: пока камера движется — поднят, после остановки (idle) — адрес по координатам ──
+  void _onCamera(mb.CameraChangedEventData _) {
+    _camDirty = true;
+    if (_m == ReceiveMethod.delivery && !_moving) setState(() => _moving = true);
+  }
+
+  void _onIdle(mb.MapIdleEventData _) {
+    if (!_camDirty) return;
+    _camDirty = false;
+    if (_m == ReceiveMethod.delivery) _scheduleReverse();
+  }
+
+  // ── точки самовывоза: нативные аннотации с картинкой-кружком, тап выбирает точку ──
+  void _onPinTap(mb.PointAnnotation a) {
+    final id = _annToPoint[a.id];
+    final p = _points.where((x) => x.id == id).firstOrNull;
+    if (p != null) _pickPoint(p, fly: false);
+  }
+
+  Future<void> _syncPins() async {
+    final mgr = _pins;
+    if (mgr == null) return;
+    final seq = ++_pinSeq;
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    _imgOn ??= await _markerPng(true, dpr);
+    _imgOff ??= await _markerPng(false, dpr);
+    await mgr.deleteAll();
+    if (seq != _pinSeq) return;
+    _annToPoint.clear();
+    if (_m != ReceiveMethod.pickup) return;
+    final ps = _points;
+    // iOS читает PNG в 1×, Android — с плотностью экрана: на iOS уменьшаем, чтобы маркер был 36 pt.
+    final size = defaultTargetPlatform == TargetPlatform.iOS ? 1 / dpr : 1.0;
+    final anns = await mgr.createMulti([
+      for (final p in ps) mb.PointAnnotationOptions(geometry: _pt(p.lat, p.lng), image: p.id == _point ? _imgOn : _imgOff, iconSize: size),
+    ]);
+    if (seq != _pinSeq) return;
+    for (var i = 0; i < anns.length && i < ps.length; i++) {
+      final a = anns[i];
+      if (a != null) _annToPoint[a.id] = ps[i].id;
     }
   }
 
@@ -129,9 +197,11 @@ class _MethodSheetState extends State<_MethodSheet> {
         if (!mounted) return;
         setState(() => _moving = false);
         if (_quiet) { _quiet = false; return; }
-        final c = _map.camera.center;
+        final st = await _mb?.getCameraState();
+        if (st == null || !mounted) return;
+        final c = st.center.coordinates;
         setState(() => _locating = true);
-        final a = await _geo.reverse(c.latitude, c.longitude).catchError((_) => '');
+        final a = await _geo.reverse(c.lat.toDouble(), c.lng.toDouble()).catchError((_) => '');
         if (!mounted) return;
         setState(() { _locating = false; _pinLabel = a.isEmpty ? null : a; if (a.isNotEmpty && !_focus.hasFocus) _street.text = a; });
       });
@@ -139,23 +209,28 @@ class _MethodSheetState extends State<_MethodSheet> {
 
   void _setCity(City c) {
     setState(() { _city = c; _citiesOpen = false; _point = null; _street.clear(); _pinLabel = null; });
-    if (_m == ReceiveMethod.pickup && _points.isNotEmpty) { _fitPoints(); } else { _map.move(LatLng(c.lat, c.lng), _m == ReceiveMethod.delivery ? 15 : 12); }
+    if (_m == ReceiveMethod.pickup && _points.isNotEmpty) { _fitPoints(); } else { _move(c.lat, c.lng, _m == ReceiveMethod.delivery ? 15 : 12); }
+    _syncPins();
   }
 
-  void _fitPoints() {
-    final ps = _points;
-    if (ps.isEmpty) return;
-    _map.fitCamera(CameraFit.bounds(bounds: LatLngBounds.fromPoints([for (final p in ps) LatLng(p.lat, p.lng)]), padding: const EdgeInsets.fromLTRB(40, 80, 40, 40)));
+  Future<void> _fitPoints() async {
+    final m = _mb, ps = _points;
+    if (m == null || ps.isEmpty) return;
+    final cam = await m.cameraForCoordinatesPadding([for (final p in ps) _pt(p.lat, p.lng)], mb.CameraOptions(),
+        mb.MbxEdgeInsets(top: 80, left: 40, bottom: 40, right: 40), 15, null);
+    await m.flyTo(cam, mb.MapAnimationOptions(duration: 600));
   }
 
   void _setMethod(ReceiveMethod m) {
     setState(() => _m = m);
-    if (m == ReceiveMethod.pickup) { _fitPoints(); } else { _map.move(_map.camera.center, 15); }
+    if (m == ReceiveMethod.pickup) { _fitPoints(); } else { _mb?.easeTo(mb.CameraOptions(zoom: 15), mb.MapAnimationOptions(duration: 400)); }
+    _syncPins();
   }
 
   void _pickPoint(PickupPoint p, {bool fly = true}) {
     setState(() => _point = p.id);
-    if (fly) _map.move(LatLng(p.lat, p.lng), 15);
+    if (fly) _move(p.lat, p.lng, 15);
+    _syncPins();
   }
 
   void _confirm() {
@@ -180,30 +255,19 @@ class _MethodSheetState extends State<_MethodSheet> {
     final isD = _m == ReceiveMethod.delivery;
     final streetOk = RegExp(r'\d').hasMatch(_street.text);
     final ok = isD ? streetOk : _point != null && _points.any((p) => p.id == _point);
-    final center = _m == ReceiveMethod.delivery && _street.text.isEmpty ? LatLng(_city.lat, _city.lng) : LatLng(_city.lat, _city.lng);
     const cfg = ShippingConfig();
 
     final map = Stack(children: [
-      FlutterMap(
-        mapController: _map,
-        options: MapOptions(
-          initialCenter: center, initialZoom: isD ? 15 : 12,
-          interactionOptions: const InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
-          onMapEvent: _onMapEvent,
-          onMapReady: () { if (!isD) { _fitPoints(); } else if (_street.text.isEmpty) { _scheduleReverse(); } },
-        ),
-        children: [
-          TileLayer(
-            urlTemplate: 'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}@2x?access_token={t}',
-            additionalOptions: const {'t': Env.mapboxToken}, tileSize: 512, zoomOffset: -1, maxZoom: 20, userAgentPackageName: 'kz.mart8.app',
-          ),
-          if (!isD) MarkerLayer(markers: [
-            for (final p in _points) Marker(point: LatLng(p.lat, p.lng), width: 44, height: 44,
-                child: GestureDetector(onTap: () => _pickPoint(p, fly: false), child: Center(child: _PointMarker(selected: p.id == _point)))),
-          ]),
-          const Align(alignment: Alignment.bottomRight, child: Padding(padding: EdgeInsets.all(4),
-              child: Text('© Mapbox © OpenStreetMap', style: TextStyle(fontFamily: 'Onest', fontSize: 10, color: Color(0xFF6B6873))))),
-        ],
+      mb.MapWidget(
+        key: const ValueKey('method-map'),
+        styleUri: mb.MapboxStyles.MAPBOX_STREETS,
+        viewport: _viewport,
+        // Жесты по карте забирает карта, а не шторка/список под ней.
+        gestureRecognizers: {Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer())},
+        onMapCreated: _onMapCreated,
+        onStyleLoadedListener: _onStyleLoaded,
+        onCameraChangeListener: _onCamera,
+        onMapIdleListener: _onIdle,
       ),
       if (isD) IgnorePointer(child: Center(child: _Pin(lift: _moving, label: _locating ? null : (_pinLabel ?? 'Двигайте карту, чтобы указать дом'), muted: _pinLabel == null && !_locating, loading: _locating || (_moving && !_quiet)))),
       Positioned(left: 16, top: 16, child: _Float(onTap: () => setState(() => _citiesOpen = !_citiesOpen), child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -387,18 +451,22 @@ class _Pin extends StatelessWidget {
   }
 }
 
-/// Точка самовывоза (map.html .pp): 36, белая с розовой рамкой 2.5 и точкой 12; выбранная — розовая, ×1.15.
-class _PointMarker extends StatelessWidget {
-  const _PointMarker({required this.selected});
-  final bool selected;
-  @override
-  Widget build(BuildContext context) => AnimatedScale(
-        scale: selected ? 1.15 : 1, duration: const Duration(milliseconds: 150),
-        child: Container(width: 36, height: 36,
-          decoration: BoxDecoration(color: selected ? const Color(0xFFEE1D74) : Colors.white, shape: BoxShape.circle, border: Border.all(color: const Color(0xFFEE1D74), width: 2.5),
-              boxShadow: const [BoxShadow(color: Color(0x2E17151A), blurRadius: 12, offset: Offset(0, 4))]),
-          child: Center(child: Container(width: 12, height: 12, decoration: BoxDecoration(color: selected ? Colors.white : const Color(0xFFEE1D74), shape: BoxShape.circle)))),
-      );
+/// Точка самовывоза (map.html .pp) для аннотации Mapbox: 36, белая с розовой рамкой 2.5 и точкой 12; выбранная — розовая, ×1.15. PNG в [dpr].
+Future<Uint8List> _markerPng(bool selected, double dpr) async {
+  const pink = Color(0xFFEE1D74);
+  final k = dpr * (selected ? 1.15 : 1);
+  final side = (52 * dpr).ceil();
+  final rec = ui.PictureRecorder();
+  final cv = Canvas(rec);
+  final c = Offset(side / 2, side / 2);
+  cv.drawCircle(c + Offset(0, 4 * dpr), 18 * k, Paint()..color = const Color(0x2E17151A)..maskFilter = MaskFilter.blur(BlurStyle.normal, 5 * dpr));
+  cv.drawCircle(c, 18 * k, Paint()..color = selected ? pink : Colors.white);
+  cv.drawCircle(c, (18 - 1.25) * k, Paint()..color = pink..style = PaintingStyle.stroke..strokeWidth = 2.5 * k);
+  cv.drawCircle(c, 6 * k, Paint()..color = selected ? Colors.white : pink);
+  final img = await rec.endRecording().toImage(side, side);
+  final bytes = await img.toByteData(format: ui.ImageByteFormat.png);
+  img.dispose();
+  return bytes!.buffer.asUint8List();
 }
 
 class _Tick extends StatelessWidget {
