@@ -1,0 +1,22 @@
+
+::group::✅ Passing tests
+✅ PhoneMaskFormatter 8 → +7
+✅ PhoneMaskFormatter маска
+✅ PhoneMaskFormatter международный
+✅ PhoneMaskFormatter пустое — пустое
+✅ PhoneMaskFormatter Backspace на символе маски стирает цифру
+✅ PhoneMaskFormatter complete
+✅ money
+✅ planShipments только лёгкие — одна курьерская
+✅ planShipments смешанная — два отправления
+✅ planShipments together — одна Газель
+✅ planShipments самовывоз бесплатно
+✅ planShipments подъём на этаж
+✅ CatalogRepository подкатегория
+✅ CatalogRepository сортировка дешевле
+✅ CatalogRepository фильтр скидка
+✅ CatalogRepository поиск по подкатегории
+✅ CatalogRepository пагинация
+::endgroup::
+
+🎉 17 tests passed.
