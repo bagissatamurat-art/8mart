@@ -11,6 +11,7 @@ export 'widgets/mart_empty_state.dart';
 export 'widgets/mart_list_row.dart';
 export 'widgets/mart_search_field.dart';
 export 'widgets/mart_select.dart';
+export 'widgets/mart_tap_field.dart';
 export 'widgets/mart_skeleton.dart';
 export 'widgets/mart_code_input.dart';
 export 'widgets/mart_icons.dart';

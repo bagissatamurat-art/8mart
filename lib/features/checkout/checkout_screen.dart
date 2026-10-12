@@ -88,7 +88,8 @@ class _Form extends StatelessWidget {
         ]));
 
     // Слоты считаются от текущего времени Казахстана; выбранный пропал (время прошло) — первый доступный.
-    final eta = '${cfg.etaMin}–${cfg.etaMax} мин';
+    // «Ближайшее» подписано временем зоны адреса (если известна), иначе общими условиями.
+    final eta = cart.quote != null ? t.etaApprox(cart.quote!.eta) : '${cfg.etaMin}–${cfg.etaMax} мин';
     final courierDays = courierSlots(DateTime.now(), asapLabel: t.slotAsap, eta: eta), cargoDays = cargoSlots(DateTime.now());
     final cSlot = effectiveSlot(courierDays, s.courierSlot), gSlot = effectiveSlot(cargoDays, s.cargoSlot);
     final phone = s.recipientPhone ?? auth.phone, kaspiPhone = s.kaspiPhone ?? auth.phone;
@@ -129,7 +130,7 @@ class _Form extends StatelessWidget {
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(MartRadius.field), border: Border.all(color: c.border)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             ShipmentHead(tag: sh.tag(t, pickup), cargo: sh.isCargo, label: sh.label(t, pickup),
-                when: (!pickup ? slotTitle(context, sh.isCargo ? cargoDays : courierDays, sh.isCargo ? gSlot : cSlot) : null) ?? sh.when(t, pickup),
+                when: (!pickup ? slotTitle(context, sh.isCargo ? cargoDays : courierDays, sh.isCargo ? gSlot : cSlot) : null) ?? sh.when(t, pickup, eta: cart.quote?.eta),
                 meta: sh.meta(t, pickup, cart.address), feeText: pickup ? null : sh.feeText(t)),
             const SizedBox(height: 12),
             Wrap(spacing: 6, runSpacing: 6, children: [for (final l in sh.lines) SizedBox.square(dimension: 40, child: MartImage(l.product.image, radius: 10, fit: BoxFit.cover))]),

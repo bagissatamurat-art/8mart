@@ -85,7 +85,7 @@ class CartScreen extends StatelessWidget {
               ],
               for (final sh in plan.shipments) ...[
                 card(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  Padding(padding: const EdgeInsets.fromLTRB(10, 10, 10, 8), child: ShipmentHead(tag: sh.tag(t, pickup), cargo: sh.isCargo, label: sh.label(t, pickup), when: sh.when(t, pickup), meta: sh.meta(t, pickup, s.address), feeText: pickup ? null : sh.feeText(t))),
+                  Padding(padding: const EdgeInsets.fromLTRB(10, 10, 10, 8), child: ShipmentHead(tag: sh.tag(t, pickup), cargo: sh.isCargo, label: sh.label(t, pickup), when: sh.when(t, pickup, eta: s.quote?.eta), meta: sh.meta(t, pickup, s.address), feeText: pickup ? null : sh.feeText(t))),
                   Container(height: 1, margin: const EdgeInsets.fromLTRB(10, 0, 10, 2), color: c.divider),
                   for (final l in sh.lines) Padding(padding: const EdgeInsets.only(top: 2),
                     child: MartCartLine(line: l, onQty: (q) => cubit.setQty(l.product.id, q), soldOutLabel: t.soldOut, notCountedLabel: t.notCounted, notInStockLabel: t.notInStock,

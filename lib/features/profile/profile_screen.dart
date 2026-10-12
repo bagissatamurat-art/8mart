@@ -33,6 +33,8 @@ class ProfileScreen extends StatelessWidget {
         Expanded(child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
           Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card)), child: const AuthView()),
           const SizedBox(height: 12),
+          _Row(label: t.faqTitle, onTap: () => context.go('/profile/faq')),
+          const SizedBox(height: 8),
           _Row(label: t.settings, onTap: () => context.go('/profile/settings')),
         ])),
       ]));
@@ -94,6 +96,7 @@ class ProfileScreen extends StatelessWidget {
           decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card)),
           child: Column(children: [
             for (final s in AccountSection.values) _NavRow(label: sectionTitle(t, s), badge: badge(s), badgeColor: s == AccountSection.bonus ? c.successText : c.ink2, onTap: () => context.go('/profile/${s.name}')),
+            _NavRow(label: t.faqTitle, onTap: () => context.go('/profile/faq')),
             _NavRow(label: t.settings, onTap: () => context.go('/profile/settings')),
           ]),
         ),

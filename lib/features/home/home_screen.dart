@@ -31,7 +31,7 @@ class HomeScreen extends StatelessWidget {
     final cart = context.watch<CartCubit>().state;
 
     return Scaffold(
-      body: RefreshIndicator(
+      body: Stack(children: [RefreshIndicator(
         color: c.primary,
         onRefresh: () async => Future<void>.delayed(const Duration(milliseconds: 600)),
         child: CustomScrollView(slivers: [
@@ -66,6 +66,9 @@ class HomeScreen extends StatelessWidget {
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ]),
       ),
+        // Шапка уезжает при прокрутке — строку состояния закрываем фоном, чтобы контент не заходил под часы.
+        Positioned(top: 0, left: 0, right: 0, height: MediaQuery.paddingOf(context).top, child: ColoredBox(color: c.surface)),
+      ]),
     );
   }
 }

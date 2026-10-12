@@ -365,6 +365,8 @@ class _PromosState extends State<_Promos> {
 }
 
 // ── Бонусы (MartAccount): тёмная карточка баланса 40/800 + правила; «История» — строки с разделителями ──
+/// Бонусы (как на сайте): баланс — фирменный зелёный бонусов с монетками «Б» (не тёмная плашка), «Как это работает» — 3 пункта,
+/// история — «+» зелёным, «−» серым.
 class _Bonus extends StatelessWidget {
   const _Bonus();
   @override
@@ -372,25 +374,53 @@ class _Bonus extends StatelessWidget {
     final t = L10n.of(context);
     final c = context.mc;
     final s = context.watch<AccountCubit>().state;
-    const muted = Color(0xFFC9C7CE);
+    const onGreen = Color(0xCCFFFFFF);
     String grp(int n) => money(n.abs()).replaceAll(RegExp(r'\s*тг\.'), '');
+    Widget circle(String glyph, Color bg, Color fg, {double size = 36}) => Container(width: size, height: size, alignment: Alignment.center,
+        decoration: BoxDecoration(color: bg, shape: BoxShape.circle), child: Text(glyph, style: _fs(size * .47, FontWeight.w800, fg, h: 1)));
+    final how = [('+', t.bonusEarnTitle, t.bonusEarnText), ('%', t.bonusSpendTitle, t.bonusSpendText(MockData.bonusMaxPart)), ('∞', t.bonusKeepTitle, t.bonusKeepText)];
     return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
       Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: const Color(0xFF17151A), borderRadius: BorderRadius.circular(MartRadius.card)),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Ваш баланс', style: _fs(14, FontWeight.w400, muted)),
-          const SizedBox(height: 8),
-          Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-            Text(grp(s.bonusBalance), style: _fs(40, FontWeight.w800, Colors.white, ls: -0.8)),
-            const SizedBox(width: 10),
-            Text(plural(s.bonusBalance, 'бонус', 'бонуса', 'бонусов'), style: _fs(16, FontWeight.w400, muted)),
-          ]),
-          const SizedBox(height: 8),
-          Text.rich(TextSpan(text: '1 бонус = 1 тг · за товары с отметкой ', children: [
-            const WidgetSpan(alignment: PlaceholderAlignment.middle, child: BonusBadge(amount: 0, compact: true, label: '+N')),
-            TextSpan(text: ' начисляем бонусы после получения заказа · оплачивайте бонусами до ${MockData.bonusMaxPart}% суммы товаров'),
-          ]), style: _fs(14, FontWeight.w400, muted, h: 1.5)),
+        padding: const EdgeInsets.all(20), clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(MartRadius.card),
+            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [c.success, c.successText])),
+        child: Row(children: [
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(t.bonusBalanceTitle, style: _fs(14, FontWeight.w600, onGreen)),
+            const SizedBox(height: 4),
+            Wrap(crossAxisAlignment: WrapCrossAlignment.end, spacing: 10, children: [
+              Text(grp(s.bonusBalance), style: _fs(32, FontWeight.w800, Colors.white, ls: -0.64, h: 1.1)),
+              Padding(padding: const EdgeInsets.only(bottom: 4), child: Text(plural(s.bonusBalance, 'бонус', 'бонуса', 'бонусов'), style: _fs(16, FontWeight.w600, const Color(0xE6FFFFFF)))),
+            ]),
+            const SizedBox(height: 4),
+            Text(t.bonusWorth(grp(s.bonusBalance)), style: _fs(14, FontWeight.w400, onGreen)),
+          ])),
+          // Стопка монеток «Б» — декор.
+          ExcludeSemantics(child: SizedBox(width: 84, height: 72, child: Stack(children: [
+            for (final (r, top, rot, sc, op) in const [(46.0, 4.0, .1, .72, .75), (26.0, 18.0, -.14, 1.0, .92), (0.0, 0.0, .21, 1.0, 1.0)])
+              Positioned(right: r, top: top, child: Opacity(opacity: op, child: Transform.rotate(angle: rot, child: Transform.scale(scale: sc,
+                  child: Container(width: 52, height: 52, alignment: Alignment.center,
+                      decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: c.successBg, width: 4),
+                          boxShadow: const [BoxShadow(color: Color(0x590F6B3E), blurRadius: 16, offset: Offset(0, 6))]),
+                      child: Text('Б', style: _fs(22, FontWeight.w800, c.success, h: 1))))))),
+          ]))),
+        ]),
+      ),
+      const SizedBox(height: 10),
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text(t.bonusHowTitle, style: _fs(16, FontWeight.w700, c.ink1)),
+          for (final (g, title, text) in how) Padding(padding: const EdgeInsets.only(top: 12), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            circle(g, c.successBg, c.successText),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: _fs(15, FontWeight.w700, c.ink1)),
+              const SizedBox(height: 2),
+              Text(text, style: _fs(13, FontWeight.w400, c.ink2, h: 1.4)),
+            ])),
+          ])),
         ]),
       ),
       const SizedBox(height: 10),
@@ -403,13 +433,15 @@ class _Bonus extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(border: Border(top: BorderSide(color: c.divider))),
             child: Row(children: [
+              circle(op.amount > 0 ? '+' : '−', op.amount > 0 ? c.successBg : c.surface2, op.amount > 0 ? c.successText : c.ink2),
+              const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(op.title, style: _fs(14, FontWeight.w400, c.ink1, h: 1.4)),
                 const SizedBox(height: 2),
                 Text(op.date, style: _fs(13, FontWeight.w400, c.ink3)),
               ])),
               const SizedBox(width: 12),
-              Text('${op.amount > 0 ? '+' : '−'}${grp(op.amount)}', style: _fs(15, FontWeight.w700, op.amount > 0 ? c.success : c.ink1)),
+              Text('${op.amount > 0 ? '+' : '−'}${grp(op.amount)}', style: _fs(15, FontWeight.w700, op.amount > 0 ? c.successText : c.ink1)),
             ]),
           ),
         ]),
