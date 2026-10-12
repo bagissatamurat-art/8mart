@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../core/api_client.dart';
 import '../domain/models.dart';
 
 /// Ответ зоны доставки: доставляем (quote) / адрес вне зон / сервис недоступен (показываем общие условия).
@@ -22,8 +23,9 @@ class QuoteUnavailable extends QuoteResult {
   const QuoteUnavailable();
 }
 
-/// Зоны доставки 8mart.kz: GET /public/branches/resolve-delivery?lat&lng → филиал, зона, стоимость и время курьера.
-/// ⚠ Временный адаптер к публичному API 8mart.kz (как GeoRepository к DaData). В проде — эндпоинт бэкенда (GET /delivery/quote?lat&lng), формы те же.
+/// Зона доставки для точки: стоимость и время курьера, филиал. С API_URL — GET /delivery/quote?lat&lng бэкенда
+/// ({status:'ok', quote:{fee, eta, branchName, zone, kaspiIntegrated}} | {status:'outside'} | {status:'unavailable'}), имя для API_MOCK — «deliveryQuote».
+/// TEMP-ADAPTER: без бэкенда — публичный API 8mart.kz (GET /public/branches/resolve-delivery?lat&lng). С бэкендом — удалить _api и _live.
 class DeliveryRepository {
   const DeliveryRepository();
   static const _api = 'https://dukenfy-api.8mart.kz/api/v1/public/branches/resolve-delivery';
@@ -35,6 +37,24 @@ class DeliveryRepository {
     final key = '${lat.toStringAsFixed(4)},${lng.toStringAsFixed(4)}';
     final hit = _cache[key];
     if (hit != null) return hit;
+    if (!ApiClient.isMocked('deliveryQuote')) return _backend(key, lat, lng);
+    return _live(key, lat, lng);
+  }
+
+  Future<QuoteResult> _backend(String key, double lat, double lng) async {
+    try {
+      final j = await ApiClient.instance.get<Map<String, dynamic>>('/delivery/quote', query: {'lat': lat.toStringAsFixed(4), 'lng': lng.toStringAsFixed(4)});
+      return switch (j['status']) {
+        'ok' => _cache[key] = QuoteOk(DeliveryQuote.fromJson(j['quote'])!),
+        'outside' => _cache[key] = const QuoteOutside(),
+        _ => const QuoteUnavailable(),
+      };
+    } catch (_) {
+      return const QuoteUnavailable();
+    }
+  }
+
+  Future<QuoteResult> _live(String key, double lat, double lng) async {
     try {
       final r = await http.get(Uri.parse('$_api?lat=${lat.toStringAsFixed(4)}&lng=${lng.toStringAsFixed(4)}')).timeout(const Duration(seconds: 6));
       final body = jsonDecode(utf8.decode(r.bodyBytes));

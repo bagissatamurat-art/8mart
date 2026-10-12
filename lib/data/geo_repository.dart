@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../core/api_client.dart';
 import '../core/env.dart';
 import '../domain/models.dart';
 
@@ -15,8 +16,9 @@ class AddressSuggestion {
 
 class GeoUnavailable implements Exception {}
 
-/// Порт geo.js: DaData suggest/geolocate + запасной Mapbox Geocoding v6.
-/// ⚠ Прототип зовёт DaData из клиента. В проде заменить на GET /geo/suggest?q&city и GET /geo/reverse?lat&lng (формы ответа те же).
+/// Подсказки адреса и адрес по пину. С API_URL — GET /geo/suggest?q&city → [{title, subtitle, lat, lng, hasHouse}] и
+/// GET /geo/reverse?lat&lng → {address, city, hasHouse} бэкенда (как у сайта), имя для API_MOCK — «geo».
+/// TEMP-ADAPTER: без бэкенда — порт geo.js, DaData из клиента + запасной Mapbox Geocoding v6. С бэкендом — удалить _dadata, _mapboxForward и ключ DADATA_API_KEY.
 class GeoRepository {
   const GeoRepository();
   static const _dd = 'https://suggestions.dadata.ru/suggestions/api/4_1/rs';
@@ -38,6 +40,17 @@ class GeoRepository {
 
   /// Подсказки «Улица, дом» в пределах города, до 6.
   Future<List<AddressSuggestion>> suggest(String q, City city) async {
+    if (!ApiClient.isMocked('geo')) {
+      try {
+        final list = await ApiClient.instance.get<List<dynamic>>('/geo/suggest', query: {'q': q, 'city': city.id});
+        return [
+          for (final s in list.cast<Map<String, dynamic>>())
+            AddressSuggestion(title: '${s['title']}', sub: '${s['subtitle'] ?? ''}', lat: (s['lat'] as num?)?.toDouble(), lng: (s['lng'] as num?)?.toDouble(), needHouse: s['hasHouse'] == false),
+        ];
+      } on ApiError {
+        throw GeoUnavailable();
+      }
+    }
     final list = await _dadata('suggest/address', {'query': q, 'count': 10, 'locations': [{'country_iso_code': 'KZ', 'city': city.name}], 'restrict_value': true, 'language': 'ru'});
     final out = <AddressSuggestion>[];
     final seen = <String>{};
@@ -61,6 +74,14 @@ class GeoRepository {
 
   /// Адрес по пину → «улица, дом». DaData geolocate, если пусто — Mapbox reverse.
   Future<String> reverse(double lat, double lng) async {
+    if (!ApiClient.isMocked('geo')) {
+      try {
+        final j = await ApiClient.instance.get<Map<String, dynamic>?>('/geo/reverse', query: {'lat': lat, 'lng': lng});
+        return '${j?['address'] ?? ''}';
+      } on ApiError {
+        throw GeoUnavailable();
+      }
+    }
     try {
       final s = (await _dadata('geolocate/address', {'lat': lat, 'lon': lng, 'count': 1, 'radius_meters': 100, 'language': 'ru'})).firstOrNull;
       final d = s?['data'] as Map?;

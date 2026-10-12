@@ -1,3 +1,4 @@
+// TEMP-ADAPTER: генератор мока из публичного API 8mart.kz. С бэкендом (GET /products, /pickup-points) не нужен.
 // Импорт настоящих данных 8mart.kz → lib/data/flowers.g.dart и lib/data/branches.g.dart (мок в форме API-контракта).
 // Тот же источник и та же логика, что у сайта (8mart-site: scripts/import-flowers.mjs, lib/branches.ts):
 //  · букеты — со всех филиалов; размеры S/M/L — варианты одного букета, у каждого своя цена и фото;

@@ -3,13 +3,15 @@
 Стартовый пакет: дизайн-токены, тема (светлая/тёмная), локализация ru/kk, виджеты UI Kit, блоки заказа, экраны главного сценария на Bloc/Cubit, Widgetbook.
 Источник правды по дизайну — `App UI Kit.dc.html` и mobile-макеты (`01…08 *.dc.html`). Отличия сайта от приложения — `docs/APP_AUDIT.md`. Макеты — `design/`. Правила для Claude Code — `CLAUDE.md`. Вопросы к бизнесу — `docs/OPEN_QUESTIONS.md`. Push, настройки, документы, разрешения, аналитика — `docs/APP_SPEC.md`.
 
+> **Подключение бэкенда — [AGENTS.md](AGENTS.md)**: ключи (env.json), переключатель мок / API (`lib/core/api_client.dart`, `API_URL`, `API_MOCK`), карта мока → эндпоинты.
+
 > Перед работой: `flutter pub get && flutter gen-l10n && flutter analyze && flutter test` (Flutter 3.44+).
 
 ## Запуск
 ```bash
 flutter pub get
 flutter gen-l10n
-flutter run --dart-define-from-file=env.json   # ключи Mapbox/DaData (env.json — в .gitignore, образец env.example.json)
+flutter run --dart-define-from-file=env.json   # API_URL, API_MOCK, Mapbox, DaData (env.json — в .gitignore, образец env.example.json, описание — AGENTS.md)
 # браузер: flutter run -d web-server --web-port 8080 --dart-define-from-file=env.json
 # галерея компонентов
 cd widgetbook && flutter pub get && flutter run -d chrome
@@ -98,7 +100,7 @@ test/            маска телефона, деньги, planShipments
 ## Что сделано / что осталось
 Сделано (на моках): сплэш → главная; каталог (категории → подкатегории, фильтры цена/скидка, 5 сортировок, бесконечная прокрутка, скелетоны, «ничего не нашли», «нет сети»); поиск (недавние, «часто ищут», подсказки категорий и товаров, результаты с фильтрами); карточка товара; способ получения; корзина с отправлениями; вход WhatsApp/Telegram + Face ID; оформление с сохранёнными картами; статус с отменой и push-запросом; профиль и 7 разделов кабинета (заказы с «Повторить», избранное, адреса, способы оплаты, промокоды, бонусы, личные данные со сменой телефона и удалением аккаунта); обязательное обновление; тёмная тема; ru/kk.
 
-Осталось подключить (нужны ключи/бэкенд): API вместо MockData, Mapbox в `method_sheet.dart` и `openAddressSheet`, Firebase push, реальная оплата Kaspi/шлюза, connectivity_plus для «нет сети» (сейчас флаг `CatalogRepository.offline`), `AppConfig.forceUpdate` из `GET /app/config`.
+Осталось подключить (нужны ключи/бэкенд): API вместо MockData (по карте в AGENTS.md; стори, зоны доставки и подсказки адресов уже переключаются через API_URL), Mapbox в `method_sheet.dart` и `openAddressSheet`, Firebase push, реальная оплата Kaspi/шлюза, connectivity_plus для «нет сети» (сейчас флаг `CatalogRepository.offline`), `AppConfig.forceUpdate` из `GET /app/config`.
 Не сделано в дизайне и коде: онбординг.
 Мок: тарифы грузовой доставки, бонусы, слоты доставки (`lib/domain/slots.dart`), порог бесплатной доставки. Казахские строки — черновые.
 
