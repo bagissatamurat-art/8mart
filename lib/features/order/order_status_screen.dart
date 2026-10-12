@@ -168,9 +168,11 @@ class OrderStatusScreen extends StatelessWidget {
           const SizedBox(height: 2),
           Text(o.address, style: _f(14, FontWeight.w600, c.ink1, h: 1.4)),
           const SizedBox(height: 12),
-          Text('Получатель', style: _f(13, FontWeight.w400, c.ink3)),
+          Text(t.recipient, style: _f(13, FontWeight.w400, c.ink3)),
           const SizedBox(height: 2),
-          Text('${auth.name} · ${auth.phone}', style: _f(14, FontWeight.w400, c.ink1, h: 1.4)),
+          // Имя — если указано в профиле (при входе не спрашиваем); телефон — из оформления.
+          Text([auth.name, o.recipientPhone.isEmpty ? auth.phone : o.recipientPhone].where((x) => x.isNotEmpty).join(' · '), style: _f(14, FontWeight.w400, c.ink1, h: 1.4)),
+          if (o.leaveAtDoor) ...[const SizedBox(height: 2), Text(t.leaveAtDoor, style: _f(13, FontWeight.w400, c.ink2))],
         ]),
         if (o.lines.isNotEmpty) ...[
           const SizedBox(height: 12),

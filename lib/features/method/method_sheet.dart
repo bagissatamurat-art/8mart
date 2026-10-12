@@ -244,7 +244,7 @@ class _MethodSheetState extends State<_MethodSheet> {
       cart.setMethod(_m, '${_city.name}, ${_street.text.trim().replaceAll(RegExp(r',\s*$'), '')}');
     } else {
       final p = _points.firstWhere((x) => x.id == _point);
-      cart.setMethod(_m, '${_city.name}, ${p.name}');
+      cart.setMethod(_m, '${_city.name}, ${p.name}', pickupKaspi: p.kaspiIntegrated);
     }
     Navigator.of(context).pop();
   }

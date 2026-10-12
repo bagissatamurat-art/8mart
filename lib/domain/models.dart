@@ -67,6 +67,19 @@ class SavedCard extends Equatable {
 
 enum ReceiveMethod { delivery, pickup }
 
+/// Зона доставки 8mart.kz для адреса (GET /public/branches/resolve-delivery?lat&lng): стоимость и время курьера, филиал.
+class DeliveryQuote extends Equatable {
+  const DeliveryQuote({required this.fee, required this.eta, required this.branchName, required this.zone, this.kaspiIntegrated = false});
+  final int fee, eta;
+  final String branchName, zone;
+  final bool kaspiIntegrated;
+  Map<String, dynamic> toJson() => {'fee': fee, 'eta': eta, 'branchName': branchName, 'zone': zone, 'kaspiIntegrated': kaspiIntegrated};
+  static DeliveryQuote? fromJson(Object? j) => j is Map ? DeliveryQuote(fee: j['fee'] as int, eta: j['eta'] as int, branchName: j['branchName'] as String? ?? '',
+      zone: j['zone'] as String? ?? '', kaspiIntegrated: j['kaspiIntegrated'] as bool? ?? false) : null;
+  @override
+  List<Object?> get props => [fee, eta, branchName, zone, kaspiIntegrated];
+}
+
 class CartLine extends Equatable {
   const CartLine(this.product, this.qty, {this.soldOut = false});
   final Product product;

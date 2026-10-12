@@ -7,8 +7,11 @@ import '../domain/shipments.dart';
 /// Статус заказа: своя шкала на каждое отправление. 0 принят · 1 собираем · 2 в пути/готов · 3 доставлен/выдан.
 class OrderState extends Equatable {
   const OrderState({this.id = '', this.method = ReceiveMethod.delivery, this.kinds = const [], this.current = const [], this.qty = const [], this.total = 0, this.bonus = 0, this.cancelled = false, this.cancelling = false,
-      this.lines = const [], this.address = '', this.paidWith = '', this.date = '', this.goods = 0, this.discount = 0, this.spent = 0, this.fees = const []});
+      this.lines = const [], this.address = '', this.paidWith = '', this.date = '', this.goods = 0, this.discount = 0, this.spent = 0, this.fees = const [], this.recipientPhone = '', this.leaveAtDoor = false});
   final String id, address, paidWith, date;
+  /// Телефон получателя (из оформления) и «оставить у двери».
+  final String recipientPhone;
+  final bool leaveAtDoor;
   /// Состав заказа и суммы для блока «N товаров» на экране статуса.
   final List<CartLine> lines;
   final int goods, discount, spent;
@@ -23,7 +26,7 @@ class OrderState extends Equatable {
   bool get allDone => current.isNotEmpty && current.every((c) => c >= 3);
   OrderState copyWith({List<int>? current, bool? cancelled, bool? cancelling}) => OrderState(
       id: id, method: method, kinds: kinds, qty: qty, total: total, bonus: bonus, lines: lines, address: address, paidWith: paidWith, date: date, goods: goods, discount: discount, spent: spent, fees: fees,
-      current: current ?? this.current, cancelled: cancelled ?? this.cancelled, cancelling: cancelling ?? this.cancelling);
+      recipientPhone: recipientPhone, leaveAtDoor: leaveAtDoor, current: current ?? this.current, cancelled: cancelled ?? this.cancelled, cancelling: cancelling ?? this.cancelling);
   @override
   List<Object?> get props => [id, method, kinds, current, qty, total, bonus, cancelled, cancelling];
 }
@@ -39,8 +42,9 @@ class OrderCubit extends Cubit<OrderState> {
   OrderCubit() : super(const OrderState());
 
   void create({required String id, required ShipmentPlan plan, required ReceiveMethod method, required int total, required int bonus,
-      List<CartLine> lines = const [], String address = '', String paidWith = '', int goods = 0, int discount = 0, int spent = 0}) => emit(OrderState(
-      id: id, method: method, total: total, bonus: bonus, lines: lines, address: address, paidWith: paidWith, date: 'сегодня', goods: goods, discount: discount, spent: spent,
+      List<CartLine> lines = const [], String address = '', String paidWith = '', int goods = 0, int discount = 0, int spent = 0,
+      String recipientPhone = '', bool leaveAtDoor = false}) => emit(OrderState(
+      recipientPhone: recipientPhone, leaveAtDoor: leaveAtDoor, id: id, method: method, total: total, bonus: bonus, lines: lines, address: address, paidWith: paidWith, date: 'сегодня', goods: goods, discount: discount, spent: spent,
       fees: [for (final s in plan.shipments) s.fee + s.lift],
       kinds: [for (final s in plan.shipments) s.kind], qty: [for (final s in plan.shipments) s.qty], current: [for (final _ in plan.shipments) 0]));
 

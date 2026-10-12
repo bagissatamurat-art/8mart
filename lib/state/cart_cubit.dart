@@ -12,12 +12,18 @@ abstract final class PromoRules {
 }
 
 class CartState extends Equatable {
-  const CartState({this.items = const {}, this.soldOut = const {}, this.method, this.address = '', this.together = false, this.promo});
+  const CartState({this.items = const {}, this.soldOut = const {}, this.method, this.address = '', this.together = false, this.promo, this.quote, this.pickupKaspi = false});
   final Map<String, int> items;
   final Set<String> soldOut;
   final ReceiveMethod? method;
   final String address;
   final bool together;
+  /// Доставка: зона адреса (стоимость и время курьера); null — общие условия ShippingConfig.
+  final DeliveryQuote? quote;
+  /// Самовывоз: филиал принимает Kaspi Pay автоматически.
+  final bool pickupKaspi;
+  /// Счёт в Kaspi на номер не нужен: филиал (зоны доставки или точка самовывоза) принимает Kaspi Pay автоматически.
+  bool get kaspiIntegrated => method == ReceiveMethod.pickup ? pickupKaspi : quote?.kaspiIntegrated ?? false;
   /// Применённый промокод (null — нет).
   final String? promo;
   int get discount => promo == PromoRules.code && goods >= PromoRules.minSum ? (goods * PromoRules.pct / 100).round() : 0;
@@ -35,15 +41,16 @@ class CartState extends Equatable {
   int qtyOf(String id) => items[id] ?? 0;
 
   ShipmentPlan plan({int floor = 0, bool lift = false, int? goodsTotal}) =>
-      planShipments(lines, method: method ?? ReceiveMethod.delivery, together: together, goodsTotal: goodsTotal ?? goods, floor: floor, lift: lift);
+      planShipments(lines, method: method ?? ReceiveMethod.delivery, together: together, goodsTotal: goodsTotal ?? goods, floor: floor, lift: lift,
+          cfg: method != ReceiveMethod.pickup && quote != null ? ShippingConfig(courierFee: quote!.fee, etaMin: quote!.eta, etaMax: quote!.eta) : const ShippingConfig());
 
-  CartState copyWith({Map<String, int>? items, Set<String>? soldOut, ReceiveMethod? method, String? address, bool? together, Object? promo = _keep}) => CartState(
+  CartState copyWith({Map<String, int>? items, Set<String>? soldOut, ReceiveMethod? method, String? address, bool? together, Object? promo = _keep, Object? quote = _keep, bool? pickupKaspi}) => CartState(
       items: items ?? this.items, soldOut: soldOut ?? this.soldOut, method: method ?? this.method, address: address ?? this.address, together: together ?? this.together,
-      promo: identical(promo, _keep) ? this.promo : promo as String?);
+      promo: identical(promo, _keep) ? this.promo : promo as String?, quote: identical(quote, _keep) ? this.quote : quote as DeliveryQuote?, pickupKaspi: pickupKaspi ?? this.pickupKaspi);
   static const _keep = Object();
 
   @override
-  List<Object?> get props => [items, soldOut, method, address, together, promo];
+  List<Object?> get props => [items, soldOut, method, address, together, promo, quote, pickupKaspi];
 }
 
 /// Корзина и способ получения переживают перезапуск (hydrated) — это и офлайн-кеш корзины.
@@ -74,7 +81,9 @@ class CartCubit extends HydratedCubit<CartState> {
     final items = Map<String, int>.from(state.items)..removeWhere((k, _) => state.soldOut.contains(k));
     emit(state.copyWith(items: items, soldOut: {}));
   }
-  void setMethod(ReceiveMethod m, String address) => emit(state.copyWith(method: m, address: address));
+  /// quote — зона доставки адреса; pickupKaspi — Kaspi подключён в выбранном филиале.
+  void setMethod(ReceiveMethod m, String address, {DeliveryQuote? quote, bool pickupKaspi = false}) =>
+      emit(state.copyWith(method: m, address: address, quote: m == ReceiveMethod.delivery ? quote : null, pickupKaspi: pickupKaspi));
   void setTogether(bool v) => emit(state.copyWith(together: v));
   /// Сервер сообщил, что товара нет в наличии.
   void markSoldOut(String id) => emit(state.copyWith(soldOut: {...state.soldOut, id}));
@@ -92,8 +101,10 @@ class CartCubit extends HydratedCubit<CartState> {
         address: j['address'] as String? ?? '',
         together: j['together'] as bool? ?? false,
         promo: j['promo'] as String?,
+        quote: DeliveryQuote.fromJson(j['quote']),
+        pickupKaspi: j['pickupKaspi'] as bool? ?? false,
       );
 
   @override
-  Map<String, dynamic>? toJson(CartState s) => {'items': s.items, 'soldOut': s.soldOut.toList(), 'method': s.method?.name, 'address': s.address, 'together': s.together, 'promo': s.promo};
+  Map<String, dynamic>? toJson(CartState s) => {'items': s.items, 'soldOut': s.soldOut.toList(), 'method': s.method?.name, 'address': s.address, 'together': s.together, 'promo': s.promo, 'quote': s.quote?.toJson(), 'pickupKaspi': s.pickupKaspi};
 }

@@ -90,3 +90,24 @@ class _SearchPainter extends CustomPainter {
   @override
   bool shouldRepaint(_SearchPainter o) => o.color != color;
 }
+
+/// Галочка геометрией (выбранный пункт списка, чекбокс).
+class MartCheck extends StatelessWidget {
+  const MartCheck({super.key, required this.color, this.width = 12});
+  final Color color;
+  final double width;
+  @override
+  Widget build(BuildContext context) => CustomPaint(size: Size(width, width * .75), painter: _CheckPainter(color));
+}
+
+class _CheckPainter extends CustomPainter {
+  _CheckPainter(this.color);
+  final Color color;
+  @override
+  void paint(Canvas canvas, Size s) {
+    final p = Paint()..color = color..strokeWidth = 2..style = PaintingStyle.stroke..strokeCap = StrokeCap.round..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(Path()..moveTo(1, s.height * .5)..lineTo(s.width * .38, s.height - 1)..lineTo(s.width - 1, 1), p);
+  }
+  @override
+  bool shouldRepaint(_CheckPainter o) => o.color != color;
+}
