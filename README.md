@@ -3,17 +3,23 @@
 Стартовый пакет: дизайн-токены, тема (светлая/тёмная), локализация ru/kk, виджеты UI Kit, блоки заказа, экраны главного сценария на Bloc/Cubit, Widgetbook.
 Источник правды по дизайну — `App UI Kit.dc.html` и mobile-макеты (`01…08 *.dc.html`). Отличия сайта от приложения — `docs/APP_AUDIT.md`. Макеты — `design/`. Правила для Claude Code — `CLAUDE.md`. Вопросы к бизнесу — `docs/OPEN_QUESTIONS.md`. Push, настройки, документы, разрешения, аналитика — `docs/APP_SPEC.md`.
 
-> Код писался без запуска Flutter. Перед работой: `flutter pub get && flutter gen-l10n && flutter analyze && flutter test` — поправить то, что найдёт анализатор.
+> Перед работой: `flutter pub get && flutter gen-l10n && flutter analyze && flutter test` (Flutter 3.44+).
 
 ## Запуск
 ```bash
-flutter create . --org kz.mart8 --platforms ios,android   # сгенерировать ios/ и android/ (lib/ не трогает)
 flutter pub get
 flutter gen-l10n
 flutter run --dart-define-from-file=env.json   # ключи Mapbox/DaData (env.json — в .gitignore, образец env.example.json)
 # браузер: flutter run -d web-server --web-port 8080 --dart-define-from-file=env.json
 # галерея компонентов
 cd widgetbook && flutter pub get && flutter run -d chrome
+# данные 8mart.kz (букеты, филиалы) → lib/data/*.g.dart
+dart run tool/import_site_data.dart
+# иконка приложения (iOS + Android) из вектора
+node design/app-icon/build.mjs
+# скриншоты для сторов: съёмка на симуляторе, затем баннеры
+flutter drive --driver=test_driver/integration_test.dart --target=integration_test/store_screenshots_test.dart -d <симулятор> --dart-define-from-file=env.json
+node design/store/build.mjs
 ```
 
 ## Структура

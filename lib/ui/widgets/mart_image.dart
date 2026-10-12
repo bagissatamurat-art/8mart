@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 
 import '../theme/mart_colors.dart';
 import '../theme/mart_tokens.dart';
+import 'mart_skeleton.dart';
 
 /// Фото товара: всегда на белой подложке (и в тёмной теме). http → кеш на диске (офлайн).
+/// Пока фото из сети грузится — мерцающий скелетон (не плоская серая плашка); не загрузилось — серая подложка.
 class MartImage extends StatelessWidget {
   const MartImage(this.src, {super.key, this.radius = 12, this.fit = BoxFit.contain});
   /// Скриншот-тесты: сетевые фото не грузим (в тестах нет файлового кеша) — серый плейсхолдер.
@@ -20,7 +22,8 @@ class MartImage extends StatelessWidget {
         : src.startsWith('http') && offline
             ? ph
             : src.startsWith('http')
-            ? CachedNetworkImage(imageUrl: src, fit: fit, placeholder: (_, __) => ph, errorWidget: (_, __, ___) => ph)
+            ? CachedNetworkImage(imageUrl: src, fit: fit, fadeInDuration: const Duration(milliseconds: 200),
+                placeholder: (_, __) => const MartSkeleton(height: double.infinity, radius: 0), errorWidget: (_, __, ___) => ph)
             : Image.asset(src, package: MartAssets.package, fit: fit);
     return ClipRRect(borderRadius: BorderRadius.circular(radius), child: ColoredBox(color: MartColors.photoBg, child: SizedBox.expand(child: img)));
   }

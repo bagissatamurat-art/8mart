@@ -4,7 +4,7 @@
 Дизайн-референс — папка design/ (открыть через локальный сервер, см. design/README.md). Главный файл — design/App UI Kit.dc.html.
 
 ## Стек
-Flutter 3.22+, Dart 3.4+. Bloc/Cubit (+ hydrated_bloc для корзины/избранного/настроек), go_router, Widgetbook. iOS + Android, один дизайн.
+Flutter 3.44+ (проверено на 3.47), Dart 3.12+. Bloc/Cubit (+ hydrated_bloc для корзины/избранного/настроек), go_router, Widgetbook. iOS + Android, один дизайн.
 
 ## Жёсткие правила
 - Цвета — только `context.mc` (MartColors, light/dark). Размеры — MartHeight/MartRadius/MartSpace. Шрифт — MartText. Новых литералов цветов и размеров в экранах не писать.
@@ -32,10 +32,12 @@ Flutter 3.22+, Dart 3.4+. Bloc/Cubit (+ hydrated_bloc для корзины/из
 - Push — спрашивать после первого заказа, не при запуске. Каталог и маршруты — lib/core/push.dart; promo и «забытая корзина» — только opt-in.
 - Настройки (язык, тема, уведомления, Face ID) и Документы — Профиль → Настройки. Язык и тема применяются сразу.
 - Бонусы: 1 бонус = 1 тг, product.bonus за шт, начисляются после получения, списать до maxPart%.
+- Сторис на главной — как на сайте: видео 8mart.kz первыми, без звука по умолчанию; просмотренные — серой рамкой.
+- Решения по продукту сначала принимаются на сайте (8mart-site); приложение сверяется с ним (README → «Сверено с сайтом»).
 
 ## Порядок работы
-1. `flutter create . --org kz.mart8 --platforms ios,android` (lib/ не перезапишется), `flutter pub get`, `flutter gen-l10n`.
-2. `flutter analyze` и `flutter test` — починить всё, что найдёт (код писался без компилятора).
+1. `flutter pub get`, `flutter gen-l10n` (ios/ и android/ уже в репозитории).
+2. `flutter analyze` и `flutter test` — без ошибок и предупреждений.
 3. Заменить MockData на репозитории по API-контракту из README; формы моделей не менять без согласования.
 4. Доделать экраны из «TODO» в README, сверяясь с design/.
 5. После каждого шага — analyze + test + прогон в Widgetbook в обеих темах и на казахском.
