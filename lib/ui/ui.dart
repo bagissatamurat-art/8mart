@@ -3,6 +3,7 @@ export 'theme/mart_colors.dart';
 export 'theme/mart_text.dart';
 export 'theme/mart_tokens.dart';
 export 'widgets/bonus_badge.dart';
+export 'widgets/mart_banner.dart';
 export 'widgets/mart_button.dart';
 export 'widgets/mart_cart_line.dart';
 export 'widgets/mart_chip.dart';

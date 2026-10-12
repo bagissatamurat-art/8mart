@@ -10,7 +10,10 @@ import '../common/product_grid.dart';
 import '../method/method_sheet.dart';
 
 /// Главная 390 (01 Главная и каталог.dc.html #1b):
-/// шапка (логотип · способ получения · поиск) → чипсы категорий → баннер 140 → «Выгодная полка» 2 в ряд.
+/// шапка (логотип · способ получения · поиск) → чипсы категорий → баннер 140 → полки цветов по подкатегориям, 2 в ряд (как на сайте).
+/// Основная категория главной — цветы.
+const _mainCategory = 'tsvety';
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, this.offline = false});
   final bool offline;
@@ -26,7 +29,6 @@ class HomeScreen extends StatelessWidget {
     final t = L10n.of(context);
     final c = context.mc;
     final cart = context.watch<CartCubit>().state;
-    final deals = MockData.products.where((p) => p.oldPrice != null).toList();
 
     return Scaffold(
       body: RefreshIndicator(
@@ -49,26 +51,44 @@ class HomeScreen extends StatelessWidget {
           ))).withTopGap(12),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            sliver: SliverToBoxAdapter(child: SizedBox(height: 140, child: MartStripes(a: c.primary100, b: c.primary50, step: 12, radius: MartRadius.card, label: '${t.banner} · 358×140'))),
+            sliver: SliverToBoxAdapter(child: MartBanner(image: 'assets/images/banner-flowers.jpg', title: t.homeBannerTitle, text: t.homeBannerText,
+                onTap: () => context.go('/catalog/tsvety'))),
           ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
-            sliver: SliverToBoxAdapter(child: Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-              Expanded(child: Text(t.dealsShelf, style: TextStyle(fontFamily: 'Onest', fontSize: 20, fontWeight: FontWeight.w700, color: c.ink1))),
-              GestureDetector(
-                behavior: HitTestBehavior.opaque, onTap: () => context.go('/catalog'),
-                child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Text(t.seeAll, style: TextStyle(fontFamily: 'Onest', fontSize: 14, fontWeight: FontWeight.w600, color: c.primary)),
-                  const SizedBox(width: 4),
-                  MartChevron(color: c.primary, size: 6),
-                ])),
-              ),
-            ])),
-          ),
-          SliverPadding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), sliver: ProductGridSliver(items: deals)),
+          // Полки — подкатегории цветов (основной товар): «Гортензии», «Розы», «Хризантемы», по 4 букета.
+          for (final sub in MockData.subsOf(_mainCategory)) ...[
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+              sliver: SliverToBoxAdapter(child: _ShelfHead(title: sub.name, all: t.seeAll, onAll: () => context.go('/catalog/$_mainCategory?sub=${sub.id}'))),
+            ),
+            SliverPadding(padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: ProductGridSliver(items: MockData.products.where((p) => p.subId == sub.id).take(4).toList())),
+          ],
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ]),
       ),
     );
+  }
+}
+
+/// Заголовок полки: название · «Все →».
+class _ShelfHead extends StatelessWidget {
+  const _ShelfHead({required this.title, required this.all, required this.onAll});
+  final String title, all;
+  final VoidCallback onAll;
+  @override
+  Widget build(BuildContext context) {
+    final c = context.mc;
+    return Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+      Expanded(child: Text(title, style: TextStyle(fontFamily: 'Onest', fontSize: 20, fontWeight: FontWeight.w700, color: c.ink1))),
+      GestureDetector(
+        behavior: HitTestBehavior.opaque, onTap: onAll,
+        child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Text(all, style: TextStyle(fontFamily: 'Onest', fontSize: 14, fontWeight: FontWeight.w600, color: c.primary)),
+          const SizedBox(width: 4),
+          MartChevron(color: c.primary, size: 6),
+        ])),
+      ),
+    ]);
   }
 }
 

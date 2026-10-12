@@ -303,7 +303,8 @@
       }
     }
   },
-  "dealsShelf": "Выгодная полка",
+  "homeBannerTitle": "Букеты за 30–70 минут",
+  "homeBannerText": "Привезём сегодня",
   "seeAll": "Все",
   "chipAll": "Все",
   "findProduct": "Найти товар",

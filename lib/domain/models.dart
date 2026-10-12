@@ -37,11 +37,16 @@ class City {
   final double lat, lng;
 }
 
-/// Точка самовывоза. acceptsCargo — выдаёт тяжёлые товары (склад).
+/// Точка самовывоза (филиал 8mart.kz). hours — график, если известен (в API его нет — пусто);
+/// isOpen / acceptingOrders — живой статус филиала; brand — вывеска, если не 8MART (ROMANTIC);
+/// kaspiIntegrated — Kaspi Pay подключён автоматически (иначе счёт в Kaspi на номер).
 class PickupPoint {
-  const PickupPoint(this.id, this.city, this.name, this.hours, this.lat, this.lng);
+  const PickupPoint(this.id, this.city, this.name, this.hours, this.lat, this.lng,
+      {this.isOpen = true, this.acceptingOrders = true, this.kaspiIntegrated = false, this.brand});
   final String id, city, name, hours;
   final double lat, lng;
+  final bool isOpen, acceptingOrders, kaspiIntegrated;
+  final String? brand;
 }
 
 class Category extends Equatable {

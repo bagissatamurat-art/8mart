@@ -1,4 +1,5 @@
 import '../domain/models.dart';
+import 'flowers.g.dart';
 
 /// Условия получения по типу товара (DELIVERY_TYPES в data.js). МОК — заполняет бизнес; в проде приходит в GET /products/{id} (conditions).
 class WayInfo {
@@ -26,13 +27,13 @@ abstract final class ProductDetailsMock {
   static const types = {
     DeliveryKind.express: ProductConditions(
       delivery: WayInfo('Сегодня, за 30–70 минут', 'от 2 000 тг, бесплатно от 20 000 тг'),
-      pickup: WayInfo('Через 30 минут', 'В наличии в 6 из 8 точек', 'Храним заказ 24 часа')),
+      pickup: WayInfo('Через 30 минут', 'В филиалах 8mart', 'Храним заказ 24 часа')),
     DeliveryKind.cargo: ProductConditions(tag: 'Тяжёлый товар',
       delivery: WayInfo('Завтра, интервал 9:00–21:00', 'от 3 000 тг — зависит от веса заказа', 'Привезём грузовой машиной. Разгрузка у подъезда, подъём на этаж — 200 тг за единицу за этаж'),
       pickup: WayInfo('Завтра с 9:00', 'Только со склада: ш. Коргалжын, 3', 'Погрузим в машину. Храним заказ 3 дня')),
     DeliveryKind.flowers: ProductConditions(
       delivery: WayInfo('Сегодня, за 30–70 минут', 'от 2 000 тг, бесплатно от 20 000 тг', 'Привезём в коробке с водой, приложим открытку'),
-      pickup: WayInfo('Соберём за 40 минут', 'В 4 из 8 точек', 'Храним букет в холодильнике до конца дня')),
+      pickup: WayInfo('Соберём за 40 минут', 'В филиалах 8mart', 'Храним букет в холодильнике до конца дня')),
   };
 
   static const _cementDesc = [
@@ -45,11 +46,11 @@ abstract final class ProductDetailsMock {
 
   static const _flowerDesc = ['Букет собираем в день заказа из свежих цветов. Состав может немного отличаться от фото — сохраним стиль и цветовую гамму.',
     'К каждому букету бесплатно прикладываем открытку и подкормку для цветов.'];
-  static const _flowerSpecs = [('S', '35 см, 9–11 цветков'), ('M', '45 см, 15–19 цветков'), ('L', '55 см, 25–29 цветков'), ('Упаковка', 'Крафт, атласная лента'),
-    ('Стойкость', '5–7 дней'), ('Уход', 'Подрезать стебли, менять воду каждый день')];
+  /// Букет: состав по размерам — из каталога 8mart.kz (flowerComposition), как на сайте.
+  static List<(String, String)> _flowerSpecs(Product p) => [for (final (size, c) in flowerComposition[p.id] ?? const <(String, String)>[]) ('Размер $size', c)];
 
   static ProductDetails of(Product p) => p.hasVariants
-      ? ProductDetails(images: [...{p.image, ...p.variants!.map((v) => v.image)}, ''], desc: _flowerDesc, specs: _flowerSpecs, conditions: types[p.delivery]!)
+      ? ProductDetails(images: [...{p.image, ...p.variants!.map((v) => v.image)}, ''], desc: _flowerDesc, specs: _flowerSpecs(p), conditions: types[p.delivery]!)
       : ProductDetails(
         images: [p.image, '', ''],
         desc: p.id == 'b1' ? _cementDesc : const ['Описание товара появится позже. Уточните детали у поддержки в WhatsApp.'],
