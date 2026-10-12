@@ -1,0 +1,9 @@
+# Поиск варианта иконки (Magnific, черновые SVG) — локально; в репозитории только выбранная иконка и build.mjs.
+magnific*/
+magnific-variants*.png
+variants*.png
+variants.json
+[A-F]-*.png
+[A-F]-*.svg
+make.mjs
+logo-ref.png
