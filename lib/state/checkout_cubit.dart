@@ -4,7 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../data/mock_data.dart';
 
 class CheckoutState extends Equatable {
-  const CheckoutState({this.payment = 'kaspi', this.offer = false, this.entrance = '2', this.floor = '7', this.flat = '48', this.comment = '',
+  /// Согласие с офертой включено по умолчанию (как на сайте).
+  const CheckoutState({this.payment = 'kaspi', this.offer = true, this.entrance = '', this.floor = '', this.flat = '', this.comment = '',
       this.slot = 0, this.cargoDay = 0, this.cargoInterval = 0, this.lift = false, this.placing = false, this.useBonus = false});
   /// Списать бонусы (до MockData.bonusMaxPart% суммы товаров).
   final bool useBonus;
@@ -23,7 +24,7 @@ class CheckoutState extends Equatable {
 
 class CheckoutCubit extends Cubit<CheckoutState> {
   CheckoutCubit() : super(const CheckoutState());
-  static const slots = ['Ближайшее, 60–90 мин', 'Сегодня 12:00–15:00', 'Сегодня 15:00–18:00'];
+  static const slots = ['Ближайшее, 30–70 мин', 'Сегодня 12:00–15:00', 'Сегодня 15:00–18:00'];
   static const cargoDays = ['Завтра, 27 сентября', 'Пн, 28 сентября', 'Вт, 29 сентября'];
   static const cargoIntervals = ['9:00–13:00', '13:00–17:00', '17:00–21:00'];
 

@@ -16,7 +16,7 @@
   "cartTitle": "Корзина",
   "clear": "Очистить",
   "cartEmpty": "В корзине пусто",
-  "cartEmptyHint": "Стройматериалы и цветы привезём за 60–90 минут",
+  "cartEmptyHint": "Букеты привезём за 30–70 минут",
   "toCatalog": "В каталог",
   "itemsCount": "{count, plural, one{{count} товар} few{{count} товара} many{{count} товаров} other{{count} товара}}",
   "@itemsCount": {
@@ -50,15 +50,12 @@
       }
     }
   },
-  "splitTitle": "Как привезти заказ",
-  "splitSub": "Тяжёлые товары возим Газелью — только на следующий день",
-  "splitTwo": "Двумя доставками",
-  "splitTogether": "Всё вместе завтра",
+  "splitSub": "Тяжёлые товары выдаём только со склада, с завтрашнего дня",
   "splitTitlePickup": "Как забрать заказ",
   "splitTwoPickup": "Забрать в два приёма",
   "splitTogetherPickup": "Всё завтра со склада",
   "courier": "Курьер",
-  "cargo": "Газель",
+  "cargo": "Грузовой",
   "store": "Точка",
   "warehouse": "Склад",
   "shipmentN": "Доставка {i} из {n}",
@@ -83,7 +80,7 @@
       }
     }
   },
-  "todayCourier": "Сегодня, за 60–90 минут",
+  "todayCourier": "Сегодня, за 30–70 минут",
   "tomorrowCargo": "Завтра, 9:00–21:00",
   "todayPickup": "Сегодня, через 30 минут",
   "tomorrowPickup": "Завтра с 9:00",
@@ -147,7 +144,7 @@
   "stAccepted": "Заказ принят",
   "stAssembling": "Собираем заказ",
   "stCourier": "Курьер в пути",
-  "stCargo": "Газель в пути",
+  "stCargo": "Грузовой в пути",
   "stReady": "Готов к выдаче",
   "stDelivered": "Доставлен",
   "stIssued": "Выдан",
@@ -462,10 +459,7 @@
   "tgWaitingMsg": "Ждём подтверждения в боте…",
   "tgConfirmed": "Номер подтверждён · {phone}",
   "loginByWa": "Войти по коду в WhatsApp",
-  "nameTitle": "Как вас зовут?",
-  "nameSub": "Чтобы курьер знал, к кому обращаться",
   "continueBtn": "Продолжить",
-  "enterName": "Укажите имя",
   "@codeSentTo": {
     "placeholders": {
       "phone": {

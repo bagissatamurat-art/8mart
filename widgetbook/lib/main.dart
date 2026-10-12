@@ -87,14 +87,15 @@ class Gallery extends StatelessWidget {
                 removeLabel: 'Удалить из корзины', perPieceLabel: 'за шт', bonusText: (n) => '+$n бонусов')),
           ]),
           WidgetbookComponent(name: 'ShipmentHead', useCases: [
-            uc('Courier', (c) => const ShipmentHead(tag: 'Курьер', cargo: false, label: 'Доставка 1 из 2', when: 'Сегодня, за 60–90 минут', meta: 'Курьер · 2 товара', feeText: '1 000 тг.')),
-            uc('Cargo', (c) => const ShipmentHead(tag: 'Газель', cargo: true, label: 'Доставка 2 из 2', when: 'Завтра, 9:00–21:00', meta: 'Газель · 125 кг', feeText: '3 000 тг.')),
+            uc('Courier', (c) => const ShipmentHead(tag: 'Курьер', cargo: false, label: 'Доставка 1 из 2', when: 'Сегодня, за 30–70 минут', meta: 'Курьер · 2 товара', feeText: '1 000 тг.')),
+            uc('Cargo', (c) => const ShipmentHead(tag: 'Грузовой', cargo: true, label: 'Доставка 2 из 2', when: 'Завтра, 9:00–21:00', meta: 'Грузовой · 125 кг', feeText: '3 000 тг.')),
           ]),
           WidgetbookComponent(name: 'SplitChoice', useCases: [
-            uc('Default', (c) => SplitChoice(title: 'Как привезти заказ', sub: 'Тяжёлые товары возим Газелью — только на следующий день',
+            // Только самовывоз: в доставке курьер и грузовой — всегда две доставки, выбора нет.
+            uc('Pickup', (c) => SplitChoice(title: 'Как забрать заказ', sub: 'Тяжёлые товары выдаём только со склада, с завтрашнего дня',
                 together: c.knobs.boolean(label: 'together'), onChanged: (_) {}, options: const [
-                  SplitOption(together: false, title: 'Двумя доставками', sub: 'Сегодня курьером + завтра Газелью', feeText: '1 000 + 3 000 тг.'),
-                  SplitOption(together: true, title: 'Всё вместе завтра', sub: 'Одной Газелью, 9:00–21:00', feeText: '3 000 тг.'),
+                  SplitOption(together: false, title: 'Забрать в два приёма', sub: 'Сегодня, через 30 минут + Завтра с 9:00', feeText: 'Бесплатно'),
+                  SplitOption(together: true, title: 'Всё завтра со склада', sub: 'Завтра с 9:00', feeText: 'Бесплатно'),
                 ])),
           ]),
           WidgetbookComponent(name: 'PaymentPicker', useCases: [

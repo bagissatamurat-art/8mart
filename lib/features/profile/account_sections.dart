@@ -439,7 +439,8 @@ class _PersonalState extends State<_Personal> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          MartInput(label: t.name, required: true, controller: _name, error: _name.text.trim().isEmpty ? 'Укажите имя' : null, onChanged: (_) => setState(() => _saved = false)),
+          // Имя — по желанию (при входе не спрашиваем).
+          MartInput(label: t.name, controller: _name, onChanged: (_) => setState(() => _saved = false)),
           const SizedBox(height: 16),
           Container(
             constraints: const BoxConstraints(minHeight: 56), padding: const EdgeInsets.only(left: 16, right: 8),
@@ -456,7 +457,7 @@ class _PersonalState extends State<_Personal> {
           ),
           if (dirty) ...[
             const SizedBox(height: 16),
-            MartButton(label: t.save, expanded: true, disabledReason: _name.text.trim().isEmpty ? 'Укажите имя' : null,
+            MartButton(label: t.save, expanded: true,
                 onPressed: () { context.read<AuthCubit>().rename(_name.text); FocusScope.of(context).unfocus(); setState(() => _saved = true); }),
           ],
           if (_saved && !dirty) ...[const SizedBox(height: 16), Text('Сохранено', style: _fs(14, FontWeight.w600, c.success))],

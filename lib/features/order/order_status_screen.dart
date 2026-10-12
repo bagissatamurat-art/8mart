@@ -46,7 +46,7 @@ class OrderStatusScreen extends StatelessWidget {
         ][i.clamp(0, 3)];
     String sub(ShipmentKind k, int i) => switch (i) {
           0 => 'Оплата прошла, передали заказ в сборку',
-          1 => k == ShipmentKind.cargo ? 'Комплектуем на складе, погрузим в Газель' : 'Проверяем наличие и упаковываем',
+          1 => k == ShipmentKind.cargo ? 'Комплектуем на складе, погрузим в грузовой' : 'Проверяем наличие и упаковываем',
           2 => pickup ? 'Покажите номер заказа на кассе' : 'Позвоним за 10–15 минут до приезда',
           _ => pickup ? 'Спасибо за покупку!' : 'Спасибо! Оцените доставку в приложении',
         };
@@ -102,9 +102,9 @@ class OrderStatusScreen extends StatelessWidget {
               if (multi) ...[
                 Row(children: [
                   Container(height: 22, padding: const EdgeInsets.symmetric(horizontal: 8), alignment: Alignment.center,
-                    decoration: BoxDecoration(color: o.kinds[i] == ShipmentKind.cargo ? c.ink1 : c.primary50, borderRadius: BorderRadius.circular(999)),
+                    decoration: BoxDecoration(color: o.kinds[i] == ShipmentKind.cargo ? c.warningBg : c.primary50, borderRadius: BorderRadius.circular(999)),
                     child: Text(o.kinds[i] == ShipmentKind.cargo ? (pickup ? t.warehouse : t.cargo) : (pickup ? t.store : t.courier),
-                        style: _f(12, FontWeight.w600, o.kinds[i] == ShipmentKind.cargo ? c.surface : c.primaryPressed))),
+                        style: _f(12, FontWeight.w600, o.kinds[i] == ShipmentKind.cargo ? c.ink1 : c.primaryPressed))),
                   const SizedBox(width: 8),
                   Text(pickup ? t.pickupN(i + 1, o.kinds.length) : t.shipmentN(i + 1, o.kinds.length), style: _f(13, FontWeight.w400, c.ink2)),
                 ]),

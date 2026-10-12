@@ -26,14 +26,13 @@ class AuthView extends StatefulWidget {
 
 class _AuthViewState extends State<AuthView> {
   final _phone = TextEditingController();
-  final _name = TextEditingController();
   final _code = TextEditingController();
   Timer? _tick;
   int _left = 45;
   bool _tgOpened = false;
 
   @override
-  void dispose() { _tick?.cancel(); _phone.dispose(); _name.dispose(); _code.dispose(); super.dispose(); }
+  void dispose() { _tick?.cancel(); _phone.dispose(); _code.dispose(); super.dispose(); }
 
   void _startTimer() {
     _tick?.cancel();
@@ -152,15 +151,6 @@ class _AuthViewState extends State<AuthView> {
               ],
               const SizedBox(height: 8),
               link(t.loginByWa, cubit.back),
-            ]);
-
-          case AuthStep.name:
-            return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              head(t.nameTitle, subText(t.nameSub)),
-              gap,
-              MartInput(label: t.name, required: true, controller: _name, autofillHints: const [AutofillHints.givenName], textInputAction: TextInputAction.done, onChanged: (_) => setState(() {})),
-              gap,
-              MartButton(label: t.continueBtn, expanded: true, disabledReason: _name.text.trim().isEmpty ? t.enterName : null, onPressed: () => cubit.setName(_name.text)),
             ]);
 
           case AuthStep.done:

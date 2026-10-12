@@ -1,9 +1,12 @@
 import 'models.dart';
 
-/// Тарифы — МОК, уточнить у бизнеса. Одно значение — одно место.
+/// Тарифы. Одно значение — одно место. Курьер — общие условия, пока адрес не выбран: самая дешёвая зона доставки 8mart.kz
+/// («Зона 1» 2 000 тг / 30–45 мин, «Зона 2» 3 000 тг / 50–70 мин; с адресом — точная зона). freeFrom и тарифы грузового — МОК.
 class ShippingConfig {
-  const ShippingConfig({this.courierFee = 1000, this.freeFrom = 20000, this.liftFee = 200, this.cargoTiers = const [(300.0, 3000), (1000.0, 5000), (1500.0, 7000)]});
+  const ShippingConfig({this.courierFee = 2000, this.etaMin = 30, this.etaMax = 70, this.freeFrom = 20000, this.liftFee = 200, this.cargoTiers = const [(300.0, 3000), (1000.0, 5000), (1500.0, 7000)]});
   final int courierFee, freeFrom, liftFee;
+  /// Время курьера до двери по зонам, мин.
+  final int etaMin, etaMax;
   final List<(double upToKg, int fee)> cargoTiers;
   int cargoFee(double kg) => (cargoTiers.firstWhere((t) => kg <= t.$1, orElse: () => cargoTiers.last)).$2;
 }
@@ -33,15 +36,17 @@ class ShipmentPlan {
   bool get hasCourierFee => shipments.any((x) => !x.isCargo && x.fee > 0);
 }
 
-/// Порт planShipments() из data.js. Тяжёлое (cargo) — Газель завтра, остальное — курьер сегодня.
-/// Если есть оба типа: together=false → два отправления, true → всё одной Газелью.
+/// Порт planShipments() с сайта. Тяжёлое (cargo) — грузовой завтра, остальное — курьер сегодня.
+/// Доставка: курьер и грузовой — разные машины, смешанная корзина всегда едет двумя доставками (together игнорируется).
+/// Самовывоз: together=false — забрать в два приёма, true — всё завтра со склада.
 ShipmentPlan planShipments(List<CartLine> lines, {ReceiveMethod method = ReceiveMethod.delivery, bool together = false,
     int? goodsTotal, int floor = 0, bool lift = false, ShippingConfig cfg = const ShippingConfig()}) {
   final pickup = method == ReceiveMethod.pickup;
   final heavy = lines.where((l) => l.product.isCargo).toList();
   final light = lines.where((l) => !l.product.isCargo).toList();
   bool anyActive(List<CartLine> ls) => ls.any((l) => !l.soldOut);
-  final canSplit = anyActive(heavy) && anyActive(light);
+  // Выбор «вместе / раздельно» — только в самовывозе.
+  final canSplit = pickup && anyActive(heavy) && anyActive(light);
   final tog = canSplit && together;
   final groups = <(ShipmentKind, List<CartLine>)>[
     if (!anyActive(heavy)) (ShipmentKind.courier, lines)

@@ -8,6 +8,7 @@ import '../../domain/shipments.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../state/cart_cubit.dart';
 import '../../ui/ui.dart';
+import '../common/pickup_split.dart';
 import '../common/shipment_texts.dart';
 import '../method/method_sheet.dart';
 
@@ -79,15 +80,7 @@ class CartScreen extends StatelessWidget {
                 const SizedBox(height: 12),
               ],
               if (plan.canSplit) ...[
-                card(SplitChoice(
-                  title: pickup ? t.splitTitlePickup : t.splitTitle, sub: t.splitSub, together: s.together, onChanged: cubit.setTogether,
-                  options: [
-                    SplitOption(together: false, title: pickup ? t.splitTwoPickup : t.splitTwo, sub: '${t.todayCourier} + ${t.tomorrowCargo}',
-                        feeText: s.copyWith(together: false).plan(goodsTotal: s.afterDiscount).shipments.map((x) => x.feeText(t)).join(' + ')),
-                    SplitOption(together: true, title: pickup ? t.splitTogetherPickup : t.splitTogether, sub: pickup ? t.tomorrowPickup : t.tomorrowCargo,
-                        feeText: s.copyWith(together: true).plan(goodsTotal: s.afterDiscount).shipments.first.feeText(t)),
-                  ],
-                )),
+                card(PickupSplitChoice(cart: s, onChanged: cubit.setTogether)),
                 const SizedBox(height: 12),
               ],
               for (final sh in plan.shipments) ...[

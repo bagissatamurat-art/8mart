@@ -15,6 +15,7 @@ import '../../state/checkout_cubit.dart';
 import '../../state/order_cubit.dart';
 import '../auth/auth_view.dart';
 import '../../domain/shipments.dart';
+import '../common/pickup_split.dart';
 import '../common/shipment_texts.dart';
 import '../method/method_sheet.dart';
 
@@ -113,15 +114,7 @@ class _Form extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(child: MartInput(label: t.flat, initialValue: s.flat, onChanged: (v) => co.set((x) => x.copyWith(flat: v)))),
         ]),
-        if (plan.canSplit) SplitChoice(
-          title: pickup ? t.splitTitlePickup : t.splitTitle, sub: t.splitSub, together: cart.together, onChanged: cartCubit.setTogether,
-          options: [
-            SplitOption(together: false, title: pickup ? t.splitTwoPickup : t.splitTwo, sub: '${t.todayCourier} + ${t.tomorrowCargo}',
-                feeText: cart.copyWith(together: false).plan(goodsTotal: cart.afterDiscount).shipments.map((x) => x.feeText(t)).join(' + ')),
-            SplitOption(together: true, title: pickup ? t.splitTogetherPickup : t.splitTogether, sub: pickup ? t.tomorrowPickup : t.tomorrowCargo,
-                feeText: cart.copyWith(together: true).plan(goodsTotal: cart.afterDiscount).shipments.first.feeText(t)),
-          ],
-        ),
+        if (plan.canSplit) PickupSplitChoice(cart: cart, onChanged: cartCubit.setTogether),
         for (final sh in plan.shipments) Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(MartRadius.field), border: Border.all(color: c.border)),

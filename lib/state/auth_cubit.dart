@@ -5,7 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../ui/widgets/mart_code_input.dart';
 
-enum AuthStep { phone, code, telegram, name, done }
+/// Шага «имя» нет: после входа сразу в приложение, имя — по желанию в «Личных данных».
+enum AuthStep { phone, code, telegram, done }
 
 class AuthState extends Equatable {
   const AuthState({this.step = AuthStep.phone, this.phone = '', this.name = '', this.code = CodeState.idle, this.loading = false, this.tgToken = '', this.tgOk = false});
@@ -35,15 +36,14 @@ class AuthCubit extends Cubit<AuthState> {
     emit(state.copyWith(loading: false, step: AuthStep.code, code: CodeState.idle));
   }
 
-  /// Мок как в макете: верный код — 1234, остальное — ошибка. Новый пользователь → шаг имени.
+  /// Мок как в макете: верный код — 1234, остальное — ошибка.
   Future<void> verify(String code) async {
     emit(state.copyWith(code: CodeState.checking));
     await Future<void>.delayed(const Duration(milliseconds: 500));
     if (code != '1234') { emit(state.copyWith(code: CodeState.error)); return; }
     emit(state.copyWith(code: CodeState.success));
     await Future<void>.delayed(const Duration(milliseconds: 400));
-    final isNew = state.name.isEmpty;
-    emit(state.copyWith(step: isNew ? AuthStep.name : AuthStep.done));
+    emit(state.copyWith(step: AuthStep.done));
   }
 
   void resetCodeError() { if (state.code == CodeState.error) emit(state.copyWith(code: CodeState.idle)); }
@@ -68,10 +68,9 @@ class AuthCubit extends Cubit<AuthState> {
     emit(state.copyWith(phone: phone, tgOk: true));
     await Future<void>.delayed(const Duration(milliseconds: 900));
     if (isClosed || state.step != AuthStep.telegram) return;
-    emit(state.copyWith(step: state.name.isEmpty ? AuthStep.name : AuthStep.done, tgOk: false));
+    emit(state.copyWith(step: AuthStep.done, tgOk: false));
   }
 
-  void setName(String name) => emit(state.copyWith(name: name.trim(), step: AuthStep.done));
   void back() { _tgPoll?.cancel(); emit(state.copyWith(step: AuthStep.phone, code: CodeState.idle, tgOk: false)); }
   void changePhone(String phone) => emit(state.copyWith(phone: phone));
   void rename(String name) => emit(state.copyWith(name: name.trim()));

@@ -347,7 +347,7 @@ class _MethodSheetState extends State<_MethodSheet> {
         Expanded(child: MartInput(label: 'Квартира, офис', controller: _flat)),
       ]),
       const SizedBox(height: 12),
-      Text('Доставка ${moneyText(cfg.courierFee)}, бесплатно от ${moneyText(cfg.freeFrom)} · 60–90 мин', style: _f(13, FontWeight.w400, c.ink2, h: 1.4)),
+      Text('Доставка от ${moneyText(cfg.courierFee)}, бесплатно от ${moneyText(cfg.freeFrom)} · ${cfg.etaMin}–${cfg.etaMax} мин', style: _f(13, FontWeight.w400, c.ink2, h: 1.4)),
     ]);
 
     final ps = [..._points]..sort((a, b) => a.name.compareTo(b.name));

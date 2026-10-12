@@ -50,10 +50,10 @@ class ProfileScreen extends StatelessWidget {
       MartTopPanel(padding: const EdgeInsets.fromLTRB(16, 8, 16, 20), children: [
         Row(children: [
           Container(width: 52, height: 52, alignment: Alignment.center, decoration: BoxDecoration(color: c.primary50, shape: BoxShape.circle),
-              child: Text(auth.name.isEmpty ? '?' : auth.name[0].toUpperCase(), style: _f(20, FontWeight.w700, c.primary))),
+              child: auth.name.isEmpty ? Icon(Icons.person_rounded, size: 26, color: c.primary) : Text(auth.name[0].toUpperCase(), style: _f(20, FontWeight.w700, c.primary))),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(auth.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: _f(20, FontWeight.w800, c.ink1, ls: -0.4)),
+            Text(auth.name.isEmpty ? t.tabProfile : auth.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: _f(20, FontWeight.w800, c.ink1, ls: -0.4)),
             const SizedBox(height: 2),
             Text(auth.phone, style: _f(14, FontWeight.w400, c.ink2)),
           ])),
