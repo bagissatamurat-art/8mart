@@ -2,7 +2,8 @@ import 'package:hydrated_bloc/hydrated_bloc.dart';
 
 /// Недавние запросы (до 6), хранятся на устройстве.
 class SearchHistoryCubit extends HydratedCubit<List<String>> {
-  SearchHistoryCubit() : super(const ['цемент м500', 'краска']);
+  /// Новый пользователь — пусто (раньше были демо-запросы стройматериалов).
+  SearchHistoryCubit() : super(const []);
   void add(String q) {
     final s = q.trim();
     if (s.isEmpty) return;

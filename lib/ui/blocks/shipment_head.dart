@@ -4,7 +4,7 @@ import '../theme/mart_colors.dart';
 import '../theme/mart_text.dart';
 import '../theme/mart_tokens.dart';
 
-/// Шапка отправления: метка (Курьер/Газель/Точка/Склад) · «Доставка 1 из 2» · когда · машина, вес · стоимость.
+/// Шапка отправления: метка (Курьер/Грузовой/Точка/Склад; грузовой — жёлтая, не чёрная) · «Доставка 1 из 2» · когда · машина, вес · стоимость.
 class ShipmentHead extends StatelessWidget {
   const ShipmentHead({super.key, required this.tag, required this.cargo, this.label, required this.when, required this.meta, this.feeText, this.compact = true});
   /// compact (корзина, оформление 390) — «когда» 16, иначе 18.
@@ -19,8 +19,8 @@ class ShipmentHead extends StatelessWidget {
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Container(height: 22, padding: const EdgeInsets.symmetric(horizontal: 8), alignment: Alignment.center,
-            decoration: BoxDecoration(color: cargo ? c.ink1 : c.primary50, borderRadius: BorderRadius.circular(MartRadius.pill)),
-            child: Text(tag, style: MartText.caption.copyWith(fontWeight: FontWeight.w600, color: cargo ? c.surface : c.primaryPressed))),
+            decoration: BoxDecoration(color: cargo ? c.warningBg : c.primary50, borderRadius: BorderRadius.circular(MartRadius.pill)),
+            child: Text(tag, style: MartText.caption.copyWith(fontWeight: FontWeight.w600, color: cargo ? c.ink1 : c.primaryPressed))),
           if (label != null) ...[const SizedBox(width: 8), Flexible(child: Text(label!, style: MartText.caption.copyWith(fontSize: 13, color: c.ink2)))],
         ]),
         const SizedBox(height: 4),

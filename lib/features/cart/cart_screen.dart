@@ -8,6 +8,7 @@ import '../../domain/shipments.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../state/cart_cubit.dart';
 import '../../ui/ui.dart';
+import '../common/pickup_split.dart';
 import '../common/shipment_texts.dart';
 import '../method/method_sheet.dart';
 
@@ -79,20 +80,12 @@ class CartScreen extends StatelessWidget {
                 const SizedBox(height: 12),
               ],
               if (plan.canSplit) ...[
-                card(SplitChoice(
-                  title: pickup ? t.splitTitlePickup : t.splitTitle, sub: t.splitSub, together: s.together, onChanged: cubit.setTogether,
-                  options: [
-                    SplitOption(together: false, title: pickup ? t.splitTwoPickup : t.splitTwo, sub: '${t.todayCourier} + ${t.tomorrowCargo}',
-                        feeText: s.copyWith(together: false).plan(goodsTotal: s.afterDiscount).shipments.map((x) => x.feeText(t)).join(' + ')),
-                    SplitOption(together: true, title: pickup ? t.splitTogetherPickup : t.splitTogether, sub: pickup ? t.tomorrowPickup : t.tomorrowCargo,
-                        feeText: s.copyWith(together: true).plan(goodsTotal: s.afterDiscount).shipments.first.feeText(t)),
-                  ],
-                )),
+                card(PickupSplitChoice(cart: s, onChanged: cubit.setTogether)),
                 const SizedBox(height: 12),
               ],
               for (final sh in plan.shipments) ...[
                 card(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  Padding(padding: const EdgeInsets.fromLTRB(10, 10, 10, 8), child: ShipmentHead(tag: sh.tag(t, pickup), cargo: sh.isCargo, label: sh.label(t, pickup), when: sh.when(t, pickup), meta: sh.meta(t, pickup, s.address), feeText: pickup ? null : sh.feeText(t))),
+                  Padding(padding: const EdgeInsets.fromLTRB(10, 10, 10, 8), child: ShipmentHead(tag: sh.tag(t, pickup), cargo: sh.isCargo, label: sh.label(t, pickup), when: sh.when(t, pickup, eta: s.quote?.eta), meta: sh.meta(t, pickup, s.address), feeText: pickup ? null : sh.feeText(t))),
                   Container(height: 1, margin: const EdgeInsets.fromLTRB(10, 0, 10, 2), color: c.divider),
                   for (final l in sh.lines) Padding(padding: const EdgeInsets.only(top: 2),
                     child: MartCartLine(line: l, onQty: (q) => cubit.setQty(l.product.id, q), soldOutLabel: t.soldOut, notCountedLabel: t.notCounted, notInStockLabel: t.notInStock,

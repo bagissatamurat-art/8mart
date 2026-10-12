@@ -35,7 +35,13 @@ void main() {
       expect(p.shipments.map((s) => s.kind), [ShipmentKind.courier, ShipmentKind.cargo]);
       expect(p.shipments.last.fee, 3000);
     });
-    test('together — одна Газель', () => expect(planShipments([CartLine(glue, 1), CartLine(cement, 2)], together: true).shipments.single.kind, ShipmentKind.cargo));
+    test('доставка: курьер и грузовой — всегда две доставки, together не действует', () {
+      final p = planShipments([CartLine(glue, 1), CartLine(cement, 2)], together: true);
+      expect(p.canSplit, false);
+      expect(p.shipments.map((s) => s.kind), [ShipmentKind.courier, ShipmentKind.cargo]);
+    });
+    test('самовывоз: всё завтра со склада — одно отправление', () => expect(
+        planShipments([CartLine(glue, 1), CartLine(cement, 2)], method: ReceiveMethod.pickup, together: true).shipments.single.kind, ShipmentKind.cargo));
     test('самовывоз бесплатно', () => expect(planShipments([CartLine(cement, 2)], method: ReceiveMethod.pickup).fee, 0));
     test('подъём на этаж', () => expect(planShipments([CartLine(cement, 2)], floor: 7, lift: true).lift, 200 * 2 * 6));
   });

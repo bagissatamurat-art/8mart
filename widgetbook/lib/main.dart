@@ -87,14 +87,28 @@ class Gallery extends StatelessWidget {
                 removeLabel: 'Удалить из корзины', perPieceLabel: 'за шт', bonusText: (n) => '+$n бонусов')),
           ]),
           WidgetbookComponent(name: 'ShipmentHead', useCases: [
-            uc('Courier', (c) => const ShipmentHead(tag: 'Курьер', cargo: false, label: 'Доставка 1 из 2', when: 'Сегодня, за 60–90 минут', meta: 'Курьер · 2 товара', feeText: '1 000 тг.')),
-            uc('Cargo', (c) => const ShipmentHead(tag: 'Газель', cargo: true, label: 'Доставка 2 из 2', when: 'Завтра, 9:00–21:00', meta: 'Газель · 125 кг', feeText: '3 000 тг.')),
+            uc('Courier', (c) => const ShipmentHead(tag: 'Курьер', cargo: false, label: 'Доставка 1 из 2', when: 'Сегодня, за 30–70 минут', meta: 'Курьер · 2 товара', feeText: '1 000 тг.')),
+            uc('Cargo', (c) => const ShipmentHead(tag: 'Грузовой', cargo: true, label: 'Доставка 2 из 2', when: 'Завтра, 9:00–21:00', meta: 'Грузовой · 125 кг', feeText: '3 000 тг.')),
+          ]),
+          WidgetbookComponent(name: 'MartStoryThumb', useCases: [
+            uc('Новая / просмотренная', (c) => Padding(padding: const EdgeInsets.all(16), child: Row(children: [
+              MartStoryThumb(cover: 'assets/images/st-flowers.jpg', title: 'Букеты', seen: false, onTap: () {}),
+              const SizedBox(width: 8),
+              MartStoryThumb(cover: 'assets/images/st-gifts.jpg', title: 'Гортензии', seen: true, onTap: () {}),
+            ]))),
+          ]),
+          WidgetbookComponent(name: 'MartSelect', useCases: [
+            uc('Время доставки', (c) => const _SelectDemo()),
+          ]),
+          WidgetbookComponent(name: 'SlotPicker', useCases: [
+            uc('Курьер: дни + время', (c) => const _SlotDemo()),
           ]),
           WidgetbookComponent(name: 'SplitChoice', useCases: [
-            uc('Default', (c) => SplitChoice(title: 'Как привезти заказ', sub: 'Тяжёлые товары возим Газелью — только на следующий день',
+            // Только самовывоз: в доставке курьер и грузовой — всегда две доставки, выбора нет.
+            uc('Pickup', (c) => SplitChoice(title: 'Как забрать заказ', sub: 'Тяжёлые товары выдаём только со склада, с завтрашнего дня',
                 together: c.knobs.boolean(label: 'together'), onChanged: (_) {}, options: const [
-                  SplitOption(together: false, title: 'Двумя доставками', sub: 'Сегодня курьером + завтра Газелью', feeText: '1 000 + 3 000 тг.'),
-                  SplitOption(together: true, title: 'Всё вместе завтра', sub: 'Одной Газелью, 9:00–21:00', feeText: '3 000 тг.'),
+                  SplitOption(together: false, title: 'Забрать в два приёма', sub: 'Сегодня, через 30 минут + Завтра с 9:00', feeText: 'Бесплатно'),
+                  SplitOption(together: true, title: 'Всё завтра со склада', sub: 'Завтра с 9:00', feeText: 'Бесплатно'),
                 ])),
           ]),
           WidgetbookComponent(name: 'PaymentPicker', useCases: [
@@ -128,3 +142,36 @@ class Gallery extends StatelessWidget {
 
 typedef UseCase = WidgetbookUseCase;
 void _noop() {}
+
+const _slotOptions = [MartSelectOption('asap', 'Ближайшее', '~30 мин'), MartSelectOption('12', '12:00–15:00'), MartSelectOption('15', '15:00–18:00'), MartSelectOption('18', '18:00–21:00')];
+
+class _SelectDemo extends StatefulWidget {
+  const _SelectDemo();
+  @override
+  State<_SelectDemo> createState() => _SelectDemoState();
+}
+
+class _SelectDemoState extends State<_SelectDemo> {
+  String v = 'asap';
+  @override
+  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.all(16),
+      child: MartSelect(label: 'Время', options: _slotOptions, value: v, onChanged: (x) => setState(() => v = x)));
+}
+
+class _SlotDemo extends StatefulWidget {
+  const _SlotDemo();
+  @override
+  State<_SlotDemo> createState() => _SlotDemoState();
+}
+
+class _SlotDemoState extends State<_SlotDemo> {
+  String v = 'asap';
+  static const days = [
+    SlotPickerDay(id: 'd0', title: 'Сегодня', date: '13 окт', options: _slotOptions),
+    SlotPickerDay(id: 'd1', title: 'Завтра', date: '14 окт', options: [MartSelectOption('d1-9', '09:00–12:00'), MartSelectOption('d1-12', '12:00–15:00')]),
+    SlotPickerDay(id: 'd2', title: 'Чт', date: '15 окт', options: [MartSelectOption('d2-9', '09:00–12:00'), MartSelectOption('d2-12', '12:00–15:00')]),
+  ];
+  @override
+  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.all(16),
+      child: SlotPicker(timeLabel: 'Время', days: days, value: v, onChanged: (x) => setState(() => v = x)));
+}

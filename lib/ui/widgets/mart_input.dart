@@ -14,7 +14,7 @@ enum MartInputType { text, phone, multiline, number }
 class MartInput extends StatefulWidget {
   const MartInput({
     super.key, required this.label, this.controller, this.initialValue, this.onChanged, this.required = false,
-    this.error, this.enabled = true, this.type = MartInputType.text, this.textInputAction, this.autofillHints, this.focusNode, this.onSubmitted,
+    this.error, this.hint, this.enabled = true, this.type = MartInputType.text, this.textInputAction, this.autofillHints, this.focusNode, this.onSubmitted,
   });
   final String label;
   final TextEditingController? controller;
@@ -23,6 +23,8 @@ class MartInput extends StatefulWidget {
   final ValueChanged<String>? onSubmitted;
   final bool required, enabled;
   final String? error;
+  /// Подсказка под полем (серым); при ошибке вместо неё — текст ошибки.
+  final String? hint;
   final MartInputType type;
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
@@ -121,7 +123,8 @@ class _MartInputState extends State<MartInput> {
           ]),
         ),
       ),
-      if (hasError) Padding(padding: const EdgeInsets.fromLTRB(4, 6, 4, 0), child: Text(w.error!, style: MartText.small.copyWith(fontSize: 13, color: c.error))),
+      if (hasError) Padding(padding: const EdgeInsets.fromLTRB(4, 6, 4, 0), child: Text(w.error!, style: MartText.small.copyWith(fontSize: 13, color: c.error)))
+      else if (w.hint != null) Padding(padding: const EdgeInsets.fromLTRB(4, 6, 4, 0), child: Text(w.hint!, style: MartText.small.copyWith(fontSize: 13, color: c.ink2))),
     ]);
   }
 }

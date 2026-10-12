@@ -37,11 +37,16 @@ class City {
   final double lat, lng;
 }
 
-/// Точка самовывоза. acceptsCargo — выдаёт тяжёлые товары (склад).
+/// Точка самовывоза (филиал 8mart.kz). hours — график, если известен (в API его нет — пусто);
+/// isOpen / acceptingOrders — живой статус филиала; brand — вывеска, если не 8MART (ROMANTIC);
+/// kaspiIntegrated — Kaspi Pay подключён автоматически (иначе счёт в Kaspi на номер).
 class PickupPoint {
-  const PickupPoint(this.id, this.city, this.name, this.hours, this.lat, this.lng);
+  const PickupPoint(this.id, this.city, this.name, this.hours, this.lat, this.lng,
+      {this.isOpen = true, this.acceptingOrders = true, this.kaspiIntegrated = false, this.brand});
   final String id, city, name, hours;
   final double lat, lng;
+  final bool isOpen, acceptingOrders, kaspiIntegrated;
+  final String? brand;
 }
 
 class Category extends Equatable {
@@ -61,6 +66,19 @@ class SavedCard extends Equatable {
 }
 
 enum ReceiveMethod { delivery, pickup }
+
+/// Зона доставки 8mart.kz для адреса (GET /public/branches/resolve-delivery?lat&lng): стоимость и время курьера, филиал.
+class DeliveryQuote extends Equatable {
+  const DeliveryQuote({required this.fee, required this.eta, required this.branchName, required this.zone, this.kaspiIntegrated = false});
+  final int fee, eta;
+  final String branchName, zone;
+  final bool kaspiIntegrated;
+  Map<String, dynamic> toJson() => {'fee': fee, 'eta': eta, 'branchName': branchName, 'zone': zone, 'kaspiIntegrated': kaspiIntegrated};
+  static DeliveryQuote? fromJson(Object? j) => j is Map ? DeliveryQuote(fee: j['fee'] as int, eta: j['eta'] as int, branchName: j['branchName'] as String? ?? '',
+      zone: j['zone'] as String? ?? '', kaspiIntegrated: j['kaspiIntegrated'] as bool? ?? false) : null;
+  @override
+  List<Object?> get props => [fee, eta, branchName, zone, kaspiIntegrated];
+}
 
 class CartLine extends Equatable {
   const CartLine(this.product, this.qty, {this.soldOut = false});
@@ -132,4 +150,24 @@ class BonusOp {
   const BonusOp(this.title, this.date, this.amount);
   final String title, date;
   final int amount;
+}
+
+/// Сторис (как на сайте): кружок-обложка на главной → слайды. Видео-слайд (сторис 8mart.kz): img — обложка, video — ролик.
+class Story extends Equatable {
+  const Story({required this.id, required this.title, required this.cover, required this.slides});
+  final String id, title, cover;
+  final List<StorySlide> slides;
+  @override
+  List<Object?> get props => [id];
+}
+
+class StorySlide {
+  const StorySlide({required this.img, this.title = '', this.text = '', this.video, this.duration, this.ctaLabel, this.ctaPath, this.ctaCopy});
+  final String img, title, text;
+  /// Видео (сторис 8mart.kz): текст уже в ролике — title/text пустые.
+  final String? video;
+  /// Длительность из API, с — пока видео не загрузилось.
+  final int? duration;
+  /// Кнопка: переход в приложении (ctaPath) или «скопировать код» (ctaCopy).
+  final String? ctaLabel, ctaPath, ctaCopy;
 }

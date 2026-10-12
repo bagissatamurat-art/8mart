@@ -1,11 +1,12 @@
 name: mart8
-description: 8mart — стройматериалы, инструменты, товары для дома, подарки и цветы. iOS + Android.
+description: 8mart — цветы и букеты с доставкой и самовывозом; также товары для дома, подарки, стройматериалы. iOS + Android.
 publish_to: none
-version: 1.3.0+13
+version: 1.4.0+14
 
 environment:
-  sdk: ">=3.4.0 <4.0.0"
-  flutter: ">=3.22.0"
+  # Как в pubspec.lock: зависимости требуют Flutter 3.44+ / Dart 3.12+.
+  sdk: ">=3.12.0 <4.0.0"
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:
@@ -27,6 +28,10 @@ dependencies:
   # Карта: нативный Mapbox Maps SDK (iOS 14+, Android). Публичный токен pk.* — через --dart-define MAPBOX_ACCESS_TOKEN.
   mapbox_maps_flutter: ^2.31.1
   http: ^1.2.2
+  # «Моё местоположение» на карте выбора адреса. Разрешения: iOS NSLocationWhenInUseUsageDescription, Android ACCESS_FINE/COARSE_LOCATION.
+  geolocator: ^14.0.2
+  # Видео-сторис 8mart.kz (GET /public/stories, type video).
+  video_player: ^2.14.1
   # Подключить, когда будут ключи/проекты:
   # firebase_core: ^3.3.0
   # firebase_messaging: ^15.0.4
@@ -34,6 +39,11 @@ dependencies:
 
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+  # Скриншоты для сторов: integration_test/store_screenshots_test.dart
+  integration_test:
+    sdk: flutter
+  flutter_driver:
     sdk: flutter
   flutter_lints: ^4.0.0
 

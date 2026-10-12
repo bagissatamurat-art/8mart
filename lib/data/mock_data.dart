@@ -1,13 +1,16 @@
 import '../domain/models.dart';
+import 'branches.g.dart';
+import 'flowers.g.dart';
 
 /// МОК вместо API. Формы объектов сохранить, данные заменить на ответы бэкенда.
 abstract final class MockData {
   static const categories = [
+    // Основной товар — цветы (букеты 8mart.kz); остальные категории — вторичные, без акцента.
+    Category(id: 'tsvety', name: 'Цветы', image: 'assets/images/cat-flowers.png'),
     Category(id: 'stroymaterialy', name: 'Стройматериалы', image: 'assets/images/cat-build.png'),
     Category(id: 'instrumenty', name: 'Инструменты', image: 'assets/images/cat-tools.png'),
     Category(id: 'dlya-doma', name: 'Для дома', image: 'assets/images/cat-home.png'),
     Category(id: 'podarki', name: 'Подарки', image: 'assets/images/cat-goods.png'),
-    Category(id: 'tsvety', name: 'Цветы', image: 'assets/images/cat-flowers.png'),
   ];
 
   static const subcategories = [
@@ -51,34 +54,8 @@ abstract final class MockData {
     Product(id: 'g2', name: 'Лента атласная, 5 м', pack: '5 м', price: 590, image: '${_i}p-g2.png', weightKg: .05, categoryId: 'podarki', subId: 'upakovka'),
     Product(id: 'g3', name: 'Открытка «С днём рождения»', pack: '1 шт', price: 490, image: '${_i}p-g3.png', weightKg: .05, categoryId: 'podarki', subId: 'otkrytki'),
     Product(id: 'g4', name: 'Шар фольгированный «Сердце»', pack: '1 шт', price: 1490, image: '${_i}p-g4.png', weightKg: .1, categoryId: 'podarki', subId: 'shary'),
-    // Цветы: один товар — размеры S/M/L (variants, у каждого своя цена) и цвет (colors). Цены — МОК (на сайте 0 тг.).
-    Product(id: 'f1', name: 'Розы Мандала', pack: 'S · M · L', price: 9900, image: 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_921d21b7-a498-4184-970f-350907f58d8d_1783525261145.png', delivery: DeliveryKind.flowers, weightKg: 1.5, categoryId: 'tsvety', subId: 'rozy',
-        colors: ['Розовый', 'Красный', 'Белый'],
-        variants: [ProductVariant('f1-s', 'S', 9900, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_2b70d6aa-a229-427c-8843-4c13d4ab011d_1783525246444.png'), ProductVariant('f2', 'M', 14400, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_2b70d6aa-a229-427c-8843-4c13d4ab011d_1783525246444.png'), ProductVariant('f1', 'L', 19800, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_921d21b7-a498-4184-970f-350907f58d8d_1783525261145.png')]),
-    Product(id: 'f3', name: 'Кустовые розы в букете', pack: 'S · M · L', price: 11900, image: 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_c6fa81b7-4989-420b-9435-b9a188a9b3ea_1783525368149.png', delivery: DeliveryKind.flowers, weightKg: 1.5, categoryId: 'tsvety', subId: 'rozy',
-        colors: ['Розовый', 'Белый'],
-        variants: [ProductVariant('f3-s', 'S', 11900, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_c6fa81b7-4989-420b-9435-b9a188a9b3ea_1783525368149.png'), ProductVariant('f3-m', 'M', 17300, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_c6fa81b7-4989-420b-9435-b9a188a9b3ea_1783525368149.png'), ProductVariant('f3', 'L', 23800, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_c6fa81b7-4989-420b-9435-b9a188a9b3ea_1783525368149.png')]),
-    Product(id: 'f4', name: 'Гортензия с хризантемами', pack: 'S · M · L', price: 12900, image: 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_7db73bc2-d9a5-4ea4-8f63-09806bd05d3c_1783525655078.png', delivery: DeliveryKind.flowers, weightKg: 1.5, categoryId: 'tsvety', subId: 'gortenzii',
-        colors: ['Микс', 'Голубой'],
-        variants: [ProductVariant('f4-s', 'S', 12900, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_7db73bc2-d9a5-4ea4-8f63-09806bd05d3c_1783525655078.png'), ProductVariant('f4', 'M', 18700, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_7db73bc2-d9a5-4ea4-8f63-09806bd05d3c_1783525655078.png'), ProductVariant('f4-l', 'L', 25800, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_7db73bc2-d9a5-4ea4-8f63-09806bd05d3c_1783525655078.png')]),
-    Product(id: 'f5', name: 'Французские розы Мандала с гортензией', pack: 'S · M · L', price: 10900, image: 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_1c97985e-0fcf-44cb-94a9-0d679043aaca_1783525461848.png', delivery: DeliveryKind.flowers, weightKg: 1.5, categoryId: 'tsvety', subId: 'rozy',
-        colors: ['Белый', 'Розовый'],
-        variants: [ProductVariant('f5-s', 'S', 10900, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_1c97985e-0fcf-44cb-94a9-0d679043aaca_1783525461848.png'), ProductVariant('f5-m', 'M', 15800, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_1c97985e-0fcf-44cb-94a9-0d679043aaca_1783525461848.png'), ProductVariant('f5', 'L', 21800, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_1c97985e-0fcf-44cb-94a9-0d679043aaca_1783525461848.png')]),
-    Product(id: 'f6', name: 'Роза микс', pack: 'S · M · L', price: 14900, image: 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_47e1639d-b11f-48aa-8bd8-39ef22e972e4_1783524822428.png', delivery: DeliveryKind.flowers, weightKg: 1.5, categoryId: 'tsvety', subId: 'rozy',
-        colors: ['Микс'],
-        variants: [ProductVariant('f6-s', 'S', 14900, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_47e1639d-b11f-48aa-8bd8-39ef22e972e4_1783524822428.png'), ProductVariant('f6', 'M', 21600, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_47e1639d-b11f-48aa-8bd8-39ef22e972e4_1783524822428.png'), ProductVariant('f6-l', 'L', 29800, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_47e1639d-b11f-48aa-8bd8-39ef22e972e4_1783524822428.png')]),
-    Product(id: 'f7', name: 'Гортензия с кустовыми розами', pack: 'S · M · L', price: 8900, image: 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_f13a65fd-3feb-4ea9-96ed-8950106eae87_1783525811054.png', delivery: DeliveryKind.flowers, weightKg: 1.5, categoryId: 'tsvety', subId: 'gortenzii',
-        colors: ['Белый', 'Голубой'],
-        variants: [ProductVariant('f7-s', 'S', 8900, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_f13a65fd-3feb-4ea9-96ed-8950106eae87_1783525811054.png'), ProductVariant('f7-m', 'M', 12900, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_f13a65fd-3feb-4ea9-96ed-8950106eae87_1783525811054.png'), ProductVariant('f7', 'L', 17800, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_f13a65fd-3feb-4ea9-96ed-8950106eae87_1783525811054.png')]),
-    Product(id: 'f8', name: 'Хризантема Момоко с розами Мандала', pack: 'S · M · L', price: 13900, image: 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_84d1c474-ddda-4f1d-9b42-7b30a1f94f14_1783525892580.png', delivery: DeliveryKind.flowers, weightKg: 1.5, categoryId: 'tsvety', subId: 'hrizantemy',
-        colors: ['Микс', 'Жёлтый'],
-        variants: [ProductVariant('f8-s', 'S', 13900, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_84d1c474-ddda-4f1d-9b42-7b30a1f94f14_1783525892580.png'), ProductVariant('f8-m', 'M', 20200, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_84d1c474-ddda-4f1d-9b42-7b30a1f94f14_1783525892580.png'), ProductVariant('f8', 'L', 27800, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_84d1c474-ddda-4f1d-9b42-7b30a1f94f14_1783525892580.png')]),
-    Product(id: 'f9', name: 'Хризантема с кустовыми розами', pack: 'S · M · L', price: 9900, image: 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_7faa562f-d421-4653-929d-7502e12fb269_1783525561210.png', delivery: DeliveryKind.flowers, weightKg: 1.5, categoryId: 'tsvety', subId: 'hrizantemy',
-        colors: ['Белый'],
-        variants: [ProductVariant('f9-s', 'S', 9900, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_7faa562f-d421-4653-929d-7502e12fb269_1783525561210.png'), ProductVariant('f9', 'M', 14400, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_7faa562f-d421-4653-929d-7502e12fb269_1783525561210.png'), ProductVariant('f9-l', 'L', 19800, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_7faa562f-d421-4653-929d-7502e12fb269_1783525561210.png')]),
-    Product(id: 'f10', name: 'Хризантема', pack: 'S · M · L', price: 11900, image: 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_2ecefd47-0667-44ba-b30c-099dd8e8138c_1783525089085.png', delivery: DeliveryKind.flowers, weightKg: 1.5, categoryId: 'tsvety', subId: 'hrizantemy',
-        colors: ['Белый', 'Жёлтый'],
-        variants: [ProductVariant('f10-s', 'S', 11900, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_2ecefd47-0667-44ba-b30c-099dd8e8138c_1783525089085.png'), ProductVariant('f10-m', 'M', 17300, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_2ecefd47-0667-44ba-b30c-099dd8e8138c_1783525089085.png'), ProductVariant('f10', 'L', 23800, 'https://dukenfy-api.8mart.kz/api/v1/catalog/files/product_2ecefd47-0667-44ba-b30c-099dd8e8138c_1783525089085.png')]),
+    // Цветы — настоящие букеты 8mart.kz (lib/data/flowers.g.dart, tool/import_site_data.dart): размеры S/M/L со своей ценой и фото.
+    ...flowerProducts,
     Product(id: 'g5', name: 'Набор латексных шаров, 10 шт', pack: '10 шт', price: 2490, image: '${_i}p-g5.png', weightKg: .2, categoryId: 'podarki', subId: 'shary'),
   ];
 
@@ -104,27 +81,11 @@ abstract final class MockData {
     'Слоновая кость': 0xFFF3EBD8, 'Светло-серый': 0xFFD9DADC, 'Бежевый': 0xFFE6D3B3};
   static const flowerSizeHint = {'S': '35 см', 'M': '45 см', 'L': '55 см'};
 
-  /// CITIES и PICKUP_POINTS из data.js — демо, в проде GET /cities и GET /pickup-points?city.
-  static const cities = [
-    City('astana', 'Астана', 51.1282, 71.4307), City('almaty', 'Алматы', 43.2389, 76.8897), City('shymkent', 'Шымкент', 42.3417, 69.5901),
-    City('karaganda', 'Караганда', 49.8047, 73.1094), City('aktobe', 'Актобе', 50.2839, 57.1670), City('pavlodar', 'Павлодар', 52.2873, 76.9674),
-    City('oskemen', 'Усть-Каменогорск', 49.9483, 82.6275), City('atyrau', 'Атырау', 47.0945, 51.9238),
-  ];
-  static const pickupPoints = [
-    PickupPoint('ast-1', 'astana', 'ул. Кабанбай батыра, 11', 'Ежедневно 08:00–23:00', 51.1166, 71.4398),
-    PickupPoint('ast-2', 'astana', 'пр. Мангилик Ел, 55', 'Ежедневно 09:00–22:00', 51.0905, 71.4180),
-    PickupPoint('ast-3', 'astana', 'ул. Бейбитшилик, 33', 'Пн–Сб 09:00–21:00', 51.1694, 71.4249),
-    PickupPoint('ast-4', 'astana', 'пр. Туран, 37', 'Ежедневно 09:00–22:00', 51.1105, 71.4090),
-    PickupPoint('ast-5', 'astana', 'ул. Сарайшык, 5', 'Ежедневно 08:00–22:00', 51.1350, 71.4310),
-    PickupPoint('ast-6', 'astana', 'пр. Республики, 68', 'Пн–Сб 09:00–20:00', 51.1800, 71.4160),
-    PickupPoint('ast-7', 'astana', 'ул. Кенесары, 40', 'Ежедневно 09:00–22:00', 51.1610, 71.4460),
-    PickupPoint('ast-8', 'astana', 'ш. Коргалжын, 3', 'Ежедневно 09:00–21:00', 51.1140, 71.3720),
-    PickupPoint('ast-9', 'astana', 'ул. Улы Дала, 27', 'Ежедневно 10:00–22:00', 51.0980, 71.4420),
-    PickupPoint('alm-1', 'almaty', 'пр. Абая, 150', 'Ежедневно 08:00–23:00', 43.2380, 76.9010),
-    PickupPoint('alm-2', 'almaty', 'ул. Розыбакиева, 247', 'Ежедневно 09:00–22:00', 43.2120, 76.8920),
-  ];
+  /// Города и филиалы 8mart.kz (lib/data/branches.g.dart). В проде — GET /cities и GET /pickup-points?city (живой статус).
+  static const cities = branchCities;
+  static const pickupPoints = branchPoints;
 
-  static const popularQueries = ['Цемент', 'Кирпич', 'Краска', 'Плитка', 'Розы', 'Гортензии'];
+  static const popularQueries = ['Розы', 'Гортензии', 'Хризантемы', 'Букет', 'Цемент', 'Краска'];
 
   static const cards = [
     SavedCard(id: 'c1', brand: 'Visa', last4: '4821', exp: '09/28', isDefault: true),

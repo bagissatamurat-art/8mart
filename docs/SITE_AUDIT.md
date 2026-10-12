@@ -1,5 +1,7 @@
 # AUDIT — 8mart.kz (24.09.2026)
 
+> ⚠ Исторический аудит 8mart.kz (сентябрь 2026). Актуальные цветы, цены и филиалы — `lib/data/flowers.g.dart` и `lib/data/branches.g.dart` (`dart run tool/import_site_data.dart`).
+
 ## Бренд
 - theme-color `#EE1D74` (розовый/маджента) — primary сохраняем.
 - Логотип: `https://8mart.kz/brand.svg` (alt «Dukenfy Logo») — файл не получен, нужен SVG.

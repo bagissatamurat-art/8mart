@@ -6,26 +6,30 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mb;
 
 import '../../core/format.dart';
+import '../../data/delivery_repository.dart';
 import '../../data/geo_repository.dart';
 import '../../data/mock_data.dart';
 import '../../domain/models.dart';
 import '../../domain/shipments.dart';
+import '../../domain/store_status.dart';
 import '../../state/cart_cubit.dart';
 import '../../ui/ui.dart';
+import 'address_search.dart';
 
 TextStyle _f(double size, FontWeight w, Color col, {double? h, double? ls}) => TextStyle(fontFamily: 'Onest', fontSize: size, fontWeight: w, color: col, height: h, letterSpacing: ls);
 
-/// Выбор способа получения (MartMethodModal.dc.html, mobile): шторка 92 %, сверху карта 46 % (город слева, × справа),
-/// снизу панель: заголовок, свич Доставка/Самовывоз, адрес с подсказками или список точек, CTA 56.
+/// Выбор способа получения (как на сайте): на весь экран, сверху карта (город слева, × справа, справа снизу — зум «+ / −» и «Моё местоположение»),
+/// снизу панель: заголовок, свич Доставка/Самовывоз, поле адреса (поиск — отдельным экраном) или компактный список филиалов со статусом, CTA 56.
+/// Доставка: стоимость и время — по зоне доставки 8mart.kz для пина; вне зон — «Доставить сюда» недоступна.
 /// Карта — нативный Mapbox Maps SDK (mapbox_maps_flutter), токен ставится в main.dart. Адрес по пину — DaData geolocate / Mapbox reverse (GeoRepository).
 /// address + onSaveAddress — режим address-only (кабинет → Адреса): без свича, поле «Название», CTA «Сохранить адрес».
-Future<void> openMethodSheet(BuildContext context, {AddressDraft? address, ValueChanged<AddressDraft>? onSaveAddress}) => showModalBottomSheet<void>(
-      context: context, isScrollControlled: true, useSafeArea: true, enableDrag: false, backgroundColor: Colors.transparent,
-      builder: (_) => FractionallySizedBox(heightFactor: .92, child: _MethodSheet(address: address, onSaveAddress: onSaveAddress)),
-    );
+Future<void> openMethodSheet(BuildContext context, {AddressDraft? address, ValueChanged<AddressDraft>? onSaveAddress}) =>
+    Navigator.of(context, rootNavigator: true).push<void>(MaterialPageRoute(fullscreenDialog: true,
+        builder: (_) => _MethodSheet(address: address, onSaveAddress: onSaveAddress)));
 
 class AddressDraft {
   const AddressDraft({this.title = '', required this.street, required this.city, this.entrance = '', this.flat = ''});
@@ -54,20 +58,20 @@ class _MethodSheetState extends State<_MethodSheet> {
   final _street = TextEditingController();
   final _entrance = TextEditingController(), _flat = TextEditingController(), _title = TextEditingController();
   bool get _addrOnly => widget.onSaveAddress != null;
-  final _focus = FocusNode();
   late ReceiveMethod _m;
   City _city = MockData.cities.first;
   bool _citiesOpen = false;
   String? _point;
-  // Подсказки
-  Timer? _debounce;
-  List<AddressSuggestion> _sg = const [];
-  bool _sgLoading = false, _sgErr = false, _sgOpen = false, _quiet = false;
-  int _sgReq = 0;
+  /// Камера летит к дому из поиска — адрес по пину не перезаписываем.
+  bool _quiet = false;
   // Пин
-  bool _moving = false, _locating = false;
-  String? _pinLabel;
+  bool _moving = false, _locating = false, _geoBusy = false;
   Timer? _reverseT;
+  /// Зона доставки для точки пина (центр карты).
+  QuoteResult? _quote;
+  bool _quoteLoading = false;
+  int _quoteReq = 0;
+  static const _delivery = DeliveryRepository();
 
   @override
   void initState() {
@@ -78,51 +82,68 @@ class _MethodSheetState extends State<_MethodSheet> {
     if (d != null) {
       _m = ReceiveMethod.delivery;
       _city = MockData.cities.firstWhere((c) => c.name == d.city, orElse: () => MockData.cities.first);
-      _street.text = d.street; _pinLabel = d.street.isEmpty ? null : d.street;
+      _street.text = d.street;
       _title.text = d.title; _entrance.text = d.entrance; _flat.text = d.flat;
-      _focus.addListener(() => setState(() => _sgOpen = _focus.hasFocus && _street.text.trim().length >= 3));
       _viewport = mb.CameraViewportState(center: _pt(_city.lat, _city.lng), zoom: 15);
       return;
     }
     final i = cart.address.indexOf(', ');
     if (i > 0) {
       _city = MockData.cities.firstWhere((c) => c.name == cart.address.substring(0, i), orElse: () => MockData.cities.first);
-      if (_m == ReceiveMethod.delivery) { _street.text = cart.address.substring(i + 2); _pinLabel = _street.text; }
+      if (_m == ReceiveMethod.delivery) { _street.text = cart.address.substring(i + 2); _quote = cart.quote == null ? null : QuoteOk(cart.quote!); }
     }
     if (_m == ReceiveMethod.pickup) _point = MockData.pickupPoints.where((p) => cart.address.endsWith(p.name)).firstOrNull?.id;
-    _focus.addListener(() => setState(() => _sgOpen = _focus.hasFocus && _street.text.trim().length >= 3));
     // Создаём один раз: MapWidget переприменяет viewport, если пришёл новый объект.
     _viewport = mb.CameraViewportState(center: _pt(_city.lat, _city.lng), zoom: _m == ReceiveMethod.delivery ? 15 : 12);
   }
 
   @override
-  void dispose() { _debounce?.cancel(); _reverseT?.cancel(); _pinTaps?.cancel(); _street.dispose(); _entrance.dispose(); _flat.dispose(); _title.dispose(); _focus.dispose(); super.dispose(); }
+  void dispose() { _reverseT?.cancel(); _pinTaps?.cancel(); _street.dispose(); _entrance.dispose(); _flat.dispose(); _title.dispose(); super.dispose(); }
 
   List<PickupPoint> get _points => MockData.pickupPoints.where((p) => p.city == _city.id).toList();
 
-  // ── подсказки: с 3 символов, debounce 300 мс, до 6 вариантов ──
-  void _onStreet(String v) {
-    _debounce?.cancel();
-    final q = v.trim();
-    if (q.length < 3) { setState(() { _sg = const []; _sgOpen = false; }); return; }
-    setState(() { _sgOpen = true; _sgLoading = true; _sgErr = false; });
-    _debounce = Timer(const Duration(milliseconds: 300), () async {
-      final req = ++_sgReq;
-      try {
-        final r = await _geo.suggest(q, _city);
-        if (mounted && req == _sgReq) setState(() { _sg = r; _sgLoading = false; });
-      } catch (_) {
-        if (mounted && req == _sgReq) setState(() { _sg = const []; _sgLoading = false; _sgErr = true; });
-      }
-    });
+  // ── поиск адреса — отдельный экран; выбран дом → карта летит к нему без повторного определения адреса по пину ──
+  Future<void> _openSearch() async {
+    final r = await openAddressSearch(context, value: _street.text, city: _city);
+    if (r == null || !mounted) return;
+    if (r.city.id != _city.id) setState(() { _city = r.city; _point = null; });
+    final s = r.suggestion;
+    setState(() => _street.text = s.title);
+    if (s.lat != null) { _quiet = true; _move(s.lat!, s.lng!, 17); _setPos(s.lat!, s.lng!); }
   }
 
-  void _pick(AddressSuggestion s) {
-    final text = s.needHouse ? '${s.title}, ' : s.title;
-    _street.value = TextEditingValue(text: text, selection: TextSelection.collapsed(offset: text.length));
-    setState(() { _sgOpen = false; _sg = const []; _pinLabel = s.title; });
-    if (s.needHouse) { _focus.requestFocus(); } else { _focus.unfocus(); }
-    if (s.lat != null) { _quiet = true; _move(s.lat!, s.lng!, 17); }
+  /// Пин встал на точку: если у адреса есть дом — считаем зону доставки (стоимость и время курьера).
+  void _setPos(double lat, double lng) {
+    if (_addrOnly || !RegExp(r'\d').hasMatch(_street.text)) { setState(() { _quote = null; _quoteLoading = false; }); return; }
+    final req = ++_quoteReq;
+    setState(() => _quoteLoading = true);
+    _delivery.quote(lat, lng).then((q) { if (mounted && req == _quoteReq) setState(() { _quote = q; _quoteLoading = false; }); });
+  }
+
+  // ── зум и «Моё местоположение» ──
+  Future<void> _zoomBy(double d) async {
+    final st = await _mb?.getCameraState();
+    if (st == null) return;
+    await _mb?.easeTo(mb.CameraOptions(zoom: (st.zoom + d).clamp(3, 19)), mb.MapAnimationOptions(duration: 250));
+  }
+
+  Future<void> _locate() async {
+    if (_geoBusy) return;
+    setState(() => _geoBusy = true);
+    try {
+      var perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) perm = await Geolocator.requestPermission();
+      if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) {
+        if (mounted) showMartToast(context, 'Нет доступа к геопозиции — разрешите его в настройках телефона');
+        return;
+      }
+      final p = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 10)));
+      await _move(p.latitude, p.longitude, _m == ReceiveMethod.delivery ? 17 : 13);
+    } catch (_) {
+      if (mounted) showMartToast(context, 'Не удалось определить местоположение');
+    } finally {
+      if (mounted) setState(() => _geoBusy = false);
+    }
   }
 
   // ── карта Mapbox ──
@@ -200,15 +221,17 @@ class _MethodSheetState extends State<_MethodSheet> {
         final st = await _mb?.getCameraState();
         if (st == null || !mounted) return;
         final c = st.center.coordinates;
+        final lat = c.lat.toDouble(), lng = c.lng.toDouble();
         setState(() => _locating = true);
-        final a = await _geo.reverse(c.lat.toDouble(), c.lng.toDouble()).catchError((_) => '');
+        final a = await _geo.reverse(lat, lng).catchError((_) => '');
         if (!mounted) return;
-        setState(() { _locating = false; _pinLabel = a.isEmpty ? null : a; if (a.isNotEmpty && !_focus.hasFocus) _street.text = a; });
+        setState(() { _locating = false; if (a.isNotEmpty) _street.text = a; });
+        _setPos(lat, lng);
       });
   }
 
   void _setCity(City c) {
-    setState(() { _city = c; _citiesOpen = false; _point = null; _street.clear(); _pinLabel = null; });
+    setState(() { _city = c; _citiesOpen = false; _point = null; _street.clear(); _quote = null; });
     if (_m == ReceiveMethod.pickup && _points.isNotEmpty) { _fitPoints(); } else { _move(c.lat, c.lng, _m == ReceiveMethod.delivery ? 15 : 12); }
     _syncPins();
   }
@@ -241,10 +264,10 @@ class _MethodSheetState extends State<_MethodSheet> {
     }
     final cart = context.read<CartCubit>();
     if (_m == ReceiveMethod.delivery) {
-      cart.setMethod(_m, '${_city.name}, ${_street.text.trim().replaceAll(RegExp(r',\s*$'), '')}');
+      cart.setMethod(_m, '${_city.name}, ${_street.text.trim().replaceAll(RegExp(r',\s*$'), '')}', quote: switch (_quote) { QuoteOk(:final quote) => quote, _ => null });
     } else {
       final p = _points.firstWhere((x) => x.id == _point);
-      cart.setMethod(_m, '${_city.name}, ${p.name}');
+      cart.setMethod(_m, '${_city.name}, ${p.name}', pickupKaspi: p.kaspiIntegrated);
     }
     Navigator.of(context).pop();
   }
@@ -254,8 +277,11 @@ class _MethodSheetState extends State<_MethodSheet> {
     final c = context.mc;
     final isD = _m == ReceiveMethod.delivery;
     final streetOk = RegExp(r'\d').hasMatch(_street.text);
-    final ok = isD ? streetOk : _point != null && _points.any((p) => p.id == _point);
+    /// Вне зон доставки — заказать сюда нельзя (адрес в кабинет сохранить можно).
+    final outside = isD && !_addrOnly && _quote is QuoteOutside;
+    final ok = isD ? streetOk && !outside : _point != null && _points.any((p) => p.id == _point);
     const cfg = ShippingConfig();
+    final top = MediaQuery.paddingOf(context).top;
 
     final map = Stack(children: [
       mb.MapWidget(
@@ -269,20 +295,39 @@ class _MethodSheetState extends State<_MethodSheet> {
         onCameraChangeListener: _onCamera,
         onMapIdleListener: _onIdle,
       ),
-      if (isD) IgnorePointer(child: Center(child: _Pin(lift: _moving, label: _locating ? null : (_pinLabel ?? 'Двигайте карту, чтобы указать дом'), muted: _pinLabel == null && !_locating, loading: _locating || (_moving && !_quiet)))),
-      Positioned(left: 16, top: 16, child: _Float(onTap: () => setState(() => _citiesOpen = !_citiesOpen), child: Row(mainAxisSize: MainAxisSize.min, children: [
+      // Пин без подписи (адрес — в поле ниже); пока определяется адрес — лоадер вокруг головки пина.
+      if (isD) IgnorePointer(child: Center(child: _Pin(lift: _moving, loading: _locating || (_moving && !_quiet)))),
+      // Зум «+ / −» и «Моё местоположение» — справа снизу.
+      Positioned(right: 16, bottom: 16, child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), boxShadow: const [BoxShadow(color: Color(0x2617151A), blurRadius: 12, offset: Offset(0, 4))]),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            _MapBtn(label: 'Приблизить', onTap: () => _zoomBy(1), child: const MartPlusMinus(plus: true, color: Color(0xFF17151A), size: 14)),
+            Container(width: 24, height: 1, color: const Color(0xFFEEEDF1)),
+            _MapBtn(label: 'Отдалить', onTap: () => _zoomBy(-1), child: const MartPlusMinus(plus: false, color: Color(0xFF17151A), size: 14)),
+          ]),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Color(0x2617151A), blurRadius: 12, offset: Offset(0, 4))]),
+          child: _MapBtn(label: 'Моё местоположение', onTap: _locate, child: _geoBusy
+              ? const SizedBox.square(dimension: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFEE1D74)))
+              : const CustomPaint(size: Size(18, 18), painter: _LocatePainter(Color(0xFF17151A)))),
+        ),
+      ])),
+      Positioned(left: 16, top: 16 + top, child: _Float(onTap: () => setState(() => _citiesOpen = !_citiesOpen), child: Row(mainAxisSize: MainAxisSize.min, children: [
         Container(width: 8, height: 8, decoration: BoxDecoration(color: c.primary, shape: BoxShape.circle)),
         const SizedBox(width: 8),
         Text(_city.name, style: _f(15, FontWeight.w600, const Color(0xFF17151A))),
         const SizedBox(width: 8),
         const MartChevron(dir: ChevronDir.down, color: Color(0xFF6B6873), size: 5),
       ]))),
-      Positioned(right: 16, top: 16, child: Semantics(button: true, label: 'Закрыть', child: GestureDetector(
+      Positioned(right: 16, top: 16 + top, child: Semantics(button: true, label: 'Закрыть', child: GestureDetector(
         onTap: () => Navigator.of(context).pop(),
         child: Container(width: 40, height: 40, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Color(0x2617151A), blurRadius: 12, offset: Offset(0, 4))]),
             child: const Center(child: MartCross(size: 14, color: Color(0xFF17151A)))),
       ))),
-      if (_citiesOpen) Positioned(left: 16, top: 68, child: Container(
+      if (_citiesOpen) Positioned(left: 16, top: 68 + top, child: Container(
         width: 240, constraints: const BoxConstraints(maxHeight: 320), padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: const [BoxShadow(color: Color(0x2917151A), blurRadius: 24, offset: Offset(0, 8))]),
         child: ListView(shrinkWrap: true, padding: EdgeInsets.zero, children: [
@@ -308,90 +353,86 @@ class _MethodSheetState extends State<_MethodSheet> {
       )));
     }
 
+    // Строка о доставке под адресом: нет дома / вне зон — подсказка на её месте (высота панели не меняется, карта не прыгает).
+    final needHouse = isD && _street.text.trim().length > 2 && !streetOk && !_locating;
+    final q = _quote;
+    final feeLine = needHouse ? ('Укажите номер дома — найдите адрес или сдвиньте пин к дому', true)
+        : outside ? ('Сюда пока не доставляем — выберите другой адрес или самовывоз', true)
+        : _quoteLoading ? ('Считаем стоимость доставки…', false)
+        : q is QuoteOk ? ('Доставка ${moneyText(q.quote.fee)}, бесплатно от ${moneyText(cfg.freeFrom)} · ~${q.quote.eta} мин', false)
+        : ('Доставка от ${moneyText(cfg.courierFee)}, бесплатно от ${moneyText(cfg.freeFrom)} · ${cfg.etaMin}–${cfg.etaMax} мин', false);
     final delivery = ListView(padding: const EdgeInsets.symmetric(horizontal: 4), children: [
-      MartInput(label: 'Улица, дом', required: true, controller: _street, focusNode: _focus, onChanged: _onStreet),
-      if (_sgOpen) Padding(padding: const EdgeInsets.only(top: 6), child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: c.border),
-            boxShadow: const [BoxShadow(color: Color(0x1A17151A), blurRadius: 24, offset: Offset(0, 8))]),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          if (_sgLoading) SizedBox(height: 44, child: Row(children: [
-            const SizedBox(width: 12),
-            SizedBox.square(dimension: 14, child: CircularProgressIndicator(strokeWidth: 2, color: c.primary, backgroundColor: c.border)),
-            const SizedBox(width: 10),
-            Text('Ищем адрес…', style: _f(14, FontWeight.w400, c.ink2)),
-          ]))
-          else if (_sg.isEmpty) Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), child: Text(
-              _sgErr ? 'Подсказки недоступны — укажите дом пином на карте' : 'Не нашли «${_street.text.trim()}» — поставьте пин на карте, адрес подставится',
-              style: _f(14, FontWeight.w400, c.ink2, h: 1.4)))
-          else for (final s in _sg) InkWell(
-            onTap: () => _pick(s), borderRadius: BorderRadius.circular(10),
-            child: ConstrainedBox(constraints: const BoxConstraints(minHeight: 56), child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(children: [
-                const CustomPaint(size: Size(16, 16), painter: _DropPainter(Color(0xFFA9A6B0))),
-                const SizedBox(width: 12),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                  Text(s.title, style: _f(15, FontWeight.w600, c.ink1, h: 1.3)),
-                  if (s.sub.isNotEmpty) ...[const SizedBox(height: 2), Text(s.sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: _f(13, FontWeight.w400, c.ink2, h: 1.3))],
-                ])),
-              ]),
-            )),
-          ),
+      MartTapField(label: 'Улица, дом', required: true, value: _street.text, busy: _locating, error: needHouse || outside, onTap: _openSearch),
+      // Подъезд и квартира — только в адресной книге кабинета; при заказе — на оформлении.
+      if (_addrOnly) ...[
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(child: MartInput(label: 'Подъезд', controller: _entrance)),
+          const SizedBox(width: 8),
+          Expanded(child: MartInput(label: 'Квартира, офис', controller: _flat)),
         ]),
-      )),
+      ],
       const SizedBox(height: 12),
-      Row(children: [
-        Expanded(child: MartInput(label: 'Подъезд', controller: _entrance)),
-        const SizedBox(width: 8),
-        Expanded(child: MartInput(label: 'Квартира, офис', controller: _flat)),
-      ]),
-      const SizedBox(height: 12),
-      Text('Доставка ${moneyText(cfg.courierFee)}, бесплатно от ${moneyText(cfg.freeFrom)} · 60–90 мин', style: _f(13, FontWeight.w400, c.ink2, h: 1.4)),
+      Text(feeLine.$1, style: _f(13, feeLine.$2 ? FontWeight.w500 : FontWeight.w400, feeLine.$2 ? c.error : c.ink2, h: 1.4)),
     ]);
 
     final ps = [..._points]..sort((a, b) => a.name.compareTo(b.name));
+    // Статус филиала цветом: открыт — зелёный, не принимает заказы — жёлтый, закрыт — серый.
+    (String, Color) status(PickupPoint p) => switch (storeTone(p)) {
+          StoreTone.open => ('Открыто · принимает заказы', c.success),
+          StoreTone.soon => ('Сейчас не принимает заказы', c.warning),
+          StoreTone.closed => ('Сейчас закрыто', c.ink3),
+        };
     final pickup = ps.isEmpty
-        ? Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14), decoration: BoxDecoration(color: const Color(0xFFFFF7E8), borderRadius: BorderRadius.circular(16)),
+        ? Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14), decoration: BoxDecoration(color: c.warningBg, borderRadius: BorderRadius.circular(16)),
             child: Text('В городе ${_city.name} пока нет точек самовывоза — выберите доставку или другой город', style: _f(14, FontWeight.w400, c.ink1, h: 1.4)))
         : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Padding(padding: const EdgeInsets.symmetric(horizontal: 2), child: Row(children: [
-              Expanded(child: Text('${ps.length} ${plural(ps.length, 'точка', 'точки', 'точек')}', style: _f(13, FontWeight.w400, c.ink2))),
-              Text('по алфавиту', style: _f(13, FontWeight.w400, c.ink2)),
-            ])),
-            const SizedBox(height: 8),
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Text('${ps.length} ${plural(ps.length, 'точка', 'точки', 'точек')} в городе ${_city.name}', style: _f(13, FontWeight.w400, c.ink2))),
+            const SizedBox(height: 4),
             Expanded(child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 4), itemCount: ps.length, separatorBuilder: (_, __) => const SizedBox(height: 8),
+              padding: EdgeInsets.zero, itemCount: ps.length, separatorBuilder: (_, __) => Divider(height: 1, indent: 52, color: c.divider),
               itemBuilder: (_, i) {
                 final p = ps[i], on = p.id == _point;
-                return GestureDetector(onTap: () => _pickPoint(p), child: AnimatedContainer(
-                  duration: MartMotion.press, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(color: on ? c.primary50 : c.surface, borderRadius: BorderRadius.circular(MartRadius.field), border: Border.all(color: on ? c.primary : c.border, width: 1.5)),
-                  child: Row(children: [
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(p.name, style: _f(15, FontWeight.w600, c.ink1)),
-                      const SizedBox(height: 2),
-                      Text(p.hours, style: _f(13, FontWeight.w400, c.ink2)),
+                final (st, tone) = status(p);
+                return Semantics(button: true, selected: on, label: '${p.brand ?? '8MART'}, ${p.name}. $st', child: GestureDetector(
+                  behavior: HitTestBehavior.opaque, onTap: () => _pickPoint(p),
+                  child: AnimatedContainer(
+                    duration: MartMotion.press, constraints: const BoxConstraints(minHeight: 60), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    decoration: BoxDecoration(color: on ? c.primary50 : Colors.transparent, borderRadius: BorderRadius.circular(12)),
+                    child: ExcludeSemantics(child: Row(children: [
+                      Container(width: 32, height: 32, decoration: BoxDecoration(shape: BoxShape.circle, color: on ? c.primary : tone.withValues(alpha: .14)),
+                          child: Center(child: Container(width: 10, height: 10, decoration: BoxDecoration(shape: BoxShape.circle, color: on ? Colors.white : tone)))),
+                      const SizedBox(width: 12),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                        Row(children: [
+                          Flexible(child: Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: _f(15, FontWeight.w600, c.ink1))),
+                          if (p.brand != null) ...[
+                            const SizedBox(width: 6),
+                            Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1), decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(6)),
+                                child: Text(p.brand!, style: _f(11, FontWeight.w600, c.ink2))),
+                          ],
+                        ]),
+                        const SizedBox(height: 2),
+                        Text(st, style: _f(13, FontWeight.w500, tone == c.ink3 ? c.ink2 : tone)),
+                      ])),
                     ])),
-                    const SizedBox(width: 12),
-                    Container(width: 20, height: 20, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: on ? c.primary : c.border, width: 2)),
-                        child: Center(child: Container(width: 10, height: 10, decoration: BoxDecoration(shape: BoxShape.circle, color: on ? c.primary : Colors.transparent)))),
-                  ]),
+                  ),
                 ));
               },
             )),
           ]);
 
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      child: ColoredBox(color: c.surface, child: LayoutBuilder(builder: (context, cons) => Column(children: [
+    return Scaffold(
+      backgroundColor: c.surface, resizeToAvoidBottomInset: false,
+      body: LayoutBuilder(builder: (context, cons) => Column(children: [
+        // Карта одной высоты в доставке и самовывозе — переключение не двигает пин.
         SizedBox(height: cons.maxHeight * .46, child: ColoredBox(color: c.surface3, child: map)),
         Expanded(child: Padding(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, 20 + MediaQuery.viewInsetsOf(context).bottom),
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 12 + MediaQuery.paddingOf(context).bottom),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Text(_addrOnly ? (widget.address!.street.isEmpty ? 'Новый адрес' : 'Изменить адрес') : 'Как получить заказ?', style: _f(22, FontWeight.w800, c.ink1, ls: -0.44)),
-            const SizedBox(height: 4),
-            Text(_addrOnly ? 'Двигайте карту или введите адрес' : 'Цены и наличие зависят от филиала', style: _f(13, FontWeight.w400, c.ink2, h: 1.4)),
+            if (_addrOnly) ...[const SizedBox(height: 4), Text('Двигайте карту или введите адрес', style: _f(13, FontWeight.w400, c.ink2, h: 1.4))],
             const SizedBox(height: 16),
             if (_addrOnly) MartInput(label: 'Название', controller: _title)
             else Container(padding: const EdgeInsets.all(4), decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(999)),
@@ -400,10 +441,10 @@ class _MethodSheetState extends State<_MethodSheet> {
             Expanded(child: isD ? delivery : pickup),
             const SizedBox(height: 16),
             MartButton(label: _addrOnly ? 'Сохранить адрес' : isD ? 'Доставить сюда' : 'Заберу здесь', expanded: true,
-                disabledReason: ok ? null : (isD ? 'Укажите улицу и дом' : 'Выберите точку на карте или в списке'), onPressed: _confirm),
+                disabledReason: ok ? null : (isD ? (outside ? 'Сюда пока не доставляем' : 'Укажите улицу и дом') : 'Выберите точку на карте или в списке'), onPressed: _confirm),
           ]),
         )),
-      ]))),
+      ])),
     );
   }
 }
@@ -421,34 +462,53 @@ class _Float extends StatelessWidget {
       ));
 }
 
-/// Пин доставки (map.html #pin): голова 28 (розовая, белая рамка 3, точка 6) + ножка 16; при движении поднимается на 8. Над ним — подсказка с адресом.
+/// Пин доставки: головка 34 (розовая, белое кольцо, точка) + ножка 14; при движении карты поднимается на 8.
+/// Адрес над пином не пишем — он в поле ниже; пока определяется — вращающееся кольцо вокруг головки.
 class _Pin extends StatelessWidget {
-  const _Pin({required this.lift, this.label, this.muted = false, this.loading = false});
-  final bool lift, muted, loading;
-  final String? label;
+  const _Pin({required this.lift, this.loading = false});
+  final bool lift, loading;
   @override
   Widget build(BuildContext context) {
-    // Коробка 140 по центру карты → сдвиг на −70, чтобы кончик ножки пришёлся ровно в центр.
-    return Transform.translate(offset: const Offset(0, -70), child: AnimatedSlide(
-      duration: const Duration(milliseconds: 150), offset: Offset(0, lift ? -8 / 140 : 0),
-      child: SizedBox(height: 140, child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-        Container(
-          constraints: const BoxConstraints(maxWidth: 260), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), boxShadow: const [BoxShadow(color: Color(0x2617151A), blurRadius: 12, offset: Offset(0, 4))]),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            if (loading) ...[const SizedBox.square(dimension: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFEE1D74))), const SizedBox(width: 8)],
-            Flexible(child: Text(loading ? 'Определяем адрес…' : (label ?? ''), textAlign: TextAlign.center,
-                style: _f(13, muted ? FontWeight.w500 : FontWeight.w600, muted ? const Color(0xFF6B6873) : const Color(0xFF17151A), h: 1.35))),
-          ]),
-        ),
-        const SizedBox(height: 6),
-        Container(width: 28, height: 28, decoration: BoxDecoration(color: const Color(0xFFEE1D74), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 3),
-            boxShadow: const [BoxShadow(color: Color(0x59EE1D74), blurRadius: 12, offset: Offset(0, 4))]),
-            child: Center(child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)))),
-        Container(width: 2.5, height: 16, decoration: BoxDecoration(color: const Color(0xFF17151A).withValues(alpha: .75), borderRadius: const BorderRadius.vertical(bottom: Radius.circular(2)))),
+    const pink = Color(0xFFEE1D74);
+    // Коробка 60 по центру карты → сдвиг на −30, чтобы кончик ножки пришёлся ровно в центр.
+    return Transform.translate(offset: const Offset(0, -30), child: AnimatedSlide(
+      duration: const Duration(milliseconds: 150), offset: Offset(0, lift ? -8 / 60 : 0),
+      child: SizedBox(height: 60, child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+        SizedBox.square(dimension: 46, child: Stack(alignment: Alignment.center, children: [
+          if (loading) const SizedBox.square(dimension: 46, child: CircularProgressIndicator(strokeWidth: 2.5, color: pink, backgroundColor: Color(0x33EE1D74))),
+          Container(width: 34, height: 34, decoration: BoxDecoration(color: pink, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 3),
+              boxShadow: const [BoxShadow(color: Color(0x59EE1D74), blurRadius: 12, offset: Offset(0, 4))]),
+              child: Center(child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)))),
+        ])),
+        Container(width: 2.5, height: 14, decoration: BoxDecoration(color: const Color(0xFF17151A).withValues(alpha: .75), borderRadius: const BorderRadius.vertical(bottom: Radius.circular(2)))),
       ])),
     ));
   }
+}
+
+/// Кнопка поверх карты 44 (зум, «Моё местоположение»).
+class _MapBtn extends StatelessWidget {
+  const _MapBtn({required this.label, required this.onTap, required this.child});
+  final String label;
+  final VoidCallback onTap;
+  final Widget child;
+  @override
+  Widget build(BuildContext context) => Semantics(button: true, label: label, child: GestureDetector(
+        behavior: HitTestBehavior.opaque, onTap: onTap, child: SizedBox.square(dimension: MartHeight.hit, child: Center(child: child))));
+}
+
+/// Стрелка «Моё местоположение» (навигационный треугольник) геометрией.
+class _LocatePainter extends CustomPainter {
+  const _LocatePainter(this.color);
+  final Color color;
+  @override
+  void paint(Canvas canvas, Size s) {
+    final p = Paint()..color = color..strokeWidth = 2..style = PaintingStyle.stroke..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(Path()..moveTo(s.width * .92, s.height * .08)..lineTo(s.width * .08, s.height * .45)..lineTo(s.width * .5, s.height * .5)
+      ..lineTo(s.width * .55, s.height * .92)..close(), p);
+  }
+  @override
+  bool shouldRepaint(_LocatePainter o) => o.color != color;
 }
 
 /// Точка самовывоза (map.html .pp) для аннотации Mapbox: 36, белая с розовой рамкой 2.5 и точкой 12; выбранная — розовая, ×1.15. PNG в [dpr].
@@ -484,23 +544,4 @@ class _TickPainter extends CustomPainter {
   }
   @override
   bool shouldRepaint(_TickPainter o) => false;
-}
-
-/// Метка-капля в подсказке адреса.
-class _DropPainter extends CustomPainter {
-  const _DropPainter(this.color);
-  final Color color;
-  @override
-  void paint(Canvas canvas, Size s) {
-    final p = Paint()..color = color..strokeWidth = 2..style = PaintingStyle.stroke;
-    final path = Path()
-      ..moveTo(s.width / 2, s.height - 1)
-      ..quadraticBezierTo(1, s.height * .55, 1, s.height * .38)
-      ..arcToPoint(Offset(s.width - 1, s.height * .38), radius: Radius.circular(s.width / 2 - 1))
-      ..quadraticBezierTo(s.width - 1, s.height * .55, s.width / 2, s.height - 1);
-    canvas.drawPath(path, p);
-    canvas.drawCircle(Offset(s.width / 2, s.height * .38), 2.5, Paint()..color = color);
-  }
-  @override
-  bool shouldRepaint(_DropPainter o) => o.color != color;
 }

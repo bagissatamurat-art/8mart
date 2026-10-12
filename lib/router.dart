@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'features/profile/faq_screen.dart';
 import 'features/cart/cart_screen.dart';
 import 'features/catalog/catalog_screen.dart';
 import 'features/checkout/checkout_screen.dart';
@@ -37,6 +38,7 @@ GoRouter buildRouter({String initialLocation = '/splash'}) => GoRouter(
                 GoRoute(path: 'notifications', builder: (_, __) => const NotificationSettingsScreen()),
                 GoRoute(path: 'documents', builder: (_, __) => const DocumentsScreen()),
               ]),
+              GoRoute(path: 'faq', builder: (_, __) => const FaqScreen()),
               GoRoute(path: ':section', builder: (_, s) => AccountSectionScreen(section: AccountSection.values.byName(s.pathParameters['section']!))),
             ])]),
           ],

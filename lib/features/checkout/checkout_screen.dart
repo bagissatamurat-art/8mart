@@ -14,7 +14,11 @@ import '../../state/auth_cubit.dart';
 import '../../state/checkout_cubit.dart';
 import '../../state/order_cubit.dart';
 import '../auth/auth_view.dart';
+import '../../core/phone_mask.dart';
 import '../../domain/shipments.dart';
+import '../../domain/slots.dart';
+import '../common/slot_days.dart';
+import '../common/pickup_split.dart';
 import '../common/shipment_texts.dart';
 import '../method/method_sheet.dart';
 
@@ -76,13 +80,6 @@ class _Form extends StatelessWidget {
           Expanded(child: Text(text, style: _f(16, FontWeight.w700, c.ink1))),
           if (action != null) GestureDetector(onTap: onAction, child: Text(action, style: _f(13, FontWeight.w600, c.primary))),
         ]);
-    Widget chips(String label, List<String> items, int sel, ValueChanged<int> on) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: _f(14, FontWeight.w600, c.ink1)),
-          const SizedBox(height: 4),
-          SizedBox(height: 44, child: ListView(scrollDirection: Axis.horizontal, clipBehavior: Clip.none, children: [
-            for (var i = 0; i < items.length; i++) Padding(padding: EdgeInsets.only(left: i == 0 ? 0 : 8), child: MartChip(label: items[i], selected: i == sel, onTap: () => on(i))),
-          ])),
-        ]);
     Widget row(String k, String v, {Color? color, Widget? tag}) => Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Row(children: [
           Text(k, style: _f(14, FontWeight.w400, c.ink2)),
           if (tag != null) ...[const SizedBox(width: 6), tag],
@@ -90,12 +87,16 @@ class _Form extends StatelessWidget {
           Text(v, style: _f(14, color == null ? FontWeight.w400 : FontWeight.w600, color ?? c.ink1)),
         ]));
 
+    // Слоты считаются от текущего времени Казахстана; выбранный пропал (время прошло) — первый доступный.
+    // «Ближайшее» подписано временем зоны адреса (если известна), иначе общими условиями.
+    final eta = cart.quote != null ? t.etaApprox(cart.quote!.eta) : '${cfg.etaMin}–${cfg.etaMax} мин';
+    final courierDays = courierSlots(DateTime.now(), asapLabel: t.slotAsap, eta: eta), cargoDays = cargoSlots(DateTime.now());
+    final cSlot = effectiveSlot(courierDays, s.courierSlot), gSlot = effectiveSlot(cargoDays, s.cargoSlot);
+    final phone = s.recipientPhone ?? auth.phone, kaspiPhone = s.kaspiPhone ?? auth.phone;
+    final kaspiInvoice = s.payment == 'kaspi' && !cart.kaspiIntegrated;
+
     return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
-      card(head: title(t.recipient), [
-        MartInput(label: t.name, required: true, initialValue: auth.name),
-        MartInput(label: t.phone, type: MartInputType.phone, required: true, initialValue: auth.phone, enabled: false),
-      ]),
-      const SizedBox(height: 12),
+      // Блока «Получатель» нет (вошедший пользователь): телефон получателя, комментарий и «Оставить у двери» — здесь.
       card(head: title(pickup ? t.pickup : t.delivery, action: t.change, onAction: () => openMethodSheet(context)), [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -113,30 +114,34 @@ class _Form extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(child: MartInput(label: t.flat, initialValue: s.flat, onChanged: (v) => co.set((x) => x.copyWith(flat: v)))),
         ]),
-        if (plan.canSplit) SplitChoice(
-          title: pickup ? t.splitTitlePickup : t.splitTitle, sub: t.splitSub, together: cart.together, onChanged: cartCubit.setTogether,
-          options: [
-            SplitOption(together: false, title: pickup ? t.splitTwoPickup : t.splitTwo, sub: '${t.todayCourier} + ${t.tomorrowCargo}',
-                feeText: cart.copyWith(together: false).plan(goodsTotal: cart.afterDiscount).shipments.map((x) => x.feeText(t)).join(' + ')),
-            SplitOption(together: true, title: pickup ? t.splitTogetherPickup : t.splitTogether, sub: pickup ? t.tomorrowPickup : t.tomorrowCargo,
-                feeText: cart.copyWith(together: true).plan(goodsTotal: cart.afterDiscount).shipments.first.feeText(t)),
-          ],
-        ),
+        MartInput(label: t.recipientPhone, type: MartInputType.phone, required: true, initialValue: phone,
+            hint: pickup ? t.recipientHintPickup : t.recipientHintDelivery,
+            error: s.touched && !PhoneMaskFormatter.isComplete(phone) ? t.blockedPhone : null,
+            onChanged: (v) => co.set((x) => x.copyWith(recipientPhone: v, touched: true))),
+        MartInput(label: pickup ? t.commentOrder : t.commentCourier, type: MartInputType.multiline, initialValue: s.comment, onChanged: (v) => co.set((x) => x.copyWith(comment: v))),
+        if (!pickup) MartSwitchTile(value: s.leaveAtDoor, onTap: co.toggleLeaveAtDoor, title: t.leaveAtDoor, sub: t.leaveAtDoorSub),
+      ]),
+      const SizedBox(height: 12),
+      // «Способ доставки» / «Когда забрать»: отправления, время курьера и грузового, подъём на этаж.
+      card(head: title(pickup ? t.shipTitlePickup : t.shipTitleDelivery), [
+        if (plan.canSplit) PickupSplitChoice(cart: cart, onChanged: cartCubit.setTogether),
         for (final sh in plan.shipments) Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(MartRadius.field), border: Border.all(color: c.border)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             ShipmentHead(tag: sh.tag(t, pickup), cargo: sh.isCargo, label: sh.label(t, pickup),
-                when: !pickup && sh.isCargo ? '${CheckoutCubit.cargoDays[s.cargoDay]}, ${CheckoutCubit.cargoIntervals[s.cargoInterval]}' : sh.when(t, pickup),
+                when: (!pickup ? slotTitle(context, sh.isCargo ? cargoDays : courierDays, sh.isCargo ? gSlot : cSlot) : null) ?? sh.when(t, pickup, eta: cart.quote?.eta),
                 meta: sh.meta(t, pickup, cart.address), feeText: pickup ? null : sh.feeText(t)),
             const SizedBox(height: 12),
             Wrap(spacing: 6, runSpacing: 6, children: [for (final l in sh.lines) SizedBox.square(dimension: 40, child: MartImage(l.product.image, radius: 10, fit: BoxFit.cover))]),
-            if (!pickup && !sh.isCargo) ...[const SizedBox(height: 12), chips(t.whenDeliver, CheckoutCubit.slots, s.slot, (i) => co.set((x) => x.copyWith(slot: i)))],
+            if (!pickup) ...[
+              const SizedBox(height: 12),
+              Text(sh.isCargo ? t.whenBring : t.whenDeliver, style: _f(14, FontWeight.w600, c.ink1)),
+              const SizedBox(height: 8),
+              SlotPicker(timeLabel: t.timeLabel, days: pickerDays(context, sh.isCargo ? cargoDays : courierDays), value: sh.isCargo ? gSlot : cSlot,
+                  onChanged: (id) => co.set((x) => sh.isCargo ? x.copyWith(cargoSlot: id) : x.copyWith(courierSlot: id))),
+            ],
             if (!pickup && sh.isCargo) ...[
-              const SizedBox(height: 12),
-              chips(t.dayLabel, CheckoutCubit.cargoDays, s.cargoDay, (i) => co.set((x) => x.copyWith(cargoDay: i))),
-              const SizedBox(height: 12),
-              chips(t.intervalLabel, CheckoutCubit.cargoIntervals, s.cargoInterval, (i) => co.set((x) => x.copyWith(cargoInterval: i))),
               const SizedBox(height: 12),
               MartSwitchTile(value: s.lift, onTap: co.toggleLift, title: t.liftToFloor,
                   sub: s.floorN > 1 ? t.liftSubCalc(moneyText(cfg.liftFee), sh.cargoUnits, s.floorN, money(cfg.liftFee * sh.cargoUnits * (s.floorN - 1))) : t.liftSubNoFloor),
@@ -148,6 +153,10 @@ class _Form extends StatelessWidget {
       card(head: title(t.payment), [
         PaymentPicker(value: s.payment, cards: MockData.cards, onChanged: co.setPayment,
             labels: PaymentLabels(kaspiSub: t.kaspiSub, cardOnline: t.cardOnline, savedCards: t.savedCards, newCard: t.newCard, newCardSub: t.newCardSub)),
+        // Kaspi Pay в филиале не подключён автоматически — выставим счёт в Kaspi на номер (из профиля, можно поменять).
+        if (kaspiInvoice) MartInput(label: t.kaspiPhone, type: MartInputType.phone, required: true, initialValue: kaspiPhone, hint: t.kaspiHint,
+            error: s.touched && !PhoneMaskFormatter.isComplete(kaspiPhone) ? t.blockedKaspiPhone : null,
+            onChanged: (v) => co.set((x) => x.copyWith(kaspiPhone: v, touched: true))),
       ]),
       const SizedBox(height: 12),
       card(head: title(t.itemsCount(cart.count), action: t.change, onAction: () => context.go('/cart')), [
@@ -208,7 +217,7 @@ class _Form extends StatelessWidget {
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             AnimatedContainer(duration: MartMotion.press, width: 20, height: 20, margin: const EdgeInsets.only(top: 1),
               decoration: BoxDecoration(color: s.offer ? c.primary : c.surface, borderRadius: BorderRadius.circular(6), border: Border.all(color: s.offer ? c.primary : c.border, width: 1.5)),
-              child: s.offer ? const Center(child: _Check()) : null),
+              child: s.offer ? const Center(child: MartCheck(color: Colors.white)) : null),
             const SizedBox(width: 10),
             Expanded(child: Text.rich(TextSpan(text: t.offerPrefix, children: [
               TextSpan(text: t.offerLink, style: const TextStyle(decoration: TextDecoration.underline)),
@@ -219,23 +228,6 @@ class _Form extends StatelessWidget {
       ),
     ]);
   }
-}
-
-/// Галочка геометрией (без иконки шрифта).
-class _Check extends StatelessWidget {
-  const _Check();
-  @override
-  Widget build(BuildContext context) => CustomPaint(size: const Size(12, 9), painter: _CheckPainter());
-}
-
-class _CheckPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size s) {
-    final p = Paint()..color = Colors.white..strokeWidth = 2..style = PaintingStyle.stroke..strokeCap = StrokeCap.round..strokeJoin = StrokeJoin.round;
-    canvas.drawPath(Path()..moveTo(1, s.height * .5)..lineTo(s.width * .38, s.height - 1)..lineTo(s.width - 1, 1), p);
-  }
-  @override
-  bool shouldRepaint(_CheckPainter o) => false;
 }
 
 class _Cta extends StatelessWidget {
@@ -249,13 +241,19 @@ class _Cta extends StatelessWidget {
     final plan = cart.plan(floor: s.floorN, lift: s.lift, goodsTotal: cart.afterDiscount);
     final spend = s.useBonus ? CheckoutCubit.spendMax(cart.afterDiscount) : 0;
     final total = cart.afterDiscount + plan.fee + plan.lift - spend;
-    final reason = cart.hasSoldOut ? t.blockedSoldOut : !s.offer ? t.blockedOffer : null;
+    final auth = context.watch<AuthCubit>().state;
+    final kaspiInvoice = s.payment == 'kaspi' && !cart.kaspiIntegrated;
+    final reason = cart.hasSoldOut ? t.blockedSoldOut
+        : !PhoneMaskFormatter.isComplete(s.recipientPhone ?? auth.phone) ? t.blockedPhone
+        : kaspiInvoice && !PhoneMaskFormatter.isComplete(s.kaspiPhone ?? auth.phone) ? t.blockedKaspiPhone
+        : !s.offer ? t.blockedOffer : null;
     Future<void> place() async {
       final id = await co.place();
       if (!context.mounted) return;
       context.read<OrderCubit>().create(id: id, plan: plan, method: cart.method ?? ReceiveMethod.delivery, total: total, bonus: cart.bonus,
           lines: cart.active.toList(), address: cart.address, paidWith: s.payment == 'kaspi' ? 'Оплачено Kaspi' : 'Оплачено картой',
-          goods: cart.goods, discount: cart.discount, spent: spend);
+          goods: cart.goods, discount: cart.discount, spent: spend,
+          recipientPhone: s.recipientPhone ?? auth.phone, leaveAtDoor: cart.method == ReceiveMethod.delivery && s.leaveAtDoor);
       if (s.payment == 'kaspi') {
         // В проде: ссылка оплаты от бэкенда → приложение Kaspi → возврат по 8mart.kz/pay/return?order=<id>
         await launchUrl(Uri.parse('https://kaspi.kz/pay/8mart?order=$id'), mode: LaunchMode.externalApplication);

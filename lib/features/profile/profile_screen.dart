@@ -33,6 +33,8 @@ class ProfileScreen extends StatelessWidget {
         Expanded(child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
           Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card)), child: const AuthView()),
           const SizedBox(height: 12),
+          _Row(label: t.faqTitle, onTap: () => context.go('/profile/faq')),
+          const SizedBox(height: 8),
           _Row(label: t.settings, onTap: () => context.go('/profile/settings')),
         ])),
       ]));
@@ -50,10 +52,10 @@ class ProfileScreen extends StatelessWidget {
       MartTopPanel(padding: const EdgeInsets.fromLTRB(16, 8, 16, 20), children: [
         Row(children: [
           Container(width: 52, height: 52, alignment: Alignment.center, decoration: BoxDecoration(color: c.primary50, shape: BoxShape.circle),
-              child: Text(auth.name.isEmpty ? '?' : auth.name[0].toUpperCase(), style: _f(20, FontWeight.w700, c.primary))),
+              child: auth.name.isEmpty ? Icon(Icons.person_rounded, size: 26, color: c.primary) : Text(auth.name[0].toUpperCase(), style: _f(20, FontWeight.w700, c.primary))),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(auth.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: _f(20, FontWeight.w800, c.ink1, ls: -0.4)),
+            Text(auth.name.isEmpty ? t.tabProfile : auth.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: _f(20, FontWeight.w800, c.ink1, ls: -0.4)),
             const SizedBox(height: 2),
             Text(auth.phone, style: _f(14, FontWeight.w400, c.ink2)),
           ])),
@@ -94,6 +96,7 @@ class ProfileScreen extends StatelessWidget {
           decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card)),
           child: Column(children: [
             for (final s in AccountSection.values) _NavRow(label: sectionTitle(t, s), badge: badge(s), badgeColor: s == AccountSection.bonus ? c.successText : c.ink2, onTap: () => context.go('/profile/${s.name}')),
+            _NavRow(label: t.faqTitle, onTap: () => context.go('/profile/faq')),
             _NavRow(label: t.settings, onTap: () => context.go('/profile/settings')),
           ]),
         ),
