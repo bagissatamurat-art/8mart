@@ -90,6 +90,13 @@ class Gallery extends StatelessWidget {
             uc('Courier', (c) => const ShipmentHead(tag: 'Курьер', cargo: false, label: 'Доставка 1 из 2', when: 'Сегодня, за 30–70 минут', meta: 'Курьер · 2 товара', feeText: '1 000 тг.')),
             uc('Cargo', (c) => const ShipmentHead(tag: 'Грузовой', cargo: true, label: 'Доставка 2 из 2', when: 'Завтра, 9:00–21:00', meta: 'Грузовой · 125 кг', feeText: '3 000 тг.')),
           ]),
+          WidgetbookComponent(name: 'MartStoryThumb', useCases: [
+            uc('Новая / просмотренная', (c) => Padding(padding: const EdgeInsets.all(16), child: Row(children: [
+              MartStoryThumb(cover: 'assets/images/st-flowers.jpg', title: 'Букеты', seen: false, onTap: () {}),
+              const SizedBox(width: 8),
+              MartStoryThumb(cover: 'assets/images/st-gifts.jpg', title: 'Гортензии', seen: true, onTap: () {}),
+            ]))),
+          ]),
           WidgetbookComponent(name: 'MartSelect', useCases: [
             uc('Время доставки', (c) => const _SelectDemo()),
           ]),

@@ -20,6 +20,7 @@ export 'widgets/mart_input.dart';
 export 'widgets/mart_product_card.dart';
 export 'widgets/mart_sheet.dart';
 export 'widgets/mart_stepper.dart';
+export 'widgets/mart_story_thumb.dart';
 export 'widgets/mart_switch_tile.dart';
 export 'widgets/mart_tab_bar.dart';
 export 'blocks/mart_headers.dart';

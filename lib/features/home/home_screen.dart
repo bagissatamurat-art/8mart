@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../data/mock_data.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../state/cart_cubit.dart';
+import '../../state/stories_cubit.dart';
+import '../stories/story_viewer.dart';
 import '../../ui/ui.dart';
 import '../common/product_grid.dart';
 import '../method/method_sheet.dart';
@@ -29,6 +31,7 @@ class HomeScreen extends StatelessWidget {
     final t = L10n.of(context);
     final c = context.mc;
     final cart = context.watch<CartCubit>().state;
+    final stories = context.watch<StoriesCubit>().state;
 
     return Scaffold(
       body: Stack(children: [RefreshIndicator(
@@ -41,6 +44,8 @@ class HomeScreen extends StatelessWidget {
             onMethod: () => openMethodSheet(context),
             searchHint: t.searchHint, onSearch: () => context.push('/search'),
           )),
+          // Сторис — как на сайте: над чипсами категорий; пока грузятся — скелетоны той же формы.
+          SliverToBoxAdapter(child: _StoriesRow(stories: stories)).withTopGap(16),
           if (offline) SliverPadding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 0), sliver: SliverToBoxAdapter(child: OfflineBanner(text: t.offline))),
           SliverToBoxAdapter(child: SizedBox(height: 44, child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16), scrollDirection: Axis.horizontal,
@@ -70,6 +75,24 @@ class HomeScreen extends StatelessWidget {
         Positioned(top: 0, left: 0, right: 0, height: MediaQuery.paddingOf(context).top, child: ColoredBox(color: c.surface)),
       ]),
     );
+  }
+}
+
+/// Ряд сторис: миниатюры 88×116, прокрутка вбок; тап — просмотр с этой истории.
+class _StoriesRow extends StatelessWidget {
+  const _StoriesRow({required this.stories});
+  final StoriesState stories;
+  @override
+  Widget build(BuildContext context) {
+    final items = stories.items;
+    return SizedBox(height: MartStoryThumb.height, child: ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 16), scrollDirection: Axis.horizontal,
+      itemCount: stories.loading ? 5 : items.length, separatorBuilder: (_, __) => const SizedBox(width: 8),
+      itemBuilder: (_, i) => stories.loading
+          ? const MartSkeleton(width: MartStoryThumb.width, height: MartStoryThumb.height, radius: 18)
+          : MartStoryThumb(cover: items[i].cover, title: items[i].title, seen: stories.seen.contains(items[i].id),
+              onTap: () => openStoryViewer(context, items, i)),
+    ));
   }
 }
 

@@ -11,6 +11,7 @@ import 'state/favorites_cubit.dart';
 import 'state/order_cubit.dart';
 import 'state/search_history_cubit.dart';
 import 'state/settings_cubit.dart';
+import 'state/stories_cubit.dart';
 import 'ui/ui.dart';
 
 class MartApp extends StatefulWidget {
@@ -36,6 +37,7 @@ class _MartAppState extends State<MartApp> {
         BlocProvider(create: (_) => OrderCubit()),
         BlocProvider(create: (_) => AccountCubit()),
         BlocProvider(create: (_) => SearchHistoryCubit()),
+        BlocProvider(create: (_) => StoriesCubit()..load()),
       ],
       child: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, s) => MaterialApp.router(
