@@ -5,7 +5,7 @@ import '../theme/mart_text.dart';
 import '../theme/mart_tokens.dart';
 import 'mart_icons.dart';
 
-/// Чип 36 (зона касания 44). selected — тёмная заливка, removable — × справа.
+/// Чип 36 (зона касания 44). selected — розовым (primary50 + контур primary, как на сайте; не чёрным), removable — × справа.
 class MartChip extends StatelessWidget {
   const MartChip({super.key, required this.label, this.selected = false, this.enabled = true, this.count, this.removable = false, this.onTap});
   final String label;
@@ -16,9 +16,9 @@ class MartChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.mc;
-    final bg = !enabled ? c.surface2 : selected ? c.ink1 : c.surface;
-    final fg = !enabled ? c.ink3 : selected ? c.surface : c.ink1;
-    final bc = !enabled ? c.divider : selected ? c.ink1 : c.border;
+    final bg = !enabled ? c.surface2 : selected ? c.primary50 : c.surface;
+    final fg = !enabled ? c.ink3 : selected ? c.primaryPressed : c.ink1;
+    final bc = !enabled ? c.divider : selected ? c.primary : c.border;
     return Semantics(
       button: true, selected: selected, enabled: enabled,
       child: GestureDetector(
@@ -32,7 +32,7 @@ class MartChip extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(MartRadius.pill), border: Border.all(color: bc, width: 1.5)),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Text(label, style: MartText.small.copyWith(fontWeight: FontWeight.w500, color: fg)),
+              Text(label, style: MartText.small.copyWith(fontWeight: selected ? FontWeight.w600 : FontWeight.w500, color: fg)),
               if (count != null) ...[const SizedBox(width: 6), Text('$count', style: MartText.caption.copyWith(color: fg.withValues(alpha: .7)))],
               if (removable) ...[const SizedBox(width: 8), MartCross(size: 10, color: fg)],
             ]),
