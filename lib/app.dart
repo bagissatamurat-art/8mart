@@ -9,6 +9,7 @@ import 'state/cart_cubit.dart';
 import 'state/checkout_cubit.dart';
 import 'state/favorites_cubit.dart';
 import 'state/order_cubit.dart';
+import 'state/placed_orders_cubit.dart';
 import 'state/search_history_cubit.dart';
 import 'state/settings_cubit.dart';
 import 'state/stories_cubit.dart';
@@ -35,7 +36,9 @@ class _MartAppState extends State<MartApp> {
         BlocProvider(create: (_) => AuthCubit()),
         BlocProvider(create: (_) => CheckoutCubit()),
         BlocProvider(create: (_) => OrderCubit()),
-        BlocProvider(create: (_) => AccountCubit()),
+        BlocProvider(create: (_) => PlacedOrdersCubit()),
+        // «Мои заказы» — оформленные с этого устройства: их id хранит PlacedOrdersCubit.
+        BlocProvider(create: (context) => AccountCubit(placedIds: () => context.read<PlacedOrdersCubit>().state)),
         BlocProvider(create: (_) => SearchHistoryCubit()),
         BlocProvider(create: (_) => StoriesCubit()..load()),
       ],

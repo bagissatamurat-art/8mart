@@ -4,6 +4,16 @@ import 'models.dart';
 /// («Зона 1» 2 000 тг / 30–45 мин, «Зона 2» 3 000 тг / 50–70 мин; с адресом — точная зона). freeFrom и тарифы грузового — МОК.
 class ShippingConfig {
   const ShippingConfig({this.courierFee = 2000, this.etaMin = 30, this.etaMax = 70, this.freeFrom = 20000, this.liftFee = 200, this.cargoTiers = const [(300.0, 3000), (1000.0, 5000), (1500.0, 7000)]});
+  /// «Бесплатной доставки от суммы нет»: порог, которого корзина не достигнет.
+  static const noFreeDelivery = 1 << 40;
+  /// Порог бесплатной доставки с сервера (RemoteConfig): known — ответ был; значение null — такого правила нет.
+  static (int?, {bool known}) remoteFreeFrom = (null, known: false);
+  /// Тарифы для расчётов и текстов: значения по умолчанию, а порог бесплатной доставки — как сказал сервер.
+  static ShippingConfig get current => remoteFreeFrom.known ? ShippingConfig(freeFrom: remoteFreeFrom.$1 ?? noFreeDelivery) : const ShippingConfig();
+  /// Те же тарифы с курьером по зоне адреса.
+  ShippingConfig withZone({required int fee, required int eta}) =>
+      ShippingConfig(courierFee: fee, etaMin: eta, etaMax: eta, freeFrom: freeFrom, liftFee: liftFee, cargoTiers: cargoTiers);
+  bool get hasFreeDelivery => freeFrom < noFreeDelivery;
   final int courierFee, freeFrom, liftFee;
   /// Время курьера до двери по зонам, мин.
   final int etaMin, etaMax;

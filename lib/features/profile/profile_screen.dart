@@ -70,7 +70,7 @@ class ProfileScreen extends StatelessWidget {
               decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card), border: Border.all(color: const Color(0xFFF7C6DC), width: 1.5)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 Row(children: [
-                  Expanded(child: Text('Активный заказ №${active.id}', style: _f(13, FontWeight.w400, c.ink3))),
+                  Expanded(child: Text('Активный заказ №${active.title}', style: _f(13, FontWeight.w400, c.ink3))),
                   MartChevron(color: c.ink3, size: 5),
                 ]),
                 const SizedBox(height: 10),
@@ -95,7 +95,7 @@ class ProfileScreen extends StatelessWidget {
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card)),
           child: Column(children: [
-            for (final s in AccountSection.values) _NavRow(label: sectionTitle(t, s), badge: badge(s), badgeColor: s == AccountSection.bonus ? c.successText : c.ink2, onTap: () => context.go('/profile/${s.name}')),
+            for (final s in visibleSections) _NavRow(label: sectionTitle(t, s), badge: badge(s), badgeColor: s == AccountSection.bonus ? c.successText : c.ink2, onTap: () => context.go('/profile/${s.name}')),
             _NavRow(label: t.faqTitle, onTap: () => context.go('/profile/faq')),
             _NavRow(label: t.settings, onTap: () => context.go('/profile/settings')),
           ]),

@@ -3,7 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
-import '../../data/mock_data.dart';
+import 'dart:async';
+
+import '../../data/catalog.dart';
+import '../../data/remote_config.dart';
+import '../../data/catalog_repository.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../ui/ui.dart';
@@ -20,21 +24,26 @@ class CatalogRootScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = L10n.of(context);
     final c = context.mc;
-    return Scaffold(
+    return ListenableBuilder(listenable: Catalog.changes, builder: (context, _) => Scaffold(
       body: Column(children: [
         MartTopPanel(children: [
           Text(t.catalogTitle, style: _t(24, FontWeight.w800, c.ink1).copyWith(letterSpacing: -0.48)),
           MartSearchPill(hint: t.findProduct, onTap: () => context.push('/search')),
         ]),
-        Expanded(child: ListView.separated(
+        // С бэкендом: первый запуск без сети — «Повторить»; пока грузится — строки-скелетоны.
+        if (Catalog.unavailable) Expanded(child: MartEmptyState(icon: Icons.wifi_off_rounded, title: t.noInternet, text: t.noInternetHint, action: t.retry, onAction: Catalog.init))
+        else if (Catalog.loading) Expanded(child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
+          for (var i = 0; i < 3; i++) const Padding(padding: EdgeInsets.only(bottom: 10), child: MartSkeletonRow()),
+        ]))
+        else Expanded(child: ListView.separated(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-          itemCount: MockData.categories.length,
+          itemCount: Catalog.categories.length,
           separatorBuilder: (_, __) => const SizedBox(height: 10),
           itemBuilder: (_, i) {
-            final cat = MockData.categories[i];
-            final subs = MockData.subsOf(cat.id).length;
-            final n = MockData.products.where((p) => p.categoryId == cat.id).length;
-            final meta = [if (subs > 0) t.sectionsCount(subs), t.itemsCount(n)].join(' · ');
+            final cat = Catalog.categories[i];
+            final subs = Catalog.subsOf(cat.id).length;
+            final n = Catalog.count(cat.id);
+            final meta = [if (subs > 0) t.sectionsCount(subs), if (n != null) t.itemsCount(n)].join(' · ');
             return GestureDetector(
               onTap: () => context.go('/catalog/${cat.id}'),
               child: Container(
@@ -55,7 +64,7 @@ class CatalogRootScreen extends StatelessWidget {
           },
         )),
       ]),
-    );
+    ));
   }
 }
 
@@ -66,8 +75,8 @@ class CategoryScreen extends StatelessWidget {
   final String? subId;
   @override
   Widget build(BuildContext context) {
-    final subs = MockData.subsOf(categoryId);
-    if (subId == null && subs.isNotEmpty) return _SubTiles(categoryId: categoryId, subs: subs);
+    final subs = Catalog.subsOf(categoryId);
+    if (subId == null && subs.isNotEmpty) return ListenableBuilder(listenable: Catalog.changes, builder: (_, __) => _SubTiles(categoryId: categoryId, subs: subs));
     return BlocProvider(
       create: (_) => CatalogCubit(categoryId: categoryId, subId: subId == 'all' ? null : subId),
       child: _CategoryView(categoryId: categoryId),
@@ -84,7 +93,8 @@ class _SubTiles extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = L10n.of(context);
     final c = context.mc;
-    final inCat = MockData.products.where((p) => p.categoryId == categoryId).toList();
+    // Счётчик и обложка раздела; с бэкендом до ответа счётчика нет, вместо обложки — полосы.
+    String meta(String? sub) { final n = Catalog.count(categoryId, sub); return n == null ? '' : t.itemsCount(n); }
     Widget tile({required String name, required String meta, required Widget img, required VoidCallback onTap}) => GestureDetector(
           onTap: onTap,
           child: Container(
@@ -102,18 +112,18 @@ class _SubTiles extends StatelessWidget {
           ),
         );
     final tiles = <Widget>[
-      tile(name: t.allProducts, meta: t.itemsCount(inCat.length), onTap: () => context.go('/catalog/$categoryId?sub=all'),
+      tile(name: t.allProducts, meta: meta(null), onTap: () => context.go('/catalog/$categoryId?sub=all'),
           img: Container(alignment: Alignment.center, decoration: BoxDecoration(color: c.primary50, borderRadius: BorderRadius.circular(12)),
               child: Text(t.allProducts, style: _t(14, FontWeight.w700, c.primary)))),
       for (final s in subs) () {
-        final items = inCat.where((p) => p.subId == s.id).toList();
-        return tile(name: s.name, meta: t.itemsCount(items.length), onTap: () => context.go('/catalog/$categoryId?sub=${s.id}'),
-            img: items.isEmpty ? const MartStripes(radius: 12) : MartImage(items.first.image, radius: 12, fit: BoxFit.cover));
+        final cover = Catalog.firstOf(categoryId, s.id)?.firstOrNull?.image ?? '';
+        return tile(name: s.name, meta: meta(s.id), onTap: () => context.go('/catalog/$categoryId?sub=${s.id}'),
+            img: cover.isEmpty ? const MartStripes(radius: 12) : MartImage(cover, radius: 12, fit: BoxFit.cover));
       }(),
     ];
     return Scaffold(
       body: Column(children: [
-        MartTopPanel(children: [MartTitleRow(title: MockData.category(categoryId)?.name ?? t.catalogTitle, onBack: () => context.go('/catalog'))]),
+        MartTopPanel(children: [MartTitleRow(title: Catalog.category(categoryId)?.name ?? t.catalogTitle, onBack: () => context.go('/catalog'))]),
         Expanded(child: LayoutBuilder(builder: (context, cons) {
           final w = (cons.maxWidth - 32 - 8) / 2;
           return GridView(
@@ -138,8 +148,8 @@ class _CategoryView extends StatelessWidget {
     final c = context.mc;
     final cubit = context.watch<CatalogCubit>();
     final s = cubit.state;
-    final subs = MockData.subsOf(categoryId);
-    final title = s.subId != null ? MockData.subName(s.subId!) : (MockData.category(categoryId)?.name ?? t.catalogTitle);
+    final subs = Catalog.subsOf(categoryId);
+    final title = s.subId != null ? Catalog.subName(s.subId!) : (Catalog.category(categoryId)?.name ?? t.catalogTitle);
     final f = s.filter;
     final active = <(String, CatalogFilter)>[
       if (f.min != null) ('от ${money(f.min!)}', CatalogFilter(max: f.max, sale: f.sale)),
@@ -212,32 +222,74 @@ String sortLabel(L10n t, SortKind s) => switch (s) {
 void openSortSheet(BuildContext context, CatalogCubit cubit) {
   final t = L10n.of(context);
   showMartSheet(context, title: t.sort, builder: (ctx) => Column(children: [
-    for (final k in SortKind.values) Padding(padding: const EdgeInsets.only(bottom: 8), child: MartRadioTile(
+    for (final k in SortKind.values) if (k != SortKind.bonus || RemoteConfig.bonus) Padding(padding: const EdgeInsets.only(bottom: 8), child: MartRadioTile(
       selected: cubit.state.sort == k, title: sortLabel(t, k), onTap: () { cubit.setSort(k); Navigator.of(ctx).pop(); })),
   ]));
 }
 
-/// Фильтры: цена от–до + «со скидкой». Кнопка «Показать N» пересчитывается сразу (в проде — GET /products/count).
+/// Фильтры: цена от–до + «со скидкой». Кнопка «Показать N» пересчитывается по мере ввода: счётчик — total выдачи с этими фильтрами.
 void openFiltersSheet(BuildContext context, CatalogCubit cubit) {
-  final t = L10n.of(context);
-  var f = cubit.state.filter;
-  final minC = TextEditingController(text: f.min?.toString() ?? ''), maxC = TextEditingController(text: f.max?.toString() ?? '');
-  showMartSheet(context, title: t.filters, builder: (ctx) => StatefulBuilder(builder: (ctx, set) {
-    CatalogFilter read() => CatalogFilter(min: int.tryParse(minC.text), max: int.tryParse(maxC.text), sale: f.sale);
-    final n = cubit.countWith(read());
+  showMartSheet(context, title: L10n.of(context).filters, builder: (_) => _FiltersBody(cubit: cubit));
+}
+
+class _FiltersBody extends StatefulWidget {
+  const _FiltersBody({required this.cubit});
+  final CatalogCubit cubit;
+  @override
+  State<_FiltersBody> createState() => _FiltersBodyState();
+}
+
+class _FiltersBodyState extends State<_FiltersBody> {
+  late var _f = widget.cubit.state.filter;
+  late final _minC = TextEditingController(text: _f.min?.toString() ?? ''), _maxC = TextEditingController(text: _f.max?.toString() ?? '');
+  /// Сколько товаров найдётся; пока считаем заново — на кнопке индикатор.
+  late int _n = widget.cubit.state.total;
+  bool _counting = false;
+  Timer? _debounce;
+  int _req = 0;
+
+  @override
+  void initState() { super.initState(); _count(wait: false); }
+  @override
+  void dispose() { _debounce?.cancel(); _minC.dispose(); _maxC.dispose(); super.dispose(); }
+
+  CatalogFilter _read() => CatalogFilter(min: int.tryParse(_minC.text), max: int.tryParse(_maxC.text), sale: _f.sale);
+
+  /// Мок отвечает сразу; с бэкендом ждём паузу в наборе, устаревший ответ отбрасываем.
+  void _count({bool wait = true}) {
+    _debounce?.cancel();
+    final req = ++_req;
+    Future<void> run() async {
+      try {
+        final n = await widget.cubit.countWith(_read());
+        if (mounted && req == _req) setState(() { _n = n; _counting = false; });
+      } on CatalogOffline {
+        if (mounted && req == _req) setState(() => _counting = false);
+      }
+    }
+    if (Catalog.mocked || !wait) { run(); return; }
+    setState(() => _counting = true);
+    _debounce = Timer(const Duration(milliseconds: 300), run);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L10n.of(context);
+    final cubit = widget.cubit;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Row(children: [
-        Expanded(child: MartInput(label: t.priceFrom, type: MartInputType.number, controller: minC, onChanged: (_) => set(() {}))),
+        Expanded(child: MartInput(label: t.priceFrom, type: MartInputType.number, controller: _minC, onChanged: (_) => _count())),
         const SizedBox(width: 8),
-        Expanded(child: MartInput(label: t.priceTo, type: MartInputType.number, controller: maxC, onChanged: (_) => set(() {}))),
+        Expanded(child: MartInput(label: t.priceTo, type: MartInputType.number, controller: _maxC, onChanged: (_) => _count())),
       ]),
       const SizedBox(height: 12),
-      Wrap(children: [MartChip(label: t.onlySale, selected: f.sale, onTap: () => set(() => f = CatalogFilter(min: f.min, max: f.max, sale: !f.sale)))]),
+      Wrap(children: [MartChip(label: t.onlySale, selected: _f.sale, onTap: () { setState(() => _f = CatalogFilter(min: _f.min, max: _f.max, sale: !_f.sale)); _count(wait: false); })]),
       const SizedBox(height: 20),
-      MartButton(label: t.showN(n), expanded: true, disabledReason: n == 0 ? t.nothingFound : null, onPressed: () { cubit.setFilter(read()); Navigator.of(ctx).pop(); }),
+      MartButton(label: t.showN(_n), expanded: true, loading: _counting, disabledReason: _n == 0 && !_counting ? t.nothingFound : null,
+          onPressed: () { cubit.setFilter(_read()); Navigator.of(context).pop(); }),
       const SizedBox(height: 8),
-      MartButton(label: t.reset, variant: MartButtonVariant.ghost, expanded: true, onPressed: () { cubit.setFilter(const CatalogFilter()); Navigator.of(ctx).pop(); }),
+      MartButton(label: t.reset, variant: MartButtonVariant.ghost, expanded: true, onPressed: () { cubit.setFilter(const CatalogFilter()); Navigator.of(context).pop(); }),
     ]);
-  }));
+  }
 }
 

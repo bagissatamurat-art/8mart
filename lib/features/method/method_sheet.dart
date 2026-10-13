@@ -12,7 +12,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mb;
 import '../../core/format.dart';
 import '../../data/delivery_repository.dart';
 import '../../data/geo_repository.dart';
-import '../../data/mock_data.dart';
+import '../../data/places.dart';
 import '../../domain/models.dart';
 import '../../domain/shipments.dart';
 import '../../domain/store_status.dart';
@@ -59,7 +59,7 @@ class _MethodSheetState extends State<_MethodSheet> {
   final _entrance = TextEditingController(), _flat = TextEditingController(), _title = TextEditingController();
   bool get _addrOnly => widget.onSaveAddress != null;
   late ReceiveMethod _m;
-  City _city = MockData.cities.first;
+  City _city = Places.cities.first;
   bool _citiesOpen = false;
   String? _point;
   /// Камера летит к дому из поиска — адрес по пину не перезаписываем.
@@ -69,6 +69,8 @@ class _MethodSheetState extends State<_MethodSheet> {
   Timer? _reverseT;
   /// Зона доставки для точки пина (центр карты).
   QuoteResult? _quote;
+  /// Точка адреса доставки (где встал пин) — уходит в корзину: по ней сервер проверяет зону и создаёт заказ.
+  double? _lat, _lng;
   bool _quoteLoading = false;
   int _quoteReq = 0;
   static const _delivery = DeliveryRepository();
@@ -76,12 +78,14 @@ class _MethodSheetState extends State<_MethodSheet> {
   @override
   void initState() {
     super.initState();
+    Places.changes.addListener(_onPlaces);
+    Places.refresh();
     final cart = context.read<CartCubit>().state;
     _m = cart.method ?? ReceiveMethod.delivery;
     final d = widget.address;
     if (d != null) {
       _m = ReceiveMethod.delivery;
-      _city = MockData.cities.firstWhere((c) => c.name == d.city, orElse: () => MockData.cities.first);
+      _city = Places.cities.firstWhere((c) => c.name == d.city, orElse: () => Places.cities.first);
       _street.text = d.street;
       _title.text = d.title; _entrance.text = d.entrance; _flat.text = d.flat;
       _viewport = mb.CameraViewportState(center: _pt(_city.lat, _city.lng), zoom: 15);
@@ -89,18 +93,21 @@ class _MethodSheetState extends State<_MethodSheet> {
     }
     final i = cart.address.indexOf(', ');
     if (i > 0) {
-      _city = MockData.cities.firstWhere((c) => c.name == cart.address.substring(0, i), orElse: () => MockData.cities.first);
-      if (_m == ReceiveMethod.delivery) { _street.text = cart.address.substring(i + 2); _quote = cart.quote == null ? null : QuoteOk(cart.quote!); }
+      _city = Places.cities.firstWhere((c) => c.name == cart.address.substring(0, i), orElse: () => Places.cities.first);
+      if (_m == ReceiveMethod.delivery) { _street.text = cart.address.substring(i + 2); _quote = cart.quote == null ? null : QuoteOk(cart.quote!); _lat = cart.lat; _lng = cart.lng; }
     }
-    if (_m == ReceiveMethod.pickup) _point = MockData.pickupPoints.where((p) => cart.address.endsWith(p.name)).firstOrNull?.id;
+    if (_m == ReceiveMethod.pickup) _point = Places.pickupPoints.where((p) => cart.pointId != null ? p.id == cart.pointId : cart.address.endsWith(p.name)).firstOrNull?.id;
     // Создаём один раз: MapWidget переприменяет viewport, если пришёл новый объект.
     _viewport = mb.CameraViewportState(center: _pt(_city.lat, _city.lng), zoom: _m == ReceiveMethod.delivery ? 15 : 12);
   }
 
   @override
-  void dispose() { _reverseT?.cancel(); _pinTaps?.cancel(); _street.dispose(); _entrance.dispose(); _flat.dispose(); _title.dispose(); super.dispose(); }
+  void dispose() { Places.changes.removeListener(_onPlaces); _reverseT?.cancel(); _pinTaps?.cancel(); _street.dispose(); _entrance.dispose(); _flat.dispose(); _title.dispose(); super.dispose(); }
 
-  List<PickupPoint> get _points => MockData.pickupPoints.where((p) => p.city == _city.id).toList();
+  /// С бэкендом: пришли свежие статусы филиалов — обновляем список и пины.
+  void _onPlaces() { if (!mounted) return; setState(() {}); _syncPins(); }
+
+  List<PickupPoint> get _points => Places.pickupPoints.where((p) => p.city == _city.id).toList();
 
   // ── поиск адреса — отдельный экран; выбран дом → карта летит к нему без повторного определения адреса по пину ──
   Future<void> _openSearch() async {
@@ -114,6 +121,7 @@ class _MethodSheetState extends State<_MethodSheet> {
 
   /// Пин встал на точку: если у адреса есть дом — считаем зону доставки (стоимость и время курьера).
   void _setPos(double lat, double lng) {
+    _lat = lat; _lng = lng;
     if (_addrOnly || !RegExp(r'\d').hasMatch(_street.text)) { setState(() { _quote = null; _quoteLoading = false; }); return; }
     final req = ++_quoteReq;
     setState(() => _quoteLoading = true);
@@ -231,7 +239,7 @@ class _MethodSheetState extends State<_MethodSheet> {
   }
 
   void _setCity(City c) {
-    setState(() { _city = c; _citiesOpen = false; _point = null; _street.clear(); _quote = null; });
+    setState(() { _city = c; _citiesOpen = false; _point = null; _street.clear(); _quote = null; _lat = null; _lng = null; });
     if (_m == ReceiveMethod.pickup && _points.isNotEmpty) { _fitPoints(); } else { _move(c.lat, c.lng, _m == ReceiveMethod.delivery ? 15 : 12); }
     _syncPins();
   }
@@ -264,10 +272,11 @@ class _MethodSheetState extends State<_MethodSheet> {
     }
     final cart = context.read<CartCubit>();
     if (_m == ReceiveMethod.delivery) {
-      cart.setMethod(_m, '${_city.name}, ${_street.text.trim().replaceAll(RegExp(r',\s*$'), '')}', quote: switch (_quote) { QuoteOk(:final quote) => quote, _ => null });
+      cart.setMethod(_m, '${_city.name}, ${_street.text.trim().replaceAll(RegExp(r',\s*$'), '')}', quote: switch (_quote) { QuoteOk(:final quote) => quote, _ => null },
+          cityId: _city.id, lat: _lat, lng: _lng);
     } else {
       final p = _points.firstWhere((x) => x.id == _point);
-      cart.setMethod(_m, '${_city.name}, ${p.name}', pickupKaspi: p.kaspiIntegrated);
+      cart.setMethod(_m, '${_city.name}, ${p.name}', pickupKaspi: p.kaspiIntegrated, cityId: _city.id, pointId: p.id);
     }
     Navigator.of(context).pop();
   }
@@ -280,7 +289,9 @@ class _MethodSheetState extends State<_MethodSheet> {
     /// Вне зон доставки — заказать сюда нельзя (адрес в кабинет сохранить можно).
     final outside = isD && !_addrOnly && _quote is QuoteOutside;
     final ok = isD ? streetOk && !outside : _point != null && _points.any((p) => p.id == _point);
-    const cfg = ShippingConfig();
+    final cfg = ShippingConfig.current;
+    // Порог бесплатной доставки показываем, только если он есть (с бэкендом его задаёт сервер).
+    final free = cfg.hasFreeDelivery ? ', бесплатно от ${moneyText(cfg.freeFrom)}' : '';
     final top = MediaQuery.paddingOf(context).top;
 
     final map = Stack(children: [
@@ -331,7 +342,7 @@ class _MethodSheetState extends State<_MethodSheet> {
         width: 240, constraints: const BoxConstraints(maxHeight: 320), padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: const [BoxShadow(color: Color(0x2917151A), blurRadius: 24, offset: Offset(0, 8))]),
         child: ListView(shrinkWrap: true, padding: EdgeInsets.zero, children: [
-          for (final ct in MockData.cities) GestureDetector(onTap: () => _setCity(ct), child: Container(
+          for (final ct in Places.cities) GestureDetector(onTap: () => _setCity(ct), child: Container(
             height: 44, padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(color: ct.id == _city.id ? const Color(0xFFFDF0F6) : Colors.transparent, borderRadius: BorderRadius.circular(10)),
             child: Row(children: [
@@ -359,8 +370,8 @@ class _MethodSheetState extends State<_MethodSheet> {
     final feeLine = needHouse ? ('Укажите номер дома — найдите адрес или сдвиньте пин к дому', true)
         : outside ? ('Сюда пока не доставляем — выберите другой адрес или самовывоз', true)
         : _quoteLoading ? ('Считаем стоимость доставки…', false)
-        : q is QuoteOk ? ('Доставка ${moneyText(q.quote.fee)}, бесплатно от ${moneyText(cfg.freeFrom)} · ~${q.quote.eta} мин', false)
-        : ('Доставка от ${moneyText(cfg.courierFee)}, бесплатно от ${moneyText(cfg.freeFrom)} · ${cfg.etaMin}–${cfg.etaMax} мин', false);
+        : q is QuoteOk ? ('Доставка ${moneyText(q.quote.fee)}$free · ~${q.quote.eta} мин', false)
+        : ('Доставка от ${moneyText(cfg.courierFee)}$free · ${cfg.etaMin}–${cfg.etaMax} мин', false);
     final delivery = ListView(padding: const EdgeInsets.symmetric(horizontal: 4), children: [
       MartTapField(label: 'Улица, дом', required: true, value: _street.text, busy: _locating, error: needHouse || outside, onTap: _openSearch),
       // Подъезд и квартира — только в адресной книге кабинета; при заказе — на оформлении.

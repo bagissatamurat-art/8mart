@@ -3,7 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
+import '../../core/api_client.dart';
 import '../../data/mock_data.dart';
+import '../../data/order_repository.dart';
+import '../../data/remote_config.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../state/cart_cubit.dart';
@@ -13,6 +16,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../state/auth_cubit.dart';
 import '../../state/checkout_cubit.dart';
 import '../../state/order_cubit.dart';
+import '../../state/placed_orders_cubit.dart';
 import '../auth/auth_view.dart';
 import '../../core/phone_mask.dart';
 import '../../domain/shipments.dart';
@@ -50,8 +54,22 @@ class CheckoutScreen extends StatelessWidget {
 
 TextStyle _f(double size, FontWeight w, Color col, {double? h}) => TextStyle(fontFamily: 'Onest', fontSize: size, fontWeight: w, color: col, height: h);
 
-class _Form extends StatelessWidget {
+class _Form extends StatefulWidget {
   const _Form();
+  @override
+  State<_Form> createState() => _FormState();
+}
+
+class _FormState extends State<_Form> {
+  @override
+  void initState() {
+    super.initState();
+    // С бэкендом: дни и интервалы доставки — с сервера; пока не пришли, экран считает их сам.
+    context.read<CheckoutCubit>().loadSlots();
+    // Цены и наличие своего филиала — до того, как покупатель увидит итог.
+    context.read<CartCubit>().validate();
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = L10n.of(context);
@@ -63,7 +81,7 @@ class _Form extends StatelessWidget {
     final auth = context.watch<AuthCubit>().state;
     final pickup = cart.method == ReceiveMethod.pickup;
     final plan = cart.plan(floor: s.floorN, lift: s.lift, goodsTotal: cart.afterDiscount);
-    const cfg = ShippingConfig();
+    final cfg = ShippingConfig.current;
     final spendMax = CheckoutCubit.spendMax(cart.afterDiscount);
     final spend = s.useBonus ? spendMax : 0;
     final total = cart.afterDiscount + plan.fee + plan.lift - spend;
@@ -90,7 +108,8 @@ class _Form extends StatelessWidget {
     // Слоты считаются от текущего времени Казахстана; выбранный пропал (время прошло) — первый доступный.
     // «Ближайшее» подписано временем зоны адреса (если известна), иначе общими условиями.
     final eta = cart.quote != null ? t.etaApprox(cart.quote!.eta) : '${cfg.etaMin}–${cfg.etaMax} мин';
-    final courierDays = courierSlots(DateTime.now(), asapLabel: t.slotAsap, eta: eta), cargoDays = cargoSlots(DateTime.now());
+    final courierDays = switch (s.courierDays) { final days? => withAsap(days, asapLabel: t.slotAsap, eta: eta), null => courierSlots(DateTime.now(), asapLabel: t.slotAsap, eta: eta) };
+    final cargoDays = s.cargoDays ?? cargoSlots(DateTime.now());
     final cSlot = effectiveSlot(courierDays, s.courierSlot), gSlot = effectiveSlot(cargoDays, s.cargoSlot);
     final phone = s.recipientPhone ?? auth.phone, kaspiPhone = s.kaspiPhone ?? auth.phone;
     final kaspiInvoice = s.payment == 'kaspi' && !cart.kaspiIntegrated;
@@ -151,7 +170,8 @@ class _Form extends StatelessWidget {
       ]),
       const SizedBox(height: 12),
       card(head: title(t.payment), [
-        PaymentPicker(value: s.payment, cards: MockData.cards, onChanged: co.setPayment,
+        // Сохранённых карт (токенов шлюза) на сервере нет — с бэкендом только Kaspi и новая карта на странице шлюза.
+        PaymentPicker(value: s.payment, cards: OrderRepository.mocked ? MockData.cards : const [], onChanged: co.setPayment,
             labels: PaymentLabels(kaspiSub: t.kaspiSub, cardOnline: t.cardOnline, savedCards: t.savedCards, newCard: t.newCard, newCardSub: t.newCardSub)),
         // Kaspi Pay в филиале не подключён автоматически — выставим счёт в Kaspi на номер (из профиля, можно поменять).
         if (kaspiInvoice) MartInput(label: t.kaspiPhone, type: MartInputType.phone, required: true, initialValue: kaspiPhone, hint: t.kaspiHint,
@@ -171,7 +191,7 @@ class _Form extends StatelessWidget {
           const SizedBox(width: 10),
           Text(money(l.sum), style: _f(14, FontWeight.w600, c.ink1)),
         ]),
-        MartPromo(label: t.promoLabel, applyLabel: t.promoApply, appliedLabel: t.promoApplied, appliedCode: cart.promo, discountText: '−${money(cart.discount)}',
+        if (RemoteConfig.promo) MartPromo(label: t.promoLabel, applyLabel: t.promoApply, appliedLabel: t.promoApplied, appliedCode: cart.promo, discountText: '−${money(cart.discount)}',
           onRemove: cartCubit.removePromo,
           onApply: (code) => switch (cartCubit.applyPromo(code)) {
             PromoResult.ok => null, PromoResult.notFound => t.promoErrNotFound, PromoResult.expired => t.promoErrExpired,
@@ -248,17 +268,54 @@ class _Cta extends StatelessWidget {
         : kaspiInvoice && !PhoneMaskFormatter.isComplete(s.kaspiPhone ?? auth.phone) ? t.blockedKaspiPhone
         : !s.offer ? t.blockedOffer : null;
     Future<void> place() async {
-      final id = await co.place();
-      if (!context.mounted) return;
-      context.read<OrderCubit>().create(id: id, plan: plan, method: cart.method ?? ReceiveMethod.delivery, total: total, bonus: cart.bonus,
-          lines: cart.active.toList(), address: cart.address, paidWith: s.payment == 'kaspi' ? 'Оплачено Kaspi' : 'Оплачено картой',
-          goods: cart.goods, discount: cart.discount, spent: spend,
-          recipientPhone: s.recipientPhone ?? auth.phone, leaveAtDoor: cart.method == ReceiveMethod.delivery && s.leaveAtDoor);
-      if (s.payment == 'kaspi') {
-        // В проде: ссылка оплаты от бэкенда → приложение Kaspi → возврат по 8mart.kz/pay/return?order=<id>
-        await launchUrl(Uri.parse('https://kaspi.kz/pay/8mart?order=$id'), mode: LaunchMode.externalApplication);
+      final cartCubit = context.read<CartCubit>(), orders = context.read<OrderCubit>(), placed = context.read<PlacedOrdersCubit>();
+      var order = cart;
+      if (!OrderRepository.mocked) {
+        // Перед оплатой — свежая проверка: если цены или наличие изменились, покупатель должен увидеть новую сумму до заказа.
+        final checked = await cartCubit.validate();
+        if (!context.mounted) return;
+        if (!checked) { showMartToast(context, t.noInternet); return; }
+        order = cartCubit.state;
+        final freshPlan = order.plan(floor: s.floorN, lift: s.lift, goodsTotal: order.afterDiscount);
+        if (order.hasSoldOut || order.afterDiscount + freshPlan.fee + freshPlan.lift - spend != total) { showMartToast(context, t.pricesUpdated); return; }
       }
-      if (context.mounted) { context.read<CartCubit>().clearCart(); context.go('/order/$id'); }
+      final kaspi = s.payment == 'kaspi';
+      final pickup = order.method == ReceiveMethod.pickup;
+      final phone = s.recipientPhone ?? auth.phone;
+      // «Астана, ул. Сыганак, 13» → «ул. Сыганак, 13»: город уходит отдельным полем.
+      final cityEnd = order.address.indexOf(', ');
+      final days = s.courierDays;
+      final PlacedOrder o;
+      try {
+        o = await co.place(OrderDraft(
+          cart: {for (final l in order.active) l.product.id: l.qty},
+          method: order.method ?? ReceiveMethod.delivery, cityId: order.cityId,
+          address: cityEnd > 0 ? order.address.substring(cityEnd + 2) : order.address,
+          pickupPointId: order.pointId, lat: order.lat, lng: order.lng,
+          entrance: s.entrance, floor: s.floor, flat: s.flat, comment: s.comment,
+          recipientName: auth.name, recipientPhone: phone,
+          leaveAtDoor: !pickup && s.leaveAtDoor,
+          kaspiPhone: kaspiInvoice ? s.kaspiPhone ?? auth.phone : null,
+          together: order.together, lift: s.lift, cargoSlot: s.cargoSlot,
+          // Слот мог пройти, пока оформляли: берём тот же, что показан на экране.
+          courierSlot: days == null ? s.courierSlot : effectiveSlot(days, s.courierSlot),
+          kaspi: kaspi,
+        ));
+      } on ApiError catch (e) {
+        if (context.mounted) showMartToast(context, e.status == 0 ? t.noInternet : e.message);
+        return;
+      }
+      if (!OrderRepository.mocked) placed.add(o.id);
+      orders.create(id: o.id, number: o.number, plan: plan, method: order.method ?? ReceiveMethod.delivery, total: total, bonus: order.bonus,
+          lines: order.active.toList(), address: order.address, paidWith: OrderRepository.mocked ? (kaspi ? 'Оплачено Kaspi' : 'Оплачено картой') : '',
+          goods: order.goods, discount: order.discount, spent: spend,
+          recipientPhone: phone, leaveAtDoor: !pickup && s.leaveAtDoor);
+      cartCubit.clearCart();
+      co.reset();
+      // Ссылка Kaspi или страница платёжного шлюза; возврат — 8mart.kz/pay/return?order=<id>. Ссылки нет — счёт Kaspi выставит оператор.
+      final payUrl = o.payUrl ?? (OrderRepository.mocked && kaspi ? 'https://kaspi.kz/pay/8mart?order=${o.id}' : null);
+      if (payUrl != null) await launchUrl(Uri.parse(payUrl), mode: LaunchMode.externalApplication);
+      if (context.mounted) context.go('/order/${o.id}');
     }
     return MartBottomBar(
       note: reason,

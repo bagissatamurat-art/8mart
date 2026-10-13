@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
+import '../../core/api_client.dart';
+import '../../data/catalog.dart';
 import '../../data/mock_data.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -10,7 +12,6 @@ import '../../state/cart_cubit.dart';
 import '../../ui/ui.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../data/product_details.dart';
 import '../../state/favorites_cubit.dart';
 import '../method/method_sheet.dart';
 
@@ -27,7 +28,7 @@ class ProductSelection extends ChangeNotifier {
   int variant = 0, color = 0;
   ProductVariant? get v => product.hasVariants ? product.variants![variant] : null;
   String? get colorName => (product.colors?.isNotEmpty ?? false) ? product.colors![color] : null;
-  String get cartKey => v == null ? product.id : MockData.cartKey(v!, colorName);
+  String get cartKey => v == null ? product.id : Catalog.cartKey(v!, colorName);
   int? get price => v?.price ?? product.price;
   void setVariant(int i) { variant = i; notifyListeners(); }
   void setColor(int i) { color = i; notifyListeners(); }
@@ -51,11 +52,18 @@ class _ProductViewState extends State<ProductView> {
   final _pager = PageController();
   int _page = 0;
   @override
-  void initState() { super.initState(); _sel.addListener(_onSel); }
+  void initState() {
+    super.initState();
+    _sel.addListener(_onSel);
+    // С бэкендом описание и характеристики приходят отдельным запросом карточки — перерисуемся, когда придут.
+    Catalog.changes.addListener(_onCatalog);
+    Catalog.loadDetails(widget.product);
+  }
   @override
-  void dispose() { _sel.removeListener(_onSel); if (widget.selection == null) _sel.dispose(); _pager.dispose(); super.dispose(); }
+  void dispose() { Catalog.changes.removeListener(_onCatalog); _sel.removeListener(_onSel); if (widget.selection == null) _sel.dispose(); _pager.dispose(); super.dispose(); }
+  void _onCatalog() { if (mounted) setState(() {}); }
   void _onSel() {
-    final i = ProductDetailsMock.of(widget.product).images.indexOf(_sel.v?.image ?? '');
+    final i = Catalog.details(widget.product).images.indexOf(_sel.v?.image ?? '');
     if (i >= 0 && _pager.hasClients) _pager.animateToPage(i, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
     setState(() {});
   }
@@ -67,11 +75,12 @@ class _ProductViewState extends State<ProductView> {
     final t = L10n.of(context);
     final c = context.mc;
     final p = widget.product;
-    final det = ProductDetailsMock.of(p);
-    final ph = ProductDetailsMock.placeholders(p);
+    final det = Catalog.details(p);
+    final ph = Catalog.placeholders(p);
+    final detLoading = !Catalog.detailsReady(p);
     final fav = context.watch<FavoritesCubit>().state.contains(p.id);
     final method = context.watch<CartCubit>().state.method;
-    final cat = [MockData.category(p.categoryId)?.name, if (p.subId.isNotEmpty) MockData.subName(p.subId)].whereType<String>().where((x) => x.isNotEmpty).join(' · ');
+    final cat = [Catalog.category(p.categoryId)?.name, if (p.subId.isNotEmpty) Catalog.subName(p.subId)].whereType<String>().where((x) => x.isNotEmpty).join(' · ');
     final disc = p.oldPrice != null && p.price != null ? ((1 - p.price! / p.oldPrice!) * 100).round() : 0;
     final descLong = det.desc.join(' ').length > 240;
     final specs = _specsOpen ? det.specs : det.specs.take(_specN).toList();
@@ -214,14 +223,18 @@ class _ProductViewState extends State<ProductView> {
             shaderCallback: (r) => LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter,
                 colors: const [Colors.black, Colors.black, Colors.transparent], stops: descLong && !_descOpen ? [0, (r.height - 48) / r.height, 1] : [0, 1, 1]).createShader(r),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              if (detLoading) for (var i = 0; i < 3; i++) Padding(padding: EdgeInsets.only(top: i == 0 ? 0 : 8), child: const MartSkeleton()),
               for (var i = 0; i < det.desc.length; i++) Padding(padding: EdgeInsets.only(top: i == 0 ? 0 : 8),
                 child: Text(det.desc[i], style: _f(15, FontWeight.w400, const Color(0xFF3A3740), h: 1.55))),
             ]),
           ),
         )),
         if (descLong) Align(alignment: Alignment.centerLeft, child: pink(_descOpen ? t.collapse : t.readMore, () => setState(() => _descOpen = !_descOpen), _descOpen)),
-        const SizedBox(height: 20),
-        Padding(padding: const EdgeInsets.only(bottom: 4), child: Text(t.specsTitle, style: _f(17, FontWeight.w700, c.ink1))),
+        // Характеристик может не быть вовсе (карточка с бэкенда) — тогда и заголовка нет.
+        if (det.specs.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          Padding(padding: const EdgeInsets.only(bottom: 4), child: Text(t.specsTitle, style: _f(17, FontWeight.w700, c.ink1))),
+        ],
         for (final (k, v) in specs) Container(
           padding: const EdgeInsets.symmetric(vertical: 9),
           decoration: BoxDecoration(border: Border(bottom: BorderSide(color: c.divider))),
@@ -311,13 +324,41 @@ class ProductPage extends StatefulWidget {
 }
 
 class _ProductPageState extends State<ProductPage> {
-  late final Product? _p = MockData.byId(widget.id);
-  late final ProductSelection? _sel = _p == null ? null : ProductSelection(_p);
+  // Из кеша каталога — сразу; по ссылке на незнакомый товар (с бэкендом) — запрос карточки.
+  late Product? _p = Catalog.byId(widget.id);
+  late ProductSelection? _sel = _p == null ? null : ProductSelection(_p!);
+  late bool _loading = _p == null && !Catalog.mocked;
+  bool _failed = false;
+
+  @override
+  void initState() { super.initState(); if (_loading) _load(); }
+
+  Future<void> _load() async {
+    setState(() { _loading = true; _failed = false; });
+    try {
+      final p = await Catalog.fetch(widget.id);
+      if (!mounted) return;
+      setState(() { _p = p; _sel = p == null ? null : ProductSelection(p); _loading = false; });
+    } on ApiError {
+      if (mounted) setState(() { _loading = false; _failed = true; });
+    }
+  }
+
   @override
   void dispose() { _sel?.dispose(); super.dispose(); }
   @override
   Widget build(BuildContext context) {
     final p = _p;
+    if (_loading) {
+      return Scaffold(backgroundColor: context.mc.surface, body: ListView(padding: EdgeInsets.zero, physics: const NeverScrollableScrollPhysics(), children: const [
+        AspectRatio(aspectRatio: 1, child: MartSkeleton(radius: 0)),
+        Padding(padding: EdgeInsets.all(MartSpace.s16), child: MartSkeletonRow()),
+      ]));
+    }
+    if (_failed) {
+      final t = L10n.of(context);
+      return Scaffold(body: SafeArea(child: MartEmptyState(icon: Icons.wifi_off_rounded, title: t.noInternet, text: t.noInternetHint, action: t.retry, onAction: _load)));
+    }
     if (p == null) return const Scaffold(body: Center(child: Text('Товар не найден')));
     return Scaffold(
       backgroundColor: context.mc.surface,

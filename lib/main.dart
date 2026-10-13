@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
@@ -6,6 +8,9 @@ import 'package:path_provider/path_provider.dart';
 
 import 'app.dart';
 import 'core/env.dart';
+import 'data/catalog.dart';
+import 'data/places.dart';
+import 'data/remote_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +20,14 @@ Future<void> main() async {
   HydratedBloc.storage = await HydratedStorage.build(
     storageDirectory: kIsWeb ? HydratedStorage.webStorageDirectory : await getApplicationDocumentsDirectory(),
   );
+  // С бэкендом: сохранённые категории, карточки корзины/избранного и филиалы — до первого кадра (на моке — ничего не делает).
+  Catalog.restore();
+  Places.restore();
+  RemoteConfig.restore();
+  // Свежий каталог и филиалы — сразу, с какого бы экрана ни открылось приложение (сплэш или ссылка на товар).
+  unawaited(Catalog.init());
+  unawaited(Places.refresh());
+  unawaited(RemoteConfig.refresh());
   // TODO: await Firebase.initializeApp(); FirebaseMessaging.onMessageOpenedApp → router.go('/order/<id>')
   runApp(const MartApp());
 }

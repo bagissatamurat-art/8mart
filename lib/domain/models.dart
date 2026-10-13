@@ -19,6 +19,29 @@ class Product extends Equatable {
   final String? variant, color;
   bool get isCargo => delivery == DeliveryKind.cargo;
   bool get hasVariants => variants != null && variants!.isNotEmpty;
+
+  /// Товар из ответа API (`GET /products…`). В ответе одна категория — `cat` (слаг подкатегории, а у товара прямо
+  /// в корне — слаг корня); корень и подкатегорию подставляет вызывающий по дереву категорий (Catalog).
+  /// Тот же товар по цене своего филиала (ответ POST /cart/validate): в каталоге цена общая, в корзине — точная.
+  Product withPrice(int price) => Product(id: id, name: name, pack: pack, price: price, oldPrice: oldPrice != null && oldPrice! > price ? oldPrice : null, image: image, bonus: bonus,
+      delivery: delivery, weightKg: weightKg, categoryId: categoryId, subId: subId, badge: badge, variants: variants, colors: colors, variant: variant, color: color);
+
+  static Product fromJson(Map<String, dynamic> j, {String? categoryId, String subId = ''}) => Product(
+        id: '${j['id']}',
+        name: j['name'] as String? ?? '',
+        pack: (j['pack'] ?? j['weight']) as String? ?? '',
+        price: (j['price'] as num?)?.round(),
+        oldPrice: (j['oldPrice'] as num?)?.round(),
+        image: j['img'] as String? ?? '',
+        bonus: (j['bonus'] as num?)?.round() ?? 0,
+        delivery: switch (j['delivery']) { 'cargo' => DeliveryKind.cargo, 'flowers' => DeliveryKind.flowers, _ => DeliveryKind.express },
+        weightKg: (j['weightKg'] as num?)?.toDouble() ?? 1,
+        categoryId: categoryId ?? j['cat'] as String? ?? '',
+        subId: subId,
+        badge: j['badge'] as String?,
+        variants: (j['variants'] as List?)?.map((v) => ProductVariant.fromJson(v as Map<String, dynamic>)).toList(),
+        colors: (j['colors'] as List?)?.cast<String>(),
+      );
   Product asVariant(String key, ProductVariant v, String? color) => Product(id: key, name: '$name, ${v.size}${color == null ? '' : ', ${color.toLowerCase()}'}', pack: v.size,
       price: v.price, image: v.image, bonus: bonus, delivery: delivery, weightKg: weightKg, categoryId: categoryId, subId: subId, variant: v.size, color: color);
   @override
@@ -29,12 +52,16 @@ class ProductVariant {
   const ProductVariant(this.id, this.size, this.price, this.image);
   final String id, size, image;
   final int price;
+  static ProductVariant fromJson(Map<String, dynamic> j) =>
+      ProductVariant('${j['id']}', j['size'] as String? ?? '', (j['price'] as num?)?.round() ?? 0, j['img'] as String? ?? '');
 }
 
 class City {
   const City(this.id, this.name, this.lat, this.lng);
   final String id, name;
   final double lat, lng;
+  /// `GET /cities`.
+  static City fromJson(Map<String, dynamic> j) => City('${j['id']}', j['name'] as String? ?? '', (j['lat'] as num).toDouble(), (j['lng'] as num).toDouble());
 }
 
 /// Точка самовывоза (филиал 8mart.kz). hours — график, если известен (в API его нет — пусто);
@@ -47,6 +74,13 @@ class PickupPoint {
   final double lat, lng;
   final bool isOpen, acceptingOrders, kaspiIntegrated;
   final String? brand;
+  /// `GET /pickup-points`. Графика в ответе нет — hours пустой, статус по isOpen / acceptingOrders.
+  static PickupPoint fromJson(Map<String, dynamic> j) => PickupPoint(
+        '${j['id']}', j['city'] as String? ?? '', j['name'] as String? ?? '', j['hours'] as String? ?? '',
+        (j['lat'] as num).toDouble(), (j['lng'] as num).toDouble(),
+        isOpen: j['isOpen'] as bool? ?? true, acceptingOrders: j['acceptingOrders'] as bool? ?? true,
+        kaspiIntegrated: j['kaspiIntegrated'] as bool? ?? false, brand: j['brand'] as String?,
+      );
 }
 
 class Category extends Equatable {
@@ -113,8 +147,11 @@ class CatalogFilter extends Equatable {
 enum OrderStatus { accepted, assembling, onway, ready, done, cancelled }
 
 class OrderSummary extends Equatable {
-  const OrderSummary({required this.id, required this.date, required this.method, required this.status, required this.items, required this.total, this.eta, this.bonus = 0, this.address = ''});
+  const OrderSummary({required this.id, required this.date, required this.method, required this.status, required this.items, required this.total, this.eta, this.bonus = 0, this.address = '', this.number = ''});
   final String id, date, address;
+  /// Номер для людей («1042»): с бэкендом [id] — длинный ключ заказа, показывать его незачем.
+  final String number;
+  String get title => number.isEmpty ? id : number;
   final ReceiveMethod method;
   final OrderStatus status;
   final Map<String, int> items;

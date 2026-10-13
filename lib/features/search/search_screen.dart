@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
+import '../../data/catalog.dart';
 import '../../data/catalog_repository.dart';
-import '../../data/mock_data.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../state/catalog_cubit.dart';
@@ -128,7 +130,7 @@ class _Start extends StatelessWidget {
         const SizedBox(height: 16),
       ],
       Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), child: _caps(context, t.popularQueries)),
-      Padding(padding: const EdgeInsets.fromLTRB(12, 4, 12, 8), child: Wrap(spacing: 8, children: [for (final p in MockData.popularQueries) MartChip(label: p, onTap: () => onQuery(p))])),
+      Padding(padding: const EdgeInsets.fromLTRB(12, 4, 12, 8), child: Wrap(spacing: 8, children: [for (final p in Catalog.popularQueries) MartChip(label: p, onTap: () => onQuery(p))])),
     ]);
   }
 }
@@ -146,17 +148,58 @@ class _Row extends StatelessWidget {
       ));
 }
 
-class _Suggest extends StatelessWidget {
+/// Подсказки по мере ввода. Мок считает сразу; с бэкендом — запрос после паузы в наборе (250 мс), устаревший ответ
+/// отбрасывается, до первого ответа — строки-скелетоны, пока идёт следующий — прежние подсказки.
+class _Suggest extends StatefulWidget {
   const _Suggest({required this.query, required this.onQuery});
   final String query;
   final ValueChanged<String> onQuery;
   @override
+  State<_Suggest> createState() => _SuggestState();
+}
+
+class _SuggestState extends State<_Suggest> {
+  static const _repo = CatalogRepository();
+  SearchSuggest? _loaded;
+  bool _failed = false;
+  Timer? _debounce;
+  int _req = 0;
+
+  @override
+  void initState() { super.initState(); _schedule(); }
+  @override
+  void didUpdateWidget(_Suggest old) { super.didUpdateWidget(old); if (old.query != widget.query) _schedule(); }
+  @override
+  void dispose() { _debounce?.cancel(); super.dispose(); }
+
+  void _schedule() {
+    if (Catalog.mocked) return;
+    _debounce?.cancel();
+    final req = ++_req, query = widget.query;
+    _debounce = Timer(const Duration(milliseconds: 250), () async {
+      try {
+        final r = await _repo.suggest(query);
+        if (mounted && req == _req) setState(() { _loaded = r; _failed = false; });
+      } on CatalogOffline {
+        if (mounted && req == _req) setState(() => _failed = true);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final t = L10n.of(context);
     final c = context.mc;
+    final query = widget.query, onQuery = widget.onQuery;
     final s = query.toLowerCase();
-    final subs = MockData.subcategories.where((x) => x.name.toLowerCase().contains(s)).take(2).toList();
-    final hits = MockData.products.where((p) => CatalogRepository.matches(p, query)).toList();
+    final r = Catalog.mocked ? _repo.suggestMock(query) : _loaded;
+    if (r == null) {
+      // Нет сети — подсказок нет; Enter откроет результаты с «Нет интернета» и «Повторить».
+      if (_failed) return const SizedBox.shrink();
+      return Column(children: [for (var i = 0; i < 4; i++) const Padding(padding: EdgeInsets.all(4), child: MartSkeletonRow())]);
+    }
+    final subs = r.categories;
+    final hits = r.products;
     if (subs.isEmpty && hits.isEmpty) return _Empty(query: query, onQuery: onQuery);
     Widget hl(String name) {
       final i = name.toLowerCase().indexOf(s);
@@ -170,16 +213,16 @@ class _Suggest extends StatelessWidget {
     }
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       if (subs.isNotEmpty) ...[
-        for (final sc in subs) _Row(onTap: () => context.go('/catalog/${sc.parentId}?sub=${sc.id}'), child: Row(children: [
+        for (final (:sub, :parent, :count) in subs) _Row(onTap: () => context.go('/catalog/${sub.parentId}?sub=${sub.id}'), child: Row(children: [
           CustomPaint(size: const Size.square(16), painter: _GridPainter(c.ink3)),
           const SizedBox(width: 12),
-          Expanded(child: Text.rich(TextSpan(text: sc.name, children: [TextSpan(text: ' · ${MockData.category(sc.parentId)?.name ?? ''}', style: TextStyle(color: c.ink3))]),
+          Expanded(child: Text.rich(TextSpan(text: sub.name, children: [TextSpan(text: ' · $parent', style: TextStyle(color: c.ink3))]),
               maxLines: 1, overflow: TextOverflow.ellipsis, style: _f(15, FontWeight.w400, c.ink1))),
-          Text('${MockData.products.where((p) => p.subId == sc.id).length}', style: _f(13, FontWeight.w400, c.ink3)),
+          Text('$count', style: _f(13, FontWeight.w400, c.ink3)),
         ])),
         Container(height: 1, margin: const EdgeInsets.fromLTRB(12, 2, 12, 4), color: c.divider),
       ],
-      for (final p in hits.take(5)) _Row(height: 60, onTap: () => openProductSheet(context, p), child: Row(children: [
+      for (final p in hits) _Row(height: 60, onTap: () => openProductSheet(context, p), child: Row(children: [
         SizedBox.square(dimension: 44, child: MartImage(p.image, radius: 10, fit: BoxFit.cover)),
         const SizedBox(width: 12),
         Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -194,7 +237,7 @@ class _Suggest extends StatelessWidget {
         onTap: () => onQuery(query),
         child: Container(height: 44, decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(999)),
           child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Text(t.allResults(hits.length), style: _f(14, FontWeight.w600, c.ink1)),
+            Text(t.allResults(r.total), style: _f(14, FontWeight.w600, c.ink1)),
             const SizedBox(width: 8),
             MartChevron(color: c.ink1, size: 5),
           ])),
@@ -216,7 +259,7 @@ class _Empty extends StatelessWidget {
       const SizedBox(height: 8),
       Text(t.nothingFoundSearchHint, textAlign: TextAlign.center, style: _f(14, FontWeight.w400, c.ink2, h: 1.4)),
       const SizedBox(height: 16),
-      Wrap(spacing: 8, alignment: WrapAlignment.center, children: [for (final p in MockData.popularQueries.take(3)) MartChip(label: p, onTap: () => onQuery(p))]),
+      Wrap(spacing: 8, alignment: WrapAlignment.center, children: [for (final p in Catalog.popularQueries.take(3)) MartChip(label: p, onTap: () => onQuery(p))]),
     ]));
   }
 }
@@ -252,7 +295,7 @@ class _Results extends StatelessWidget {
           const SizedBox(width: 8),
           MartChip(label: t.chipAll, selected: cat == null, onTap: () => onCat(null)),
           for (final e in byCat.entries) Padding(padding: const EdgeInsets.only(left: 8),
-              child: MartChip(label: MockData.category(e.key)?.name ?? e.key, count: e.value, selected: cat == e.key, onTap: () => onCat(e.key))),
+              child: MartChip(label: Catalog.category(e.key)?.name ?? e.key, count: e.value, selected: cat == e.key, onTap: () => onCat(e.key))),
         ])),
         Row(children: [
           Expanded(child: Text(s.loading ? '' : t.itemsCount(cat == null ? s.total : items.length), style: _f(14, FontWeight.w400, c.ink3))),

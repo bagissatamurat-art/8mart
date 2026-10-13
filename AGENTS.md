@@ -22,7 +22,7 @@ flutter build appbundle --release --dart-define-from-file=env.json
 
 | Ключ | Что это |
 |---|---|
-| `API_URL` | адрес бэкенда, например `https://api.8mart.kz/v1`. Пусто — приложение на моке |
+| `API_URL` | адрес бэкенда. Прод — `https://dukenfy-api.8mart.kz/api/v1/store` (слой витрины в core, описан в `STOREFRONT_API.md` репозитория бэкенда). Пусто — приложение на моке |
 | `API_MOCK` | что пока остаётся на моке, через запятую: `stories,geo,deliveryQuote`; `*` — всё |
 | `MAPBOX_ACCESS_TOKEN` | публичный `pk.*` Mapbox — карта выбора адреса. Ограничить по bundle id в кабинете Mapbox |
 | `DADATA_API_KEY` | временно: подсказки адресов из клиента, пока нет `GET /geo/*`. С бэкендом — убрать |
@@ -38,41 +38,45 @@ flutter build appbundle --release --dart-define-from-file=env.json
 | `deliveryQuote` | `lib/data/delivery_repository.dart` | `GET /delivery/quote?lat&lng` | TEMP-ADAPTER: зоны 8mart.kz |
 | `stories` | `lib/data/story_repository.dart` | `GET /stories` | TEMP-ADAPTER: сторис 8mart.kz + свои |
 | `geo` | `lib/data/geo_repository.dart` | `GET /geo/suggest?q&city`, `GET /geo/reverse?lat&lng` | TEMP-ADAPTER: DaData из клиента |
+| `catalog` | `lib/data/catalog.dart` (кеш для экранов), `lib/data/catalog_repository.dart` | `GET /categories`, `GET /products?category&sub&q&sort&page&min&max&sale`, `GET /products?ids=`, `GET /products/{id}`, `GET /search/suggest?q` | `MockData` (категории, товары, описания) |
+| `places` | `lib/data/places.dart` | `GET /cities`, `GET /pickup-points` | снимок филиалов `lib/data/branches.g.dart` |
+| `config` | `lib/data/remote_config.dart` | `GET /app/config` — контакты поддержки, способы оплаты, порог бесплатной доставки, включённые функции | значения мока |
+| `cart` | `lib/data/cart_repository.dart` → `CartCubit.validate()` | `POST /cart/validate` — раскупленное и цены своего филиала | проверки нет |
+| `slots` | `lib/data/slots_repository.dart` → `CheckoutCubit.loadSlots()` | `GET /delivery/slots?kind` | расчёт на устройстве (`lib/domain/slots.dart`) |
+| `orders` | `lib/data/order_repository.dart` → `CheckoutCubit.place`, `OrderCubit`, `AccountCubit` | `POST /orders`, `GET /orders/{id}`, `GET /orders?ids=`, `POST /orders/{id}/cancel` | демо-заказ и демо-кабинет |
 
 Временные мосты помечены `TEMP-ADAPTER` (`grep -rn TEMP-ADAPTER lib tool`). Когда эндпоинт работает на проде, мост можно удалить.
 
-## Что подключить (карта мока)
+`Catalog` и `Places` — хранилища с синхронным доступом: экраны читают `Catalog.categories`, `Catalog.byId(id)`, `Catalog.cartItem(key)`, `Places.cities` и перерисовываются по `Catalog.changes` / `Places.changes`. С бэкендом кеш прогревается при запуске (`main.dart`, сплэш ждёт его не дольше 4 с), карточки корзины и избранного, дерево категорий и филиалы хранятся на диске; на моке те же вызовы отдают `MockData`. Счётчик «Показать N» — `total` из `GET /products` с теми же фильтрами.
 
-Экраны и кубиты пока читают `MockData` (`lib/data/mock_data.dart`) напрямую и синхронно. Порядок работы:
+## Что подключено и что осталось
 
-1. Сделать репозиторий в `lib/data/`. Образец — `DeliveryRepository`: `if (ApiClient.isMocked('имя')) мок; иначе ApiClient.instance.get(...)`.
-2. Загружать данные в кубите (`loading` → данные / ошибка) и отдавать экрану из state. Скелетоны и пустые состояния уже есть в `lib/ui`.
-3. Убрать обращение к `MockData` из экрана.
+С `API_URL` на бэкенде работает всё, кроме входа: каталог, поиск, карточка, корзина (цены и наличие филиала), способ получения, слоты, оформление, оплата, статус и отмена заказа, «Мои заказы», контакты поддержки. Экраны `MockData` напрямую не читают — только репозитории в своих мок-ветках.
 
-| `MockData.…` | Где используется | Эндпоинт |
+Как это устроено, пока входа нет:
+
+- **Заказ** создаётся с телефоном из оформления; сервер сам определяет филиал, цены и стоимость доставки. В корзине лежат место получения для сервера: `cityId`, `pointId` (самовывоз) или `lat`/`lng` (доставка).
+- **«Мои заказы»** — заказы, оформленные с этого устройства: их id хранит `PlacedOrdersCubit`, статусы приходят с сервера. Заказ открывается по своему id (длинный ключ), человеку показываем `number`.
+- **Адреса и избранное** хранятся на устройстве. С настоящим входом переедут на сервер (`/me/addresses`, `/favorites`).
+- **Промокоды, бонусы, сохранённые карты** на сервере не заведены. С бэкендом их поля и разделы скрыты (`RemoteConfig.promo` / `.bonus`), чтобы не показывать выдуманные числа; включатся, когда сервер пришлёт `features` в `/app/config`.
+- **Порог бесплатной доставки** приходит с сервера (`delivery.freeFrom`). Сейчас его нет: платится стоимость зоны, и приложение не пишет «бесплатно от…» (`ShippingConfig.current`).
+- **Перед оплатой** корзина проверяется ещё раз: если цены или наличие изменились, заказ не создаётся — покупатель сначала видит новую сумму.
+
+Что остаётся на моке:
+
+| Что | Где | Что нужно |
 |---|---|---|
-| `categories`, `subcategories`, `subsOf`, `subName`, `category` | home, catalog, search, product | `GET /categories` |
-| `products`, `byId`, `cartItem` | home, catalog, search, product, cart_cubit, order, account | `GET /products…`, `GET /products/{id}`, `POST /cart/validate` |
-| `CatalogRepository.page/count` | catalog_cubit | `GET /products?…`, `GET /products/count` |
-| `ProductConditions` (`product_details.dart`) | product | `conditions` в `GET /products/{id}` |
-| `popularQueries` | search | `GET /search/suggest` или конфиг |
-| `cities`, `pickupPoints` (`branches.g.dart`) | method_sheet, address_search, faq | `GET /cities`, `GET /pickup-points?city` |
-| `cards` | account_cubit, checkout | `GET /me/cards`, `DELETE /me/cards/{id}` |
-| `addresses` | account_cubit | `GET/POST/PUT/DELETE /me/addresses` |
-| `orders` | account_cubit, order_status | `GET /orders`, `GET /orders/{id}`, `POST /orders/{id}/cancel` |
-| `promos` | account_cubit | `GET /me/promos` |
-| `bonusBalance`, `bonusMaxPart`, `bonusHistory` | account, checkout, faq | `GET /me/bonus` |
-| `supportPhone`, `supportWa`, `tgLink` | faq, order, auth | `GET /app/config` |
-| `AuthCubit` (код `1234`) | auth | `POST /auth/code`, `/auth/verify`, `/auth/tg`, `GET /auth/tg/{token}` |
-| `OrderCubit.create`, `CheckoutCubit` | checkout | `POST /orders` → `{id, payUrl?}` |
-| `PromoRules` (`cart_cubit.dart`) | cart | `POST /promo/check` |
-| слоты (`lib/domain/slots.dart`) | checkout | `GET /delivery/slots?kind` |
+| Вход: код `1234`, Telegram | `AuthCubit`, `auth_view.dart` | `POST /auth/code`, `/auth/verify`, `/auth/tg`, `GET /auth/tg/{token}` — в core есть в ветке `main`, не перенесено в продовую линию |
+| Смена телефона, удаление аккаунта | `account_sections.dart` | `/me`, `/me/phone` — вместе со входом |
+| Условия получения в карточке («Через 30 минут», «Храним 24 часа») | `product_details.dart` | тексты от бизнеса; сервер `conditions` не отдаёт |
+| Обязательное обновление | `system_screens.dart` (`AppConfig.forceUpdate`) | `package_info_plus` + `minVersion` из `/app/config` |
+| Push | `lib/core/push.dart` | проект Firebase, `POST /devices` |
 
 `colorSwatch` и `flowerSizeHint` — справочники интерфейса, остаются в приложении.
 
 **Вход.** После `POST /auth/verify` сохранить `refreshToken` во `flutter_secure_storage` и выставить `ApiClient.instance.token = () => accessToken`. Обновление по 401 (`POST /auth/refresh`) добавить в `ApiClient.send`.
 
-**Сторис.** `cta.href` у сайта — пути сайта (`/product/f1`). Приложению нужны свои маршруты (`/p/f1`, `lib/router.dart`): либо бэкенд отдаёт `cta.appPath`, либо перевести путь в `StoryRepository.storyFromJson`.
+**Сторис.** С бэкендом показываются только сторис сервера; свои слайды приложения собраны на товарах мока и остаются только в мок-режиме.
 
 ## Границы
 
@@ -85,7 +89,7 @@ flutter build appbundle --release --dart-define-from-file=env.json
 ```bash
 flutter pub get && flutter gen-l10n
 flutter analyze      # без ошибок и предупреждений
-flutter test         # тест переключателя — test/api_client_test.dart
+flutter test         # переключатель — test/api_client_test.dart; каталог — test/catalog_api_test.dart; заказы, корзина, слоты, настройки — test/orders_api_test.dart; экран статуса — test/order_screen_test.dart
 ```
 
 Затем пройти руками на симуляторе в светлой и тёмной теме: главная → каталог → товар → корзина → способ получения → оформление → заказ → профиль.

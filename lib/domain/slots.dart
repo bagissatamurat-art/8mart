@@ -64,6 +64,11 @@ List<SlotDay> cargoSlots(DateTime now, {SlotConfig cfg = const SlotConfig()}) =>
   for (var k = 1; k <= cfg.cargoDays; k++) _day(now, k, [for (final x in cfg.cargoIntervals) Slot('${_ymd(_kz(now, k))}|$x', x)]),
 ];
 
+/// Дни с сервера приходят без подписи «Ближайшего»: текст и время зоны адреса подставляет приложение.
+List<SlotDay> withAsap(List<SlotDay> days, {required String asapLabel, required String eta}) => [
+  for (final d in days) SlotDay(d.id, d.offset, d.weekday, d.day, d.month, [for (final s in d.slots) s.id == 'asap' ? Slot('asap', asapLabel, eta) : s]),
+];
+
 /// Есть ли слот среди дней (выбранный мог пройти, пока оформляли).
 bool hasSlot(List<SlotDay> days, String id) => days.any((d) => d.slots.any((s) => s.id == id));
 SlotDay? dayOf(List<SlotDay> days, String id) => days.where((d) => d.slots.any((s) => s.id == id)).firstOrNull;

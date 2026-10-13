@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../data/mock_data.dart';
+import '../../data/catalog.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../state/cart_cubit.dart';
 import '../../state/stories_cubit.dart';
@@ -33,10 +33,11 @@ class HomeScreen extends StatelessWidget {
     final cart = context.watch<CartCubit>().state;
     final stories = context.watch<StoriesCubit>().state;
 
-    return Scaffold(
+    // Каталог с бэкенда догружается после сплэша (или по «потянуть вниз») — перерисовываемся по Catalog.changes.
+    return ListenableBuilder(listenable: Catalog.changes, builder: (context, _) => Scaffold(
       body: Stack(children: [RefreshIndicator(
         color: c.primary,
-        onRefresh: () async => Future<void>.delayed(const Duration(milliseconds: 600)),
+        onRefresh: () => Catalog.mocked ? Future<void>.delayed(const Duration(milliseconds: 600)) : Catalog.init(),
         child: CustomScrollView(slivers: [
           SliverToBoxAdapter(child: MartHomeHeader(
             methodChosen: cart.method != null,
@@ -46,12 +47,12 @@ class HomeScreen extends StatelessWidget {
           )),
           // Сторис — как на сайте: над чипсами категорий; пока грузятся — скелетоны той же формы.
           SliverToBoxAdapter(child: _StoriesRow(stories: stories)).withTopGap(16),
-          if (offline) SliverPadding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 0), sliver: SliverToBoxAdapter(child: OfflineBanner(text: t.offline))),
+          if (offline || Catalog.stale || Catalog.unavailable) SliverPadding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 0), sliver: SliverToBoxAdapter(child: OfflineBanner(text: t.offline))),
           SliverToBoxAdapter(child: SizedBox(height: 44, child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16), scrollDirection: Axis.horizontal,
             children: [
               MartChip(label: t.chipAll, selected: true, onTap: () => context.go('/catalog')),
-              for (final cat in MockData.categories) Padding(padding: const EdgeInsets.only(left: 8), child: MartChip(label: cat.name, onTap: () => context.go('/catalog/${cat.id}'))),
+              for (final cat in Catalog.categories) Padding(padding: const EdgeInsets.only(left: 8), child: MartChip(label: cat.name, onTap: () => context.go('/catalog/${cat.id}'))),
             ],
           ))).withTopGap(12),
           SliverPadding(
@@ -60,13 +61,13 @@ class HomeScreen extends StatelessWidget {
                 onTap: () => context.go('/catalog/tsvety'))),
           ),
           // Полки — подкатегории цветов (основной товар): «Гортензии», «Розы», «Хризантемы», по 4 букета.
-          for (final sub in MockData.subsOf(_mainCategory)) ...[
+          for (final sub in Catalog.subsOf(_mainCategory)) ...[
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
               sliver: SliverToBoxAdapter(child: _ShelfHead(title: sub.name, all: t.seeAll, onAll: () => context.go('/catalog/$_mainCategory?sub=${sub.id}'))),
             ),
             SliverPadding(padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: ProductGridSliver(items: MockData.products.where((p) => p.subId == sub.id).take(4).toList())),
+                sliver: ProductGridSliver(items: Catalog.firstOf(_mainCategory, sub.id)?.take(4).toList() ?? const [], loading: Catalog.firstOf(_mainCategory, sub.id) == null)),
           ],
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ]),
@@ -74,7 +75,7 @@ class HomeScreen extends StatelessWidget {
         // Шапка уезжает при прокрутке — строку состояния закрываем фоном, чтобы контент не заходил под часы.
         Positioned(top: 0, left: 0, right: 0, height: MediaQuery.paddingOf(context).top, child: ColoredBox(color: c.surface)),
       ]),
-    );
+    ));
   }
 }
 

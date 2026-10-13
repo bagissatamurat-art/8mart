@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/format.dart';
 import '../../data/mock_data.dart';
+import '../../data/remote_config.dart';
+import '../../data/places.dart';
 import '../../domain/shipments.dart';
 import '../../domain/slots.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -15,18 +17,19 @@ class FaqScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = L10n.of(context);
     final c = context.mc;
-    const ship = ShippingConfig(), slots = SlotConfig();
+    final ship = ShippingConfig.current;
+    const slots = SlotConfig();
     final items = [
       (t.faq1Q, t.faq1A('${ship.etaMin}–${ship.etaMax}', slots.courierIntervals.join(', '))),
-      (t.faq2Q, t.faq2A(moneyText(ship.courierFee), moneyText(ship.freeFrom))),
+      (t.faq2Q, ship.hasFreeDelivery ? t.faq2A(moneyText(ship.courierFee), moneyText(ship.freeFrom)) : t.faq2ANoFree(moneyText(ship.courierFee))),
       (t.faq3Q, t.faq3A),
-      (t.faq4Q, t.faq4A(MockData.cities.map((x) => x.name).join(', '))),
+      (t.faq4Q, t.faq4A(Places.cities.map((x) => x.name).join(', '))),
       (t.faq5Q, t.faq5A),
       (t.faq6Q, t.faq6A),
       (t.faq7Q, t.faq7A),
-      (t.faq8Q, t.faq8A(MockData.bonusMaxPart)),
+      if (RemoteConfig.bonus) (t.faq8Q, t.faq8A(MockData.bonusMaxPart)),
       (t.faq9Q, t.faq9A),
-      (t.faq10Q, t.faq10A(MockData.supportPhone)),
+      (t.faq10Q, t.faq10A(RemoteConfig.supportPhone)),
     ];
     return Scaffold(
       appBar: AppBar(leading: const Padding(padding: EdgeInsets.only(left: 8), child: Center(child: MartBackButton())), leadingWidth: 60, title: Text(t.faqTitle)),

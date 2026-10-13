@@ -6,7 +6,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/format.dart';
 import '../../core/phone_mask.dart';
+import '../../data/catalog.dart';
 import '../../data/mock_data.dart';
+import '../../data/order_repository.dart';
+import '../../data/remote_config.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../state/account_cubit.dart';
@@ -19,6 +22,13 @@ import 'order_labels.dart';
 import '../method/method_sheet.dart';
 
 enum AccountSection { orders, favorites, addresses, payments, promos, bonus, personal }
+
+/// Разделы в меню профиля. Промокодов, бонусов и сохранённых карт на сервере пока нет — с бэкендом их разделы
+/// не показываем (RemoteConfig), чтобы не обещать того, чего нет.
+List<AccountSection> get visibleSections => [
+      for (final s in AccountSection.values)
+        if (switch (s) { AccountSection.promos => RemoteConfig.promo, AccountSection.bonus => RemoteConfig.bonus, AccountSection.payments => OrderRepository.mocked, _ => true }) s,
+    ];
 
 String sectionTitle(L10n t, AccountSection s) => switch (s) {
       AccountSection.orders => t.myOrders, AccountSection.favorites => t.favorites, AccountSection.addresses => t.addresses,
@@ -35,7 +45,12 @@ class AccountSectionScreen extends StatefulWidget {
 
 class _AccountSectionScreenState extends State<AccountSectionScreen> {
   @override
-  void initState() { super.initState(); context.read<AccountCubit>().load(); }
+  void initState() {
+    super.initState();
+    final account = context.read<AccountCubit>()..load();
+    // С бэкендом: при входе в «Мои заказы» — свежие статусы.
+    if (widget.section == AccountSection.orders) account.refreshOrders();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,28 +105,40 @@ class _ActiveOrder extends StatelessWidget {
     final c = context.mc;
     final cur = orderStep(o);
     final labels = orderSteps(o);
+    final etaLabel = o.method == ReceiveMethod.pickup ? 'Будет готов к' : 'Привезём к';
+    // Срок с датой («15 октября, 18:00–21:00») рядом с заголовком не помещается — отдельной строкой, как на экране статуса.
+    final etaWide = (o.eta?.length ?? 0) > 12;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card), border: Border.all(color: const Color(0xFFF7C6DC), width: 1.5)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Заказ №${o.id} · ${o.date}', style: _fs(13, FontWeight.w400, c.ink3)),
+            Text('Заказ №${o.title} · ${o.date}', style: _fs(13, FontWeight.w400, c.ink3)),
             const SizedBox(height: 4),
             Text(orderStatusLabel(o), style: _fs(20, FontWeight.w800, c.ink1, ls: -0.4)),
             const SizedBox(height: 4),
             Text(o.address, style: _fs(14, FontWeight.w400, c.ink2, h: 1.4)),
           ])),
-          if (o.eta != null) ...[
+          if (o.eta != null && !etaWide) ...[
             const SizedBox(width: 12),
             Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), decoration: BoxDecoration(color: c.primary50, borderRadius: BorderRadius.circular(14)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Text(o.method == ReceiveMethod.pickup ? 'Будет готов к' : 'Привезём к', style: _fs(12, FontWeight.w400, c.ink2)),
+                Text(etaLabel, style: _fs(12, FontWeight.w400, c.ink2)),
                 const SizedBox(height: 2),
                 Text(o.eta!, style: _fs(16, FontWeight.w700, c.ink1)),
               ])),
           ],
         ]),
+        if (etaWide) ...[
+          const SizedBox(height: 12),
+          Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), decoration: BoxDecoration(color: c.primary50, borderRadius: BorderRadius.circular(14)),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+              Text(etaLabel, style: _fs(12, FontWeight.w400, c.ink2)),
+              const SizedBox(width: 6),
+              Expanded(child: Text(o.eta!, style: _fs(16, FontWeight.w700, c.ink1))),
+            ])),
+        ],
         const SizedBox(height: 16),
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           for (var i = 0; i < 4; i++) ...[
@@ -146,7 +173,7 @@ class _PastOrder extends StatelessWidget {
       decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(MartRadius.card)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Wrap(spacing: 8, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
-          Text('№${o.id}', style: _fs(15, FontWeight.w600, c.ink1)),
+          Text('№${o.title}', style: _fs(15, FontWeight.w600, c.ink1)),
           Text(o.date, style: _fs(13, FontWeight.w400, c.ink3)),
           Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: chipBg, borderRadius: BorderRadius.circular(999)),
               child: Text(orderStatusLabel(o), style: _fs(12, FontWeight.w600, chipFg))),
@@ -154,7 +181,7 @@ class _PastOrder extends StatelessWidget {
         ]),
         const SizedBox(height: 10),
         Row(children: [
-          for (final id in ids.take(4)) if (MockData.byId(id) case final p?) Padding(padding: const EdgeInsets.only(right: 6),
+          for (final id in ids.take(4)) if (Catalog.cartItem(id) case final p?) Padding(padding: const EdgeInsets.only(right: 6),
               child: Opacity(opacity: cancelled ? .5 : 1, child: SizedBox.square(dimension: 44, child: MartImage(p.image, radius: 10, fit: BoxFit.cover)))),
           if (n > 4) Container(width: 44, height: 44, alignment: Alignment.center, decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(10)),
               child: Text('+${n - 4}', style: _fs(13, FontWeight.w600, c.ink2))),
@@ -180,11 +207,14 @@ class _PastOrder extends StatelessWidget {
 // ── Избранное ──
 class _Favorites extends StatelessWidget {
   const _Favorites();
+  // Карточки избранного с бэкенда могут догрузиться после открытия экрана — перерисовываемся по Catalog.changes.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(listenable: Catalog.changes, builder: (context, _) => _content(context));
+
+  Widget _content(BuildContext context) {
     final t = L10n.of(context);
     final ids = context.watch<FavoritesCubit>().state;
-    final items = [for (final id in ids) if (MockData.byId(id) case final p?) p];
+    final items = [for (final id in ids) if (Catalog.byId(id) case final p?) p];
     final c = context.mc;
     // Пусто (MartAccount): белая карточка — контур сердца 40, «Пока пусто», подсказка.
     if (items.isEmpty) {

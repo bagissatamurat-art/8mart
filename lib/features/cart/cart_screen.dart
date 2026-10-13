@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
+import '../../data/remote_config.dart';
 import '../../domain/models.dart';
 import '../../domain/shipments.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -23,7 +24,7 @@ class CartScreen extends StatelessWidget {
     final s = cubit.state;
     final pickup = s.method == ReceiveMethod.pickup;
     final plan = s.plan(goodsTotal: s.afterDiscount);
-    const cfg = ShippingConfig();
+    final cfg = ShippingConfig.current;
     final total = s.afterDiscount + plan.fee;
     final reason = s.method == null ? t.blockedMethod : s.hasSoldOut ? t.blockedSoldOut : null;
     TextStyle f(double size, FontWeight w, Color col, {double? h}) => TextStyle(fontFamily: 'Onest', fontSize: size, fontWeight: w, color: col, height: h);
@@ -94,18 +95,18 @@ class CartScreen extends StatelessWidget {
                 const SizedBox(height: 12),
               ],
               card(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                MartPromo(label: t.promoLabel, applyLabel: t.promoApply, appliedLabel: t.promoApplied, appliedCode: s.promo, discountText: '−${money(s.discount)}',
+                if (RemoteConfig.promo) MartPromo(label: t.promoLabel, applyLabel: t.promoApply, appliedLabel: t.promoApplied, appliedCode: s.promo, discountText: '−${money(s.discount)}',
                   onRemove: cubit.removePromo,
                   onApply: (code) => switch (cubit.applyPromo(code)) {
                     PromoResult.ok => null, PromoResult.notFound => t.promoErrNotFound, PromoResult.expired => t.promoErrExpired,
                     PromoResult.minSum => t.promoErrMinSum(money(PromoRules.minSum)),
                   }),
-                const SizedBox(height: 12),
+                if (RemoteConfig.promo) const SizedBox(height: 12),
                 _Row(t.itemsCount(s.count), money(s.goods)),
                 if (s.discount > 0) _Row(t.promoLabel, '−${money(s.discount)}', ok: true),
                 if (pickup) _Row(t.pickup, t.free, ok: true)
                 else for (final sh in plan.shipments) _Row('${t.delivery}${plan.multi ? ' · ${sh.tag(t, false)}' : ''}', sh.feeText(t), ok: sh.fee == 0),
-                if (!pickup && plan.hasCourierFee && s.afterDiscount > 0) ...[
+                if (!pickup && plan.hasCourierFee && s.afterDiscount > 0 && cfg.hasFreeDelivery) ...[
                   const SizedBox(height: 4),
                   ClipRRect(borderRadius: BorderRadius.circular(3), child: LinearProgressIndicator(value: (s.afterDiscount / cfg.freeFrom).clamp(0, 1), minHeight: 6, backgroundColor: c.bg, color: c.success)),
                   const SizedBox(height: 6),

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../data/geo_repository.dart';
-import '../../data/mock_data.dart';
+import '../../data/places.dart';
 import '../../domain/models.dart';
 import '../../ui/ui.dart';
 
@@ -120,9 +120,9 @@ class _AddressSearchState extends State<_AddressSearch> {
           MartInput(label: 'Улица и номер дома', controller: _ctl, focusNode: _focus, textInputAction: TextInputAction.search,
               onChanged: (_) => _search(), onSubmitted: (_) { if (_items.isNotEmpty) _pick(_items.first); }),
           const SizedBox(height: 12),
-          if (MockData.cities.length > 1) MartSelect(label: 'Город', value: _city.id, sheetTitle: 'Город',
-              options: [for (final ct in MockData.cities) MartSelectOption(ct.id, ct.name)],
-              onChanged: (id) { setState(() => _city = MockData.cities.firstWhere((x) => x.id == id)); _search(); }),
+          if (Places.cities.length > 1) MartSelect(label: 'Город', value: _city.id, sheetTitle: 'Город',
+              options: [for (final ct in Places.cities) MartSelectOption(ct.id, ct.name)],
+              onChanged: (id) { setState(() => _city = Places.cities.firstWhere((x) => x.id == id)); _search(); }),
         ])),
         Expanded(child: ListView(padding: const EdgeInsets.fromLTRB(12, 8, 12, 16), keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, children: [
           if (q.length < 3) hint('Ищем в городе ${_city.name}. Начните с улицы — например, «Кабанбай батыра 11»')

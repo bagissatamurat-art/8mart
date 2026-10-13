@@ -21,7 +21,8 @@ class StoryRepository {
       try {
         return [for (final s in await ApiClient.instance.get<List<dynamic>>('/stories')) storyFromJson(s as Map<String, dynamic>)];
       } catch (_) {
-        return _local();
+        // Свои слайды собраны на товарах и промокоде мока — с настоящим каталогом они вели бы в никуда.
+        return const [];
       }
     }
     return [...await _live(), ..._local()];

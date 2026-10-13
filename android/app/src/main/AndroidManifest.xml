@@ -3,8 +3,10 @@
     <!-- «Моё местоположение» на карте выбора адреса (geolocator), только пока приложение открыто. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Вход по отпечатку / лицу (local_auth). -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
     <application
-        android:label="mart8"
+        android:label="8mart"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

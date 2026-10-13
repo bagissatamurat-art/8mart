@@ -1,4 +1,6 @@
+import '../core/format.dart';
 import '../domain/models.dart';
+import '../domain/shipments.dart';
 import 'flowers.g.dart';
 
 /// Условия получения по типу товара (DELIVERY_TYPES в data.js). МОК — заполняет бизнес; в проде приходит в GET /products/{id} (conditions).
@@ -36,6 +38,16 @@ abstract final class ProductDetailsMock {
       pickup: WayInfo('Соберём за 40 минут', 'В филиалах 8mart', 'Храним букет в холодильнике до конца дня')),
   };
 
+  /// Условия по типу товара. Цена курьера — из тарифов (ShippingConfig.current): порог бесплатной доставки
+  /// показываем, только если он есть — с бэкендом его задаёт сервер, и обещать «бесплатно от…» без него нельзя.
+  static ProductConditions conditionsOf(DeliveryKind kind) {
+    final base = types[kind]!;
+    final cfg = ShippingConfig.current;
+    if (kind == DeliveryKind.cargo || cfg.freeFrom == const ShippingConfig().freeFrom) return base;
+    final price = 'от ${moneyText(cfg.courierFee)}${cfg.hasFreeDelivery ? ', бесплатно от ${moneyText(cfg.freeFrom)}' : ''}';
+    return ProductConditions(tag: base.tag, delivery: WayInfo(base.delivery.when, price, base.delivery.note), pickup: base.pickup);
+  }
+
   static const _cementDesc = [
     'Портландцемент М400 Д20 — универсальный цемент для большинства строительных работ: приготовления бетона и кладочных растворов, заливки фундаментов, стяжки пола и штукатурки.',
     'Добавка 20% минеральных компонентов повышает водостойкость и снижает риск появления трещин. Подходит для работы при температуре от +5 °C.',
@@ -49,13 +61,33 @@ abstract final class ProductDetailsMock {
   /// Букет: состав по размерам — из каталога 8mart.kz (flowerComposition), как на сайте.
   static List<(String, String)> _flowerSpecs(Product p) => [for (final (size, c) in flowerComposition[p.id] ?? const <(String, String)>[]) ('Размер $size', c)];
 
+  static const _noDesc = ['Описание товара появится позже. Уточните детали у поддержки в WhatsApp.'];
+
+  /// Карточка из ответа `GET /products/{id}`: описание абзацами, характеристики парами, галерея.
+  /// Описания нет (у букетов сервер отдаёт состав в характеристиках) — общий текст по типу товара, как в моке.
+  static ProductDetails fromJson(Product p, Map<String, dynamic> j) {
+    final desc = (j['description'] as String? ?? '').split(RegExp(r'\r?\n')).map((x) => x.trim()).where((x) => x.isNotEmpty).toList();
+    final images = (j['images'] as List? ?? const []).whereType<String>().where((x) => x.isNotEmpty).toList();
+    return ProductDetails(
+      images: images.isNotEmpty ? images : _gallery(p),
+      desc: desc.isNotEmpty ? desc : (p.hasVariants ? _flowerDesc : _noDesc),
+      specs: [for (final row in (j['specs'] as List? ?? const []).whereType<List>()) if (row.length >= 2) ('${row[0]}', '${row[1]}')],
+      conditions: conditionsOf(p.delivery),
+    );
+  }
+
+  /// Пока карточка грузится: фото из списка, описания и характеристик ещё нет.
+  static ProductDetails pending(Product p) => ProductDetails(images: _gallery(p), desc: const [], specs: const [], conditions: conditionsOf(p.delivery));
+
+  static List<String> _gallery(Product p) => [...{if (p.image.isNotEmpty) p.image, ...?p.variants?.map((v) => v.image).where((x) => x.isNotEmpty)}];
+
   static ProductDetails of(Product p) => p.hasVariants
-      ? ProductDetails(images: [...{p.image, ...p.variants!.map((v) => v.image)}, ''], desc: _flowerDesc, specs: _flowerSpecs(p), conditions: types[p.delivery]!)
+      ? ProductDetails(images: [...{p.image, ...p.variants!.map((v) => v.image)}, ''], desc: _flowerDesc, specs: _flowerSpecs(p), conditions: conditionsOf(p.delivery))
       : ProductDetails(
         images: [p.image, '', ''],
-        desc: p.id == 'b1' ? _cementDesc : const ['Описание товара появится позже. Уточните детали у поддержки в WhatsApp.'],
+        desc: p.id == 'b1' ? _cementDesc : _noDesc,
         specs: p.id == 'b1' ? _cementSpecs : [('Фасовка', p.pack), ('Производитель', 'Уточняется')],
-        conditions: types[p.delivery]!,
+        conditions: conditionsOf(p.delivery),
       );
   static List<String> placeholders(Product p) => p.hasVariants
       ? [...List.filled(of(p).images.length - 1, ''), 'букет в интерьере']

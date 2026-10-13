@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/format.dart';
+import '../../data/catalog.dart';
 import '../../data/mock_data.dart';
+import '../../data/order_repository.dart';
+import '../../data/remote_config.dart';
 import '../../domain/models.dart';
 import '../../domain/shipments.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -18,9 +21,40 @@ TextStyle _f(double size, FontWeight w, Color col, {double? h, double? ls}) => T
 /// Статус заказа 390 (03 Оформление.dc.html #3b, шаг success): белая панель — назад + «Статус заказа» + «N товаров»;
 /// карточка — «Заказ № · дата», на каждое отправление: метка, статус 24/800, подпись, «Привезём к», шкала, курьер/водитель; поддержка WhatsApp;
 /// карточка получения и получателя; карточка состава и итогов; «Продолжить покупки»; «Отменить заказ» серой ссылкой.
-class OrderStatusScreen extends StatelessWidget {
+class OrderStatusScreen extends StatefulWidget {
   const OrderStatusScreen({super.key, required this.id});
   final String id;
+  @override
+  State<OrderStatusScreen> createState() => _OrderStatusScreenState();
+}
+
+class _OrderStatusScreenState extends State<OrderStatusScreen> with WidgetsBindingObserver {
+  late final OrderCubit _orders = context.read<OrderCubit>();
+  String get id => widget.id;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // С бэкендом: заказ и его статус — с сервера, пока экран открыт (на моке — состояние из оформления).
+    _orders.open(id);
+  }
+
+  /// Вернулись из Kaspi или со страницы оплаты — статус сразу, не дожидаясь очередного опроса.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _orders.refresh();
+  }
+
+  @override
+  void didUpdateWidget(OrderStatusScreen old) {
+    super.didUpdateWidget(old);
+    // Тот же экран, другой заказ: ссылка из push или возврат из оплаты поверх открытого статуса.
+    if (old.id != id) _orders.open(id);
+  }
+
+  @override
+  void dispose() { WidgetsBinding.instance.removeObserver(this); _orders.stopPolling(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
@@ -29,12 +63,25 @@ class OrderStatusScreen extends StatelessWidget {
     final live = context.watch<OrderCubit>().state;
     final auth = context.watch<AuthCubit>().state;
     final settings = context.watch<SettingsCubit>();
-    final o = live.id == id ? live : () {
+    final o = live.id == id || !OrderRepository.mocked ? live : () {
       final s = MockData.orders.where((x) => x.id == id).firstOrNull;
       if (s == null) return live;
-      return orderFromSummary(s, [for (final e in s.items.entries) if (MockData.byId(e.key) case final p?) CartLine(p, e.value)]);
+      return orderFromSummary(s, [for (final e in s.items.entries) if (Catalog.cartItem(e.key) case final p?) CartLine(p, e.value)]);
     }();
     final isLive = live.id == id;
+    // С бэкендом: первого ответа ещё нет, заказа нет или нет сети — показать нечего.
+    if (!OrderRepository.mocked && (o.missing || (o.lines.isEmpty && (o.loading || o.offline)))) {
+      return Scaffold(body: Column(children: [
+        MartTopPanel(padding: const EdgeInsets.fromLTRB(16, 8, 16, 16), children: [
+          MartTitleRow(title: 'Статус заказа', onBack: () => context.canPop() ? context.pop() : context.go('/')),
+        ]),
+        Expanded(child: o.missing
+            ? MartEmptyState(icon: Icons.receipt_long_outlined, title: t.orderNotFound, text: t.orderNotFoundText, action: t.continueShopping, onAction: () => context.go('/'))
+            : o.offline
+                ? MartEmptyState(icon: Icons.wifi_off_rounded, title: t.noInternet, text: t.noInternetHint, action: t.retry, onAction: () => _orders.open(id))
+                : const Padding(padding: EdgeInsets.all(16), child: MartSkeleton(height: 220, radius: MartRadius.card))),
+      ]));
+    }
     final pickup = o.method == ReceiveMethod.pickup;
     final multi = o.kinds.length > 1;
     final count = o.lines.fold(0, (s, l) => s + l.qty);
@@ -45,13 +92,16 @@ class OrderStatusScreen extends StatelessWidget {
           pickup ? t.stIssued : t.stDelivered,
         ][i.clamp(0, 3)];
     String sub(ShipmentKind k, int i) => switch (i) {
-          0 => 'Оплата прошла, передали заказ в сборку',
+          // С бэкендом заказ может ждать оплаты: счёт Kaspi на номер или страница шлюза.
+          0 => o.remote && !o.paid ? (o.kaspi && o.payUrl == null ? t.stAwaitKaspi : t.stAwaitPay) : 'Оплата прошла, передали заказ в сборку',
           1 => k == ShipmentKind.cargo ? 'Комплектуем на складе, погрузим в грузовой' : 'Проверяем наличие и упаковываем',
           2 => pickup ? 'Покажите номер заказа на кассе' : 'Позвоним за 10–15 минут до приезда',
           _ => pickup ? 'Спасибо за покупку!' : 'Спасибо! Оцените доставку в приложении',
         };
     List<TimelineStage> stages(ShipmentKind k, int cur) => [
-          for (var i = 0; i < 4; i++) TimelineStage(stage(k, i), sub: sub(k, i), time: i <= cur ? ['14:05', '14:07', '14:40', '15:25'][i] : null),
+          // Время этапов: с бэкендом — из истории заказа; на моке — демо.
+          for (var i = 0; i < 4; i++) TimelineStage(stage(k, i), sub: sub(k, i),
+              time: i > cur ? null : o.remote ? (i < o.times.length ? o.times[i] : null) : ['14:05', '14:07', '14:40', '15:25'][i]),
         ];
 
     Widget card(List<Widget> ch, {EdgeInsets padding = const EdgeInsets.all(16)}) => Container(
@@ -62,12 +112,17 @@ class OrderStatusScreen extends StatelessWidget {
           Text(v, style: _f(14, strong ? FontWeight.w600 : FontWeight.w400, color ?? c.ink1)),
         ]));
 
-    return Scaffold(body: Column(children: [
+    return BlocListener<OrderCubit, OrderState>(
+      // Сервер отказал в отмене (заказ уже собран) — говорим почему; экран при этом уже со свежим статусом.
+      listenWhen: (a, b) => b.cancelError != null && a.cancelError != b.cancelError,
+      listener: (context, state) => showMartToast(context, state.cancelError!),
+      child: Scaffold(body: Column(children: [
       MartTopPanel(padding: const EdgeInsets.fromLTRB(16, 8, 16, 16), children: [
         MartTitleRow(title: 'Статус заказа', trailing: count > 0 ? t.itemsCount(count) : null, onBack: () => context.canPop() ? context.pop() : context.go('/')),
       ]),
       Expanded(child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 20), children: [
-        if (isLive && !settings.state.pushAsked && !o.cancelled) ...[
+        // Push ещё не подключён (нужен Firebase): с бэкендом разрешение не спрашиваем — уведомления всё равно не придут.
+        if (isLive && OrderRepository.mocked && !settings.state.pushAsked && !o.cancelled) ...[
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: c.primary50, borderRadius: BorderRadius.circular(MartRadius.card)),
@@ -87,12 +142,13 @@ class OrderStatusScreen extends StatelessWidget {
           const SizedBox(height: 12),
         ],
         card(padding: const EdgeInsets.fromLTRB(16, 20, 16, 16), [
-          Text('Заказ №${o.id} · ${o.date}', style: _f(13, FontWeight.w400, c.ink3)),
+          Text('Заказ №${o.title}${o.date.isEmpty ? '' : ' · ${o.date}'}', style: _f(13, FontWeight.w400, c.ink3)),
           const SizedBox(height: 20),
           if (o.cancelled) ...[
             Text(t.stCancelled, style: _f(24, FontWeight.w800, c.error, ls: -0.48)),
             const SizedBox(height: 6),
-            Text(t.refund(money(o.total)), style: _f(14, FontWeight.w400, c.ink2, h: 1.45)),
+            // Возвращать нечего, если заказ не был оплачен.
+            if (!o.remote || o.paid) Text(t.refund(money(o.total)), style: _f(14, FontWeight.w400, c.ink2, h: 1.45)),
             if (o.bonus > 0) ...[const SizedBox(height: 6), Text('Вернём ${o.bonus} ${plural(o.bonus, 'бонус', 'бонуса', 'бонусов')}', style: _f(14, FontWeight.w400, c.ink2, h: 1.45))],
           ] else for (var i = 0; i < o.kinds.length; i++) Container(
             padding: EdgeInsets.only(bottom: i < o.kinds.length - 1 ? 20 : 0),
@@ -113,20 +169,22 @@ class OrderStatusScreen extends StatelessWidget {
               Text(stage(o.kinds[i], o.current[i]), style: _f(24, FontWeight.w800, o.current[i] >= 3 ? c.success : c.ink1, ls: -0.48)),
               const SizedBox(height: 6),
               Text(sub(o.kinds[i], o.current[i]), style: _f(14, FontWeight.w400, c.ink2, h: 1.45)),
-              if (o.current[i] < 3) ...[
+              // Срок: с бэкендом — выбранный слот (у «как можно скорее» срока нет); на моке — демо.
+              if (o.current[i] < 3 && (!o.remote || o.eta != null)) ...[
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(color: c.primary50, borderRadius: BorderRadius.circular(14)),
                   child: Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
                     Expanded(child: Text(pickup ? 'Будет готов к' : 'Привезём к', style: _f(13, FontWeight.w400, c.ink2))),
-                    Text(o.kinds[i] == ShipmentKind.cargo ? 'завтра, 9:00–21:00' : pickup ? '14:35' : '15:20–15:35', style: _f(18, FontWeight.w700, c.ink1)),
+                    Text(o.remote ? o.eta! : o.kinds[i] == ShipmentKind.cargo ? 'завтра, 9:00–21:00' : pickup ? '14:35' : '15:20–15:35', style: _f(18, FontWeight.w700, c.ink1)),
                   ]),
                 ),
               ],
               const SizedBox(height: 16),
               OrderTimeline(stages: stages(o.kinds[i], o.current[i]), current: o.current[i]),
-              if (!pickup && o.current[i] == 2) ...[
+              // Курьер: с бэкендом — назначенный на заказ (имя и телефон); на моке — демо.
+              if (!pickup && o.current[i] == 2 && (!o.remote || (o.courierName ?? '').isNotEmpty)) ...[
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
@@ -135,9 +193,11 @@ class OrderStatusScreen extends StatelessWidget {
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(o.kinds[i] == ShipmentKind.cargo ? 'Водитель' : 'Курьер', style: _f(12, FontWeight.w400, c.ink2)),
                       const SizedBox(height: 2),
-                      Text(o.kinds[i] == ShipmentKind.cargo ? 'Серик' : 'Ерлан', style: _f(15, FontWeight.w600, c.ink1)),
+                      Text(o.remote ? o.courierName! : o.kinds[i] == ShipmentKind.cargo ? 'Серик' : 'Ерлан', style: _f(15, FontWeight.w600, c.ink1)),
                     ])),
-                    MartButton(label: 'Позвонить', variant: MartButtonVariant.ghost, size: MartButtonSize.m44, onPressed: () => launchUrl(Uri.parse('tel:+77001112233'))),
+                    if (!o.remote || (o.courierPhone ?? '').isNotEmpty)
+                      MartButton(label: 'Позвонить', variant: MartButtonVariant.ghost, size: MartButtonSize.m44,
+                          onPressed: () => launchUrl(Uri.parse('tel:${o.remote ? o.courierPhone!.replaceAll(' ', '') : '+77001112233'}'))),
                   ]),
                 ),
               ],
@@ -148,7 +208,7 @@ class OrderStatusScreen extends StatelessWidget {
           const SizedBox(height: 16),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => launchUrl(Uri.parse('https://wa.me/${MockData.supportWa}?text=${Uri.encodeComponent('Вопрос по заказу №${o.id}')}'), mode: LaunchMode.externalApplication),
+            onTap: () => launchUrl(Uri.parse('https://wa.me/${RemoteConfig.supportWa}?text=${Uri.encodeComponent('Вопрос по заказу №${o.title}')}'), mode: LaunchMode.externalApplication),
             child: ConstrainedBox(constraints: const BoxConstraints(minHeight: 48), child: Row(children: [
               Container(width: 36, height: 36, alignment: Alignment.center, decoration: BoxDecoration(color: c.successBg, shape: BoxShape.circle),
                   child: Container(width: 18, height: 15, decoration: BoxDecoration(border: Border.all(color: c.success, width: 2),
@@ -171,7 +231,7 @@ class OrderStatusScreen extends StatelessWidget {
           Text(t.recipient, style: _f(13, FontWeight.w400, c.ink3)),
           const SizedBox(height: 2),
           // Имя — если указано в профиле (при входе не спрашиваем); телефон — из оформления.
-          Text([auth.name, o.recipientPhone.isEmpty ? auth.phone : o.recipientPhone].where((x) => x.isNotEmpty).join(' · '), style: _f(14, FontWeight.w400, c.ink1, h: 1.4)),
+          Text([o.remote ? o.recipientName : auth.name, o.recipientPhone.isEmpty ? auth.phone : RemoteConfig.prettyPhone(o.recipientPhone)].where((x) => x.isNotEmpty).join(' · '), style: _f(14, FontWeight.w400, c.ink1, h: 1.4)),
           if (o.leaveAtDoor) ...[const SizedBox(height: 2), Text(t.leaveAtDoor, style: _f(13, FontWeight.w400, c.ink2))],
         ]),
         if (o.lines.isNotEmpty) ...[
@@ -202,7 +262,7 @@ class OrderStatusScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
               Expanded(child: Text(t.total, style: _f(16, FontWeight.w700, c.ink1))),
-              if (o.paidWith.isNotEmpty) ...[Text(o.paidWith, style: _f(13, FontWeight.w600, c.success)), const SizedBox(width: 8)],
+              if (o.remote ? o.paid : o.paidWith.isNotEmpty) ...[Text(o.remote ? t.orderPaid : o.paidWith, style: _f(13, FontWeight.w600, c.success)), const SizedBox(width: 8)],
               Text(money(o.total), style: _f(20, FontWeight.w700, c.ink1, ls: -0.2)),
             ]),
             if (o.bonus > 0 && !o.cancelled) ...[
@@ -222,10 +282,17 @@ class OrderStatusScreen extends StatelessWidget {
           ]),
         ],
         const SizedBox(height: 12),
+        // Не оплачен, а ссылка на оплату есть (вернулись из Kaspi или со страницы шлюза, не заплатив) — оплатить отсюда.
+        if (o.remote && !o.paid && !o.cancelled && o.payUrl != null) ...[
+          o.kaspi
+              ? KaspiPayButton(onPressed: () => launchUrl(Uri.parse(o.payUrl!), mode: LaunchMode.externalApplication))
+              : MartButton(label: t.pay, amount: money(o.total), expanded: true, onPressed: () => launchUrl(Uri.parse(o.payUrl!), mode: LaunchMode.externalApplication)),
+          const SizedBox(height: 8),
+        ],
         MartButton(label: t.continueShopping, variant: MartButtonVariant.ghost, expanded: true, onPressed: () => context.go('/')),
         if (isLive && o.canCancel) Center(child: GestureDetector(
           onTap: () => showMartSheet(context, title: '${t.cancelOrder}?', builder: (ctx) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text(t.refund(money(o.total)), style: _f(14, FontWeight.w400, c.ink2, h: 1.4)),
+            if (!o.remote || o.paid) Text(t.refund(money(o.total)), style: _f(14, FontWeight.w400, c.ink2, h: 1.4)),
             if (o.spent > 0) Padding(padding: const EdgeInsets.only(top: 6), child: Text('Вернём ${o.spent} ${plural(o.spent, 'бонус', 'бонуса', 'бонусов')}', style: _f(14, FontWeight.w400, c.ink2))),
             const SizedBox(height: 20),
             MartButton(label: t.cancelOrder, variant: MartButtonVariant.danger, expanded: true, onPressed: () { context.read<OrderCubit>().cancel(); Navigator.of(ctx).pop(); }),
@@ -236,6 +303,7 @@ class OrderStatusScreen extends StatelessWidget {
               child: Text(t.cancelOrder, style: _f(14, FontWeight.w500, c.ink3).copyWith(decoration: TextDecoration.underline, decorationColor: c.ink3))))),
         )),
       ])),
-    ]));
+    ])),
+    );
   }
 }

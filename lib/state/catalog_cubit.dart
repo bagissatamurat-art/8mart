@@ -63,7 +63,8 @@ class CatalogCubit extends Cubit<CatalogState> {
     }
   }
 
-  int countWith(CatalogFilter f) => repo.count(categoryId: state.categoryId, subId: state.subId, query: state.query, filter: f);
+  /// Для кнопки «Показать N» в фильтрах. Без сети бросает CatalogOffline.
+  Future<int> countWith(CatalogFilter f) => repo.count(categoryId: state.categoryId, subId: state.subId, query: state.query, filter: f);
   void setSub(String? id) { emit(state.copyWith(subId: id)); load(); }
   void setSort(SortKind s) { emit(state.copyWith(sort: s)); load(); }
   void setFilter(CatalogFilter f) { emit(state.copyWith(filter: f)); load(); }

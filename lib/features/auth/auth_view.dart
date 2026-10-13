@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../data/mock_data.dart';
+import '../../data/remote_config.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../ui/ui.dart';
 import 'package:local_auth/local_auth.dart';
@@ -133,7 +134,7 @@ class _AuthViewState extends State<AuthView> {
               MartButton(label: t.openTg, expanded: true, onPressed: () {
                 setState(() => _tgOpened = true);
                 cubit.waitTelegram();
-                launchUrl(Uri.parse(MockData.tgLink(s.tgToken)), mode: LaunchMode.externalApplication);
+                if (RemoteConfig.tgLink(s.tgToken) case final link?) launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
               }),
               if (_tgOpened || s.tgOk) ...[
                 const SizedBox(height: 12),
@@ -178,7 +179,11 @@ Future<void> offerBiometrics(BuildContext context) async {
     Text(t.faceIdSub, textAlign: TextAlign.center, style: MartText.small.copyWith(color: c.ink2)),
     const SizedBox(height: 20),
     MartButton(label: t.enable, expanded: true, onPressed: () async {
-      final ok = await auth.authenticate(localizedReason: t.faceIdOffer, options: const AuthenticationOptions(biometricOnly: true));
+      // Отказ системы (биометрия не настроена, заблокирована) — то же, что «не сейчас»: шторка не должна зависнуть.
+      var ok = false;
+      try {
+        ok = await auth.authenticate(localizedReason: t.faceIdOffer, options: const AuthenticationOptions(biometricOnly: true));
+      } on PlatformException { ok = false; }
       settings.setBiometrics(ok);
       if (ctx.mounted) Navigator.of(ctx).pop();
     }),

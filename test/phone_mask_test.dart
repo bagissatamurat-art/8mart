@@ -50,8 +50,8 @@ void main() {
     const repo = CatalogRepository();
     test('подкатегория', () async => expect((await repo.page(categoryId: 'stroymaterialy', subId: 'kraski')).items.map((p) => p.id), ['b4', 'b12']));
     test('сортировка дешевле', () async { final r = await repo.page(categoryId: 'instrumenty', sort: SortKind.cheap); expect(r.items.first.id, 't6'); });
-    test('фильтр скидка', () => expect(repo.count(categoryId: 'instrumenty', filter: const CatalogFilter(sale: true)), 2));
-    test('поиск по подкатегории', () => expect(repo.count(query: 'краски'), 2));
+    test('фильтр скидка', () async => expect(await repo.count(categoryId: 'instrumenty', filter: const CatalogFilter(sale: true)), 2));
+    test('поиск по подкатегории', () async => expect(await repo.count(query: 'краски'), 2));
     test('пагинация', () async { final r = await repo.page(categoryId: 'stroymaterialy', page: 1); expect(r.items.length, 2); expect(r.total, 10); });
   });
 }
