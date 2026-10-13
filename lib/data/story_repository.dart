@@ -2,18 +2,43 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../core/api_client.dart';
 import '../domain/models.dart';
 import '../domain/shipments.dart';
 import '../state/cart_cubit.dart' show PromoRules;
 import 'mock_data.dart';
 
 /// Сторис главной — как на сайте: настоящие сторис 8mart.kz (сейчас — видео) первыми, затем свои о букетах, промокоде и доставке.
-/// ⚠ Живые — временный адаптер к публичному API 8mart.kz (GET /api/v1/public/stories). В проде — GET /stories бэкенда, формы те же.
+/// С API_URL — GET /stories бэкенда (форма Story сайта: {id, title, cover, slides:[{img, title, text, video?, duration?, cta?:{label, href?, copy?}}]}),
+/// имя для API_MOCK — «stories». Без бэкенда:
+/// TEMP-ADAPTER — живые сторис из публичного API 8mart.kz (GET /api/v1/public/stories) + свои (_local). С бэкендом — удалить _live.
 class StoryRepository {
   const StoryRepository();
   static const _origin = 'https://dukenfy-api.8mart.kz';
 
-  Future<List<Story>> stories() async => [...await _live(), ..._local()];
+  Future<List<Story>> stories() async {
+    if (!ApiClient.isMocked('stories')) {
+      try {
+        return [for (final s in await ApiClient.instance.get<List<dynamic>>('/stories')) storyFromJson(s as Map<String, dynamic>)];
+      } catch (_) {
+        return _local();
+      }
+    }
+    return [...await _live(), ..._local()];
+  }
+
+  /// Сторис в форме сайта. cta.href — путь сайта (/product/f1, /catalog?cat=…): в приложении — ctaPath для go_router.
+  static Story storyFromJson(Map<String, dynamic> j) => Story(
+        id: '${j['id']}', title: '${j['title'] ?? ''}', cover: '${j['cover'] ?? ''}',
+        slides: [
+          for (final s in (j['slides'] as List? ?? const []).cast<Map<String, dynamic>>())
+            StorySlide(
+              img: '${s['img'] ?? ''}', title: '${s['title'] ?? ''}', text: '${s['text'] ?? ''}',
+              video: s['video'] as String?, duration: (s['duration'] as num?)?.round(),
+              ctaLabel: (s['cta'] as Map?)?['label'] as String?, ctaPath: (s['cta'] as Map?)?['href'] as String?, ctaCopy: (s['cta'] as Map?)?['copy'] as String?,
+            ),
+        ],
+      );
 
   Future<List<Story>> _live() async {
     try {
