@@ -20,7 +20,7 @@ class ApiError implements Exception {
 ///   API_MOCK — имена, которые пока остаются на моке («stories,geo»; «*» — все). Так бэкенд подключается по одному эндпоинту.
 ///
 /// Репозиторий: `if (ApiClient.isMocked('stories')) return мок; return ApiClient.instance.get('/stories')`.
-/// Токен: AuthCubit после входа вызывает ApiClient.instance.token = () => accessToken.
+/// Токен и реакцию на 401 подключает AuthSession (lib/data/auth_repository.dart).
 class ApiClient {
   ApiClient({String? baseUrl, String? mocked, http.Client? client})
       : baseUrl = (baseUrl ?? Env.apiUrl).replaceFirst(RegExp(r'/$'), ''),
@@ -37,6 +37,8 @@ class ApiClient {
   final http.Client _http;
   /// Источник accessToken (Bearer). null — запрос без авторизации.
   String? Function() token = () => null;
+  /// Сервер не принял токен (401 на запрос с токеном): сессия закончилась.
+  void Function()? onUnauthorized;
   Duration timeout = const Duration(seconds: 15);
 
   bool mocked(String name) => baseUrl.isEmpty || _mocked.contains('*') || _mocked.contains(name);
@@ -76,6 +78,7 @@ class ApiClient {
     } catch (_) {
       throw const ApiError(0, 'Нет связи с сервером');
     }
+    if (r.statusCode == 401 && t != null && t.isNotEmpty) onUnauthorized?.call();
     if (r.statusCode == 204 || r.bodyBytes.isEmpty) {
       if (r.statusCode >= 400) throw ApiError(r.statusCode, r.reasonPhrase ?? 'Ошибка сервера');
       return null as T;

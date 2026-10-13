@@ -1,5 +1,6 @@
 import '../core/api_client.dart';
 import '../domain/models.dart';
+import 'auth_repository.dart';
 import 'catalog.dart';
 import 'mock_data.dart';
 
@@ -119,7 +120,8 @@ class RemoteOrder {
 }
 
 /// Заказы: создание, страница заказа, отмена. С бэкендом — `/orders…` витрины (имя для API_MOCK — «orders»);
-/// без него — мок, как раньше. Входа пока нет, поэтому список — по id заказов, оформленных с этого устройства.
+/// без него — мок, как раньше. Заказ вошедшего покупателя сервер привязывает к нему по токену; список — его заказы
+/// плюс те, чьи id помнит устройство (оформленные до входа).
 class OrderRepository {
   const OrderRepository();
   /// Имя в `API_MOCK`.
@@ -145,13 +147,14 @@ class OrderRepository {
     }
   }
 
-  /// Заказы по id, в порядке списка. На моке — демо-заказы кабинета.
+  /// Заказы покупателя: свои (по токену входа) и по id с устройства. На моке — демо-заказы кабинета.
   Future<List<OrderSummary>> list(List<String> ids) async {
     if (mocked) {
       await Future<void>.delayed(const Duration(milliseconds: 700));
       return MockData.orders;
     }
-    if (ids.isEmpty) return const [];
+    // Гостю без заказов на устройстве спрашивать нечего; вошедшему сервер отдаст его заказы и без id.
+    if (ids.isEmpty && AuthSession.token == null) return const [];
     final j = await ApiClient.instance.get<List<dynamic>>('/orders', query: {'ids': ids.join(',')});
     final orders = [for (final o in j.whereType<Map>()) RemoteOrder.fromJson(o.cast<String, dynamic>())];
     // «Повторить» и превью состава читают карточки из каталога.

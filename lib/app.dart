@@ -42,7 +42,11 @@ class _MartAppState extends State<MartApp> {
         BlocProvider(create: (_) => SearchHistoryCubit()),
         BlocProvider(create: (_) => StoriesCubit()..load()),
       ],
-      child: BlocBuilder<SettingsCubit, SettingsState>(
+      // Вошли, вышли или сервер закрыл сессию — кабинет прежнего покупателя из памяти убираем.
+      child: BlocListener<AuthCubit, AuthState>(
+        listenWhen: (a, b) => a.authed != b.authed,
+        listener: (context, _) => context.read<AccountCubit>().reset(),
+        child: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, s) => MaterialApp.router(
           title: '8mart',
           debugShowCheckedModeBanner: false,
@@ -54,7 +58,7 @@ class _MartAppState extends State<MartApp> {
           localizationsDelegates: L10n.localizationsDelegates,
           routerConfig: _router,
         ),
-      ),
+      )),
     );
   }
 }

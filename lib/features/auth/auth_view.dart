@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../data/auth_repository.dart';
 import '../../data/remote_config.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../ui/ui.dart';
@@ -16,8 +17,9 @@ import '../../state/settings_cubit.dart';
 
 TextStyle _f(double size, FontWeight w, Color col, {double? h, double? ls}) => TextStyle(fontFamily: 'Onest', fontSize: size, fontWeight: w, color: col, height: h, letterSpacing: ls);
 
-/// Вход (MartAuth.dc.html, mobile): телефон → код из WhatsApp (4 ячейки, таймер 45 с) → «Как вас зовут?»; альтернатива — Telegram-бот.
-/// changePhone — смена номера в кабинете (другой заголовок, без Telegram и условий).
+/// Вход (MartAuth.dc.html, mobile). С бэкендом — только через Telegram-бота: «Войти через Telegram» → бот → «Поделиться номером».
+/// На моке — как в макете: телефон → код из WhatsApp (4 ячейки, таймер 45 с); альтернатива — Telegram-бот.
+/// changePhone — смена номера в кабинете (другой заголовок, без Telegram и условий); только на моке.
 class AuthView extends StatefulWidget {
   const AuthView({super.key, this.changePhone = false});
   final bool changePhone;
@@ -25,7 +27,7 @@ class AuthView extends StatefulWidget {
   State<AuthView> createState() => _AuthViewState();
 }
 
-class _AuthViewState extends State<AuthView> {
+class _AuthViewState extends State<AuthView> with WidgetsBindingObserver {
   final _phone = TextEditingController();
   final _code = TextEditingController();
   Timer? _tick;
@@ -33,7 +35,16 @@ class _AuthViewState extends State<AuthView> {
   bool _tgOpened = false;
 
   @override
-  void dispose() { _tick?.cancel(); _phone.dispose(); _code.dispose(); super.dispose(); }
+  void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); }
+
+  /// Вернулись из Telegram — проверяем вход сразу, не дожидаясь очередного опроса.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) context.read<AuthCubit>().checkTelegram();
+  }
+
+  @override
+  void dispose() { WidgetsBinding.instance.removeObserver(this); _tick?.cancel(); _phone.dispose(); _code.dispose(); super.dispose(); }
 
   void _startTimer() {
     _tick?.cancel();
@@ -46,7 +57,8 @@ class _AuthViewState extends State<AuthView> {
     final t = L10n.of(context);
     final c = context.mc;
     return BlocConsumer<AuthCubit, AuthState>(
-      listenWhen: (a, b) => a.step != b.step,
+      // Новая ссылка входа (другой токен) — тот же шаг, но ожидание начинается заново.
+      listenWhen: (a, b) => a.step != b.step || a.tgToken != b.tgToken,
       listener: (context, s) {
         if (s.step == AuthStep.code) { _code.clear(); _startTimer(); }
         if (s.step == AuthStep.telegram) setState(() => _tgOpened = false);
@@ -64,8 +76,24 @@ class _AuthViewState extends State<AuthView> {
               behavior: HitTestBehavior.opaque, onTap: onTap,
               child: SizedBox(height: 44, child: Center(child: Text(label, style: _f(14, FontWeight.w600, color ?? c.ink2)))));
         const gap = SizedBox(height: 20);
+        Widget terms() => Text.rich(TextSpan(text: t.termsPrefix, children: [
+              TextSpan(text: t.termsLink, style: TextStyle(color: c.ink2, decoration: TextDecoration.underline)),
+              TextSpan(text: t.termsAnd),
+              TextSpan(text: t.privacyLink, style: TextStyle(color: c.ink2, decoration: TextDecoration.underline)),
+            ]), textAlign: TextAlign.center, style: _f(12, FontWeight.w400, c.ink3, h: 1.4));
+        // С бэкендом вход один — через Telegram-бота: кода из WhatsApp нет.
+        final real = !AuthRepository.mocked;
 
         switch (s.step) {
+          case AuthStep.phone when real:
+            return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              head(t.authTitle, subText(t.authSubTg)),
+              gap,
+              MartButton(label: t.loginTelegram, expanded: true, onPressed: cubit.startTelegram),
+              gap,
+              terms(),
+            ]);
+
           case AuthStep.phone:
             final ok = PhoneMaskFormatter.isComplete(_phone.text);
             return AutofillGroup(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -84,11 +112,7 @@ class _AuthViewState extends State<AuthView> {
                 const SizedBox(height: 12),
                 MartButton(label: t.loginTelegram, variant: MartButtonVariant.ghost, expanded: true, onPressed: cubit.startTelegram),
                 gap,
-                Text.rich(TextSpan(text: t.termsPrefix, children: [
-                  TextSpan(text: t.termsLink, style: TextStyle(color: c.ink2, decoration: TextDecoration.underline)),
-                  TextSpan(text: t.termsAnd),
-                  TextSpan(text: t.privacyLink, style: TextStyle(color: c.ink2, decoration: TextDecoration.underline)),
-                ]), textAlign: TextAlign.center, style: _f(12, FontWeight.w400, c.ink3, h: 1.4)),
+                terms(),
               ],
             ]));
 
@@ -131,12 +155,19 @@ class _AuthViewState extends State<AuthView> {
                 ]),
               ),
               gap,
-              MartButton(label: t.openTg, expanded: true, onPressed: () {
+              if (s.error != null || s.tgExpired) ...[
+                // Ссылку не получили (нет сети, вход недоступен) или она устарела — просим новую.
+                Text(s.error ?? t.tgLinkExpired, textAlign: TextAlign.center, style: _f(14, FontWeight.w400, c.error, h: 1.4)),
+                const SizedBox(height: 12),
+                MartButton(label: s.error != null ? t.retry : t.tgNewLink, expanded: true, onPressed: cubit.startTelegram),
+              ] else MartButton(label: t.openTg, expanded: true, loading: s.loading, onPressed: () {
                 setState(() => _tgOpened = true);
                 cubit.waitTelegram();
-                if (RemoteConfig.tgLink(s.tgToken) case final link?) launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
+                // С бэкендом ссылку с токеном входа присылает сервер.
+                final link = real ? s.tgUrl : RemoteConfig.tgLink(s.tgToken);
+                if (link != null && link.isNotEmpty) launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
               }),
-              if (_tgOpened || s.tgOk) ...[
+              if ((_tgOpened && s.error == null && !s.tgExpired) || s.tgOk) ...[
                 const SizedBox(height: 12),
                 Container(
                   height: 44, alignment: Alignment.center,
@@ -151,7 +182,7 @@ class _AuthViewState extends State<AuthView> {
                 ),
               ],
               const SizedBox(height: 8),
-              link(t.loginByWa, cubit.back),
+              link(real ? t.goBack : t.loginByWa, cubit.back),
             ]);
 
           case AuthStep.done:
@@ -167,7 +198,9 @@ Future<void> offerBiometrics(BuildContext context) async {
   final settings = context.read<SettingsCubit>();
   if (settings.state.biometricsAsked) return;
   final auth = LocalAuthentication();
-  final can = await auth.canCheckBiometrics && await auth.isDeviceSupported();
+  // Нет биометрии или самого плагина (веб) — не предлагаем.
+  bool can;
+  try { can = await auth.canCheckBiometrics && await auth.isDeviceSupported(); } on Exception { can = false; }
   if (!can || !context.mounted) return;
   final t = L10n.of(context);
   final c = context.mc;

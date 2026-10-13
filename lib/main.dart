@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'app.dart';
 import 'core/env.dart';
+import 'data/auth_repository.dart';
 import 'data/catalog.dart';
 import 'data/places.dart';
 import 'data/remote_config.dart';
@@ -24,6 +25,8 @@ Future<void> main() async {
   Catalog.restore();
   Places.restore();
   RemoteConfig.restore();
+  // Вход с прошлого запуска (Keychain / Keystore): приложение открывается уже в аккаунте.
+  await AuthSession.restore();
   // Свежий каталог и филиалы — сразу, с какого бы экрана ни открылось приложение (сплэш или ссылка на товар).
   unawaited(Catalog.init());
   unawaited(Places.refresh());

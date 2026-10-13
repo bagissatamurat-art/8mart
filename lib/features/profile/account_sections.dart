@@ -4,8 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../core/api_client.dart';
 import '../../core/format.dart';
 import '../../core/phone_mask.dart';
+import '../../data/auth_repository.dart';
 import '../../data/catalog.dart';
 import '../../data/mock_data.dart';
 import '../../data/order_repository.dart';
@@ -513,14 +515,20 @@ class _PersonalState extends State<_Personal> {
                 const SizedBox(height: 2),
                 Text(auth.phone, style: _fs(16, FontWeight.w400, c.ink1)),
               ])),
-              GestureDetector(onTap: () => openChangePhoneSheet(context), child: Container(height: 40, padding: const EdgeInsets.symmetric(horizontal: 12), alignment: Alignment.center,
+              // С бэкендом номер — тот, что подтвердил Telegram: сменить его можно только новым входом.
+              if (AuthRepository.mocked) GestureDetector(onTap: () => openChangePhoneSheet(context), child: Container(height: 40, padding: const EdgeInsets.symmetric(horizontal: 12), alignment: Alignment.center,
                   decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(999)), child: Text(t.change, style: _fs(14, FontWeight.w600, c.primary)))),
             ]),
           ),
           if (dirty) ...[
             const SizedBox(height: 16),
             MartButton(label: t.save, expanded: true,
-                onPressed: () { context.read<AuthCubit>().rename(_name.text); FocusScope.of(context).unfocus(); setState(() => _saved = true); }),
+                onPressed: () async {
+                  FocusScope.of(context).unfocus();
+                  final ok = await context.read<AuthCubit>().rename(_name.text);
+                  if (!context.mounted) return;
+                  if (ok) { setState(() => _saved = true); } else { showMartToast(context, t.notSaved); }
+                }),
           ],
           if (_saved && !dirty) ...[const SizedBox(height: 16), Text('Сохранено', style: _fs(14, FontWeight.w600, c.success))],
         ]),
@@ -537,12 +545,18 @@ class _PersonalState extends State<_Personal> {
   void _confirmDelete(BuildContext context) {
     final t = L10n.of(context);
     showMartSheet(context, title: '${t.deleteAccount}?', builder: (ctx) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Text(t.deleteAccountText, style: MartText.small.copyWith(color: ctx.mc.ink2)),
+      Text(AuthRepository.mocked ? t.deleteAccountText : t.deleteAccountTextReal, style: MartText.small.copyWith(color: ctx.mc.ink2)),
       const SizedBox(height: 20),
-      MartButton(label: t.deleteAccount, variant: MartButtonVariant.danger, expanded: true, onPressed: () {
-        // В проде: DELETE /me → очистить токены в secure storage
+      MartButton(label: t.deleteAccount, variant: MartButtonVariant.danger, expanded: true, onPressed: () async {
         Navigator.of(ctx).pop();
-        context.read<AuthCubit>().logout();
+        // С бэкендом — DELETE /me: аккаунт и все его сессии. Не получилось — покупатель остаётся в аккаунте.
+        try {
+          await context.read<AuthCubit>().deleteAccount();
+        } on ApiError catch (e) {
+          if (context.mounted) showMartToast(context, e.message);
+          return;
+        }
+        if (!context.mounted) return;
         context.read<AccountCubit>().reset();
         context.read<CartCubit>().clearCart();
         context.go('/');

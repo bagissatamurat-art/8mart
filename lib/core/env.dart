@@ -5,7 +5,8 @@ abstract final class Env {
   static const apiUrl = String.fromEnvironment('API_URL');
   /// Что пока остаётся на моке при заданном API_URL, через запятую: «stories,geo». «*» — всё.
   /// Имена: stories, deliveryQuote, geo, catalog (категории, товары, поиск), places (города, точки самовывоза),
-  /// config (настройки приложения), cart (проверка корзины), slots (окна доставки), orders (заказы) — см. AGENTS.md.
+  /// config (настройки приложения), cart (проверка корзины), slots (окна доставки), orders (заказы),
+  /// auth (вход через Telegram-бота; с этим именем — вход из макета, код 1234) — см. AGENTS.md.
   static const apiMock = String.fromEnvironment('API_MOCK');
   /// Публичный pk.* Mapbox — карта и запасной геокодинг.
   static const mapboxToken = String.fromEnvironment('MAPBOX_ACCESS_TOKEN');
