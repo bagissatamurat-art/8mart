@@ -44,7 +44,7 @@ flutter build appbundle --release --dart-define-from-file=env.json
 | `cart` | `lib/data/cart_repository.dart` → `CartCubit.validate()` | `POST /cart/validate` — раскупленное и цены своего филиала | проверки нет |
 | `slots` | `lib/data/slots_repository.dart` → `CheckoutCubit.loadSlots()` | `GET /delivery/slots?kind` | расчёт на устройстве (`lib/domain/slots.dart`) |
 | `orders` | `lib/data/order_repository.dart` → `CheckoutCubit.place`, `OrderCubit`, `AccountCubit` | `POST /orders`, `GET /orders/{id}`, `GET /orders?ids=`, `POST /orders/{id}/cancel` | демо-заказ и демо-кабинет |
-| `auth` | `lib/data/auth_repository.dart` (`AuthRepository`, `AuthSession`) → `AuthCubit` | `POST /auth/tg`, `GET /auth/tg/{token}`, `POST /auth/logout`, `GET/PATCH/DELETE /me` | вход из макета: телефон → код `1234` |
+| `auth` | `lib/data/auth_repository.dart` (`AuthRepository`, `AuthSession`) → `AuthCubit` | `POST /auth/code`, `POST /auth/verify`, `POST /auth/tg`, `GET /auth/tg/{token}`, `POST /auth/logout`, `GET/PATCH/DELETE /me` | вход из макета: телефон → код `1234` |
 
 Временные мосты помечены `TEMP-ADAPTER` (`grep -rn TEMP-ADAPTER lib tool`). Когда эндпоинт работает на проде, мост можно удалить.
 
@@ -56,7 +56,8 @@ flutter build appbundle --release --dart-define-from-file=env.json
 
 Как это устроено:
 
-- **Вход — только через Telegram-бота**, кода из WhatsApp нет. «Войти через Telegram» → сервер даёт ссылку `t.me/<бот>?start=<токен>` → покупатель нажимает в боте «Старт» и «Поделиться номером» → приложение опрашивает `GET /auth/tg/{token}` раз в 2 с (и сразу при возврате из Telegram) и получает сессию. Номер подтверждает Telegram, поэтому вводить его не нужно. Ссылка живёт 10 минут; устарела — экран предлагает новую.
+- **Вход — код из WhatsApp**: номер → `POST /auth/code` (код уходит с WhatsApp магазина через Wazzup) → 4 цифры → `POST /auth/verify` отдаёт сессию. Ошибки сервера (на номере нет WhatsApp, новый код рано, кончились попытки) экран показывает его текстом.
+- **Telegram-бот** — только если сервер его включил (`/app/config` → `auth` содержит `telegram`): «Войти через Telegram» → сервер даёт ссылку `t.me/<бот>?start=<токен>` → покупатель нажимает в боте «Старт» и «Поделиться номером» → приложение опрашивает `GET /auth/tg/{token}` раз в 2 с (и сразу при возврате из Telegram) и получает сессию. Ссылка живёт 10 минут; устарела — экран предлагает новую. Бота нет — кнопок Telegram нет.
 - **Сессия** (`AuthSession`) — токен и профиль в Keychain / Keystore (`flutter_secure_storage`), читается до `runApp`: приложение открывается уже в аккаунте. Токен уходит в каждый запрос; ответ 401 сессию закрывает, и приложение выходит из аккаунта. Отдельного токена обновления нет: сервер продлевает сессию обращениями.
 - **Профиль**: имя — `PATCH /me`, удаление аккаунта — `DELETE /me`, выход — `POST /auth/logout`. Номер телефона — тот, что подтвердил Telegram; сменить его можно только новым входом, поэтому кнопки «Изменить» с бэкендом нет.
 - **Заказ** создаётся с телефоном получателя из оформления; сервер сам определяет филиал, цены и стоимость доставки и привязывает заказ к вошедшему покупателю. В корзине лежат место получения для сервера: `cityId`, `pointId` (самовывоз) или `lat`/`lng` (доставка).
