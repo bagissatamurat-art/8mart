@@ -9,6 +9,7 @@ import 'package:mart8/app.dart';
 import 'package:mart8/core/api_client.dart';
 import 'package:mart8/data/auth_repository.dart';
 import 'package:mart8/data/order_repository.dart';
+import 'package:mart8/data/remote_config.dart';
 import 'package:mart8/state/auth_cubit.dart';
 import 'package:mart8/ui/widgets/mart_code_input.dart';
 import 'package:mart8/ui/widgets/mart_image.dart';
@@ -41,6 +42,9 @@ void main() {
   var sessionAlive = true;
   var patchFails = false;
   var links = 0;
+  /// Ответ на POST /auth/code: 200 или ошибка сервера с текстом.
+  var codeStatus = 200;
+  var codeMessage = '';
 
   void useApi() {
     ApiClient.instance = ApiClient(baseUrl: 'https://api.test/store', mocked: '', client: MockClient((r) async {
@@ -51,6 +55,15 @@ void main() {
           if (startStatus != 200) return json(startStatus, {'error': {'code': startStatus, 'message': 'Вход через Telegram сейчас недоступен'}});
           links++;
           return json(200, {'token': 'tok-$links', 'url': 'https://t.me/mart8_bot?start=tok-$links', 'expiresIn': 600});
+        case ('POST', '/store/auth/code'):
+          if (codeStatus != 200) return json(codeStatus, {'error': {'code': codeStatus, 'message': codeMessage}});
+          return json(200, {'ok': true, 'resendIn': 45, 'expiresIn': 300});
+        case ('POST', '/store/auth/verify'):
+          return switch ((jsonDecode(r.body) as Map)['code']) {
+            '0427' => json(200, {'accessToken': 'access-1', 'user': _user}),
+            '5555' => json(410, {'error': {'code': 410, 'message': 'Слишком много попыток. Запросите новый код'}}),
+            _ => json(400, {'error': {'code': 400, 'message': 'Неверный код'}}),
+          };
         case ('GET', final p) when p.startsWith('/store/auth/tg/'):
           return json(200, switch (tg) {
             'ok' => {'status': 'ok', 'phone': _user['phone'], 'tokens': {'accessToken': 'access-1'}, 'user': _user},
@@ -78,10 +91,62 @@ void main() {
     sessionAlive = true;
     patchFails = false;
     links = 0;
+    codeStatus = 200;
+    RemoteConfig.debugSet(null);
     AuthSession.debugReset(store: store);
     useApi();
   });
-  tearDown(() { ApiClient.instance = ApiClient(baseUrl: '', mocked: ''); AuthSession.debugReset(); });
+  tearDown(() { ApiClient.instance = ApiClient(baseUrl: '', mocked: ''); AuthSession.debugReset(); RemoteConfig.debugSet(null); });
+
+  group('вход по коду из WhatsApp', () {
+    test('номер → код → сессия', () async {
+      final cubit = AuthCubit();
+      await cubit.sendCode('+7 (700) 133-90-71');
+      expect((cubit.state.step, cubit.state.error), (AuthStep.code, null));
+      expect(jsonDecode(calls.last.body), {'phone': '+7 (700) 133-90-71', 'channel': 'whatsapp'});
+
+      // Неверный код — текст экрана, а не сервера.
+      await cubit.verify('1111');
+      expect((cubit.state.code, cubit.state.error, cubit.state.authed), (CodeState.error, null, false));
+      cubit.resetCodeError();
+
+      await cubit.verify('0427');
+      expect(jsonDecode(calls.last.body), {'phone': '+7 (700) 133-90-71', 'code': '0427'});
+      expect((cubit.state.step, cubit.state.name), (AuthStep.done, 'Айгерим'));
+      expect(AuthSession.token, 'access-1');
+      expect(jsonDecode(store.value!)['token'], 'access-1');
+      await cubit.close();
+    });
+
+    test('код не отправился — текст сервера, остаёмся на номере', () async {
+      codeStatus = 422;
+      codeMessage = 'Не удалось отправить код: на этом номере нет WhatsApp. Проверьте номер';
+      final cubit = AuthCubit();
+      await cubit.sendCode('+7 (700) 133-90-71');
+      expect((cubit.state.step, cubit.state.loading, cubit.state.error), (AuthStep.phone, false, codeMessage));
+
+      codeStatus = 200;
+      await cubit.sendCode('+7 (700) 133-90-71');
+      expect((cubit.state.step, cubit.state.error), (AuthStep.code, null));
+
+      // Повторная отправка раньше срока — причина под кодом, шаг тот же.
+      codeStatus = 429;
+      codeMessage = 'Новый код можно запросить через 15 с';
+      await cubit.sendCode('+7 (700) 133-90-71');
+      expect((cubit.state.step, cubit.state.error), (AuthStep.code, codeMessage));
+      await cubit.close();
+    });
+
+    test('кончились попытки — текст сервера: нужен новый код', () async {
+      final cubit = AuthCubit();
+      await cubit.sendCode('+7 (700) 133-90-71');
+      await cubit.verify('5555');
+      expect((cubit.state.code, cubit.state.error), (CodeState.error, 'Слишком много попыток. Запросите новый код'));
+      cubit.resetCodeError();
+      expect((cubit.state.code, cubit.state.error), (CodeState.idle, null));
+      await cubit.close();
+    });
+  });
 
   group('вход через Telegram-бота', () {
     test('ссылка на бота → ждём → бот подтвердил номер → сессия', () async {
@@ -226,7 +291,7 @@ void main() {
     await cubit.close();
   });
 
-  testWidgets('экран входа с бэкендом: только Telegram, без телефона и кода', (tester) async {
+  testWidgets('экран входа с бэкендом: способы входа — из /app/config', (tester) async {
     HydratedBloc.storage = _MemStorage();
     MartImage.offline = true;
     addTearDown(() => MartImage.offline = false);
@@ -236,18 +301,32 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
       }
     }
+    Future<void> open(Map<String, dynamic> config) async {
+      RemoteConfig.debugSet(config);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(const MartApp(initialLocation: '/profile'));
+      await settle();
+    }
 
-    await tester.pumpWidget(const MartApp(initialLocation: '/profile'));
-    await settle();
+    // Сейчас на сервере: код из WhatsApp, бота нет — кнопок Telegram нет.
+    await open({'auth': ['code']});
+    expect(find.text('Получить код в WhatsApp'), findsOneWidget);
+    expect(find.text('Войти через Telegram'), findsNothing);
+    expect(find.text('Прототип: верный код — 1234'), findsNothing);
+
+    // Оба способа — как в макете.
+    await open({'auth': ['code', 'telegram']});
+    expect(find.text('Получить код в WhatsApp'), findsOneWidget);
+    expect(find.text('Войти через Telegram'), findsOneWidget);
+
+    // Только бот: вместо телефона одна кнопка.
+    await open({'auth': ['telegram']});
     expect(find.text('Войти через Telegram'), findsOneWidget);
     expect(find.text('Получить код в WhatsApp'), findsNothing);
     expect(find.byType(TextField), findsNothing);
-
     await tester.tap(find.text('Войти через Telegram'));
     await settle();
     expect(find.text('Открыть Telegram'), findsOneWidget);
-    expect(find.text('Нажмите «Поделиться номером»'), findsOneWidget);
-    // Кода из WhatsApp с бэкендом нет — вернуться можно только назад.
     expect(find.text('Войти по коду в WhatsApp'), findsNothing);
     expect(find.text('Назад'), findsOneWidget);
 

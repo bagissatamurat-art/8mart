@@ -130,11 +130,22 @@ class TgOk extends TgStatus {
   final AuthUser user;
 }
 
-/// Вход и профиль покупателя (имя для API_MOCK — «auth»). Вход — только через Telegram-бота:
-/// `POST /auth/tg` → ссылка на бота → покупатель делится номером → `GET /auth/tg/{token}` отдаёт сессию.
+/// Вход и профиль покупателя (имя для API_MOCK — «auth»). Два способа входа, какие работают — `/app/config` → `auth`:
+/// код из WhatsApp (`POST /auth/code` → `POST /auth/verify` отдаёт сессию) и Telegram-бот
+/// (`POST /auth/tg` → ссылка на бота → покупатель делится номером → `GET /auth/tg/{token}` отдаёт сессию).
 class AuthRepository {
   const AuthRepository();
   static bool get mocked => AuthSession.mocked;
+
+  /// Код в WhatsApp. Ошибки — [ApiError] с текстом для покупателя: 400 — номер не тот, 422 — на номере нет WhatsApp,
+  /// 429 — новый код просят слишком рано или слишком часто, 503 — отправить не удалось.
+  Future<void> sendCode(String phone) => ApiClient.instance.post<Object?>('/auth/code', body: {'phone': phone, 'channel': 'whatsapp'});
+
+  /// Код → сессия. Неверный код — [ApiError] 400; 410 — код устарел, использован или кончились попытки.
+  Future<({String accessToken, AuthUser user})> verifyCode(String phone, String code) async {
+    final j = await ApiClient.instance.post<Map<String, dynamic>>('/auth/verify', body: {'phone': phone, 'code': code});
+    return (accessToken: '${j['accessToken']}', user: AuthUser.fromJson((j['user'] as Map).cast<String, dynamic>()));
+  }
 
   Future<({String token, String url})> startTelegram() async {
     final j = await ApiClient.instance.post<Map<String, dynamic>>('/auth/tg');

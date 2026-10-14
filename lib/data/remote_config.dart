@@ -39,6 +39,12 @@ abstract final class RemoteConfig {
   static String? get telegramBot => mocked ? MockData.tgBot : _text(_map('support'), 'telegramBot');
   static String? tgLink(String token) => switch (telegramBot) { final bot? => 'https://t.me/$bot?start=$token', _ => null };
 
+  /// Способы входа из `auth`: код из WhatsApp и Telegram-бот. На моке — оба, как в макете. До ответа сервера — код
+  /// без Telegram; сервер не назвал ни одного — тоже код: сервер сам ответит, что вход недоступен.
+  static List<String>? get _auth => (_j['auth'] as List?)?.whereType<String>().toList();
+  static bool get telegramLogin => mocked || (_auth?.contains('telegram') ?? false);
+  static bool get codeLogin => mocked || (_auth?.contains('code') ?? true) || !telegramLogin;
+
   /// Оплата картой доступна (платёжный шлюз включён на сервере).
   static bool get cardPayment => mocked || ((_j['payments'] as List?)?.contains('card') ?? true);
   /// Промокоды и бонусы: на моке — как в макетах; с бэкендом — только если сервер их включил.

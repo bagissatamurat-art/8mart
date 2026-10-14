@@ -23,20 +23,23 @@ class AuthState extends Equatable {
   final String tgUrl;
   /// Ссылка входа устарела (10 минут) или уже использована — нужна новая.
   final bool tgExpired;
-  /// Почему вход не начался (нет сети, вход недоступен) — текст для покупателя.
+  /// Почему вход не начался или код не принят (нет сети, вход недоступен, на номере нет WhatsApp, код устарел) — текст для покупателя.
   final String? error;
   bool get authed => step == AuthStep.done;
-  AuthState copyWith({AuthStep? step, String? phone, String? name, CodeState? code, bool? loading, String? tgToken, bool? tgOk, bool? tgExpired}) => AuthState(
+  static const _keep = Object();
+  /// error: не передан — прежний; null — убрать.
+  AuthState copyWith({AuthStep? step, String? phone, String? name, CodeState? code, bool? loading, String? tgToken, bool? tgOk, bool? tgExpired, Object? error = _keep}) => AuthState(
       step: step ?? this.step, phone: phone ?? this.phone, name: name ?? this.name, code: code ?? this.code, loading: loading ?? this.loading, tgToken: tgToken ?? this.tgToken, tgOk: tgOk ?? this.tgOk,
-      tgUrl: tgUrl, tgExpired: tgExpired ?? this.tgExpired, error: error);
+      tgUrl: tgUrl, tgExpired: tgExpired ?? this.tgExpired, error: identical(error, _keep) ? this.error : error as String?);
   @override
   List<Object?> get props => [step, phone, name, code, loading, tgToken, tgOk, tgUrl, tgExpired, error];
 }
 
 /// Вход покупателя.
 ///
-/// С бэкендом — только через Telegram-бота: `POST /auth/tg` даёт ссылку `t.me/<бот>?start=<токен>`, покупатель
-/// нажимает в боте «Старт» и «Поделиться номером», а приложение опрашивает `GET /auth/tg/{token}` и получает сессию.
+/// С бэкендом — код из WhatsApp: `POST /auth/code` отправляет код, `POST /auth/verify` меняет его на сессию.
+/// И Telegram-бот, если сервер его включил (`/app/config` → `auth`): `POST /auth/tg` даёт ссылку `t.me/<бот>?start=<токен>`,
+/// покупатель нажимает в боте «Старт» и «Поделиться номером», а приложение опрашивает `GET /auth/tg/{token}` и получает сессию.
 /// Сессия хранится в [AuthSession] (Keychain / Keystore) и переживает перезапуск.
 ///
 /// На моке (пустой API_URL или «auth» в API_MOCK) — как в макете: телефон → код 1234, Telegram подтверждается сам.
@@ -72,25 +75,56 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // ── мок: телефон и код ──
+  // ── телефон и код из WhatsApp ──
 
+  /// Код в WhatsApp (и «Отправить код ещё раз»). Не отправился — причина в [AuthState.error], шаг прежний.
   Future<void> sendCode(String phone) async {
-    emit(state.copyWith(loading: true, phone: phone));
-    await Future<void>.delayed(const Duration(milliseconds: 600));
-    emit(state.copyWith(loading: false, step: AuthStep.code, code: CodeState.idle));
+    emit(state.copyWith(loading: true, phone: phone, error: null));
+    if (AuthRepository.mocked) {
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+      emit(state.copyWith(loading: false, step: AuthStep.code, code: CodeState.idle));
+      return;
+    }
+    try {
+      await repo.sendCode(phone);
+      if (isClosed) return;
+      emit(state.copyWith(loading: false, step: AuthStep.code, code: CodeState.idle));
+    } on ApiError catch (e) {
+      if (isClosed) return;
+      emit(state.copyWith(loading: false, error: _text(e)));
+    }
   }
 
-  /// Мок как в макете: верный код — 1234, остальное — ошибка.
+  /// Код → вход. На моке, как в макете: верный код — 1234. С бэкендом неверный код — [CodeState.error] с текстом экрана;
+  /// устарел, кончились попытки, нет сети — тот же статус с текстом сервера в [AuthState.error].
   Future<void> verify(String code) async {
-    emit(state.copyWith(code: CodeState.checking));
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    if (code != '1234') { emit(state.copyWith(code: CodeState.error)); return; }
-    emit(state.copyWith(code: CodeState.success));
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    emit(state.copyWith(step: AuthStep.done));
+    emit(state.copyWith(code: CodeState.checking, error: null));
+    if (AuthRepository.mocked) {
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      if (code != '1234') { emit(state.copyWith(code: CodeState.error)); return; }
+      emit(state.copyWith(code: CodeState.success));
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      emit(state.copyWith(step: AuthStep.done));
+      return;
+    }
+    try {
+      final r = await repo.verifyCode(state.phone, code);
+      await AuthSession.save(r.accessToken, r.user);
+      if (isClosed) return;
+      emit(state.copyWith(code: CodeState.success, phone: r.user.phone, name: r.user.name));
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      if (isClosed || state.step != AuthStep.code) return;
+      emit(AuthState(step: AuthStep.done, phone: r.user.phone, name: r.user.name));
+    } on ApiError catch (e) {
+      if (isClosed) return;
+      emit(state.copyWith(code: CodeState.error, error: e.status == 400 ? null : _text(e)));
+    }
   }
 
-  void resetCodeError() { if (state.code == CodeState.error) emit(state.copyWith(code: CodeState.idle)); }
+  void resetCodeError() { if (state.code == CodeState.error || state.error != null) emit(state.copyWith(code: CodeState.idle, error: null)); }
+
+  /// Текст ошибки сервера для покупателя; на сбой самого сервера — общий.
+  static String _text(ApiError e) => e.status >= 500 && e.status != 503 ? 'Сервер не отвечает. Попробуйте ещё раз' : e.message;
 
   // ── Telegram ──
 

@@ -17,8 +17,9 @@ import '../../state/settings_cubit.dart';
 
 TextStyle _f(double size, FontWeight w, Color col, {double? h, double? ls}) => TextStyle(fontFamily: 'Onest', fontSize: size, fontWeight: w, color: col, height: h, letterSpacing: ls);
 
-/// Вход (MartAuth.dc.html, mobile). С бэкендом — только через Telegram-бота: «Войти через Telegram» → бот → «Поделиться номером».
-/// На моке — как в макете: телефон → код из WhatsApp (4 ячейки, таймер 45 с); альтернатива — Telegram-бот.
+/// Вход (MartAuth.dc.html, mobile): телефон → код из WhatsApp (4 ячейки, таймер 45 с); альтернатива — Telegram-бот.
+/// С бэкендом способы входа — из [RemoteConfig] (`/app/config` → `auth`): бота нет — кнопок Telegram нет; есть только бот —
+/// вместо телефона одна кнопка «Войти через Telegram» → бот → «Поделиться номером».
 /// changePhone — смена номера в кабинете (другой заголовок, без Telegram и условий); только на моке.
 class AuthView extends StatefulWidget {
   const AuthView({super.key, this.changePhone = false});
@@ -35,7 +36,10 @@ class _AuthViewState extends State<AuthView> with WidgetsBindingObserver {
   bool _tgOpened = false;
 
   @override
-  void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); }
+  void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); RemoteConfig.changes.addListener(_onConfig); }
+
+  /// Пришли свежие настройки — мог измениться набор способов входа.
+  void _onConfig() { if (mounted) setState(() {}); }
 
   /// Вернулись из Telegram — проверяем вход сразу, не дожидаясь очередного опроса.
   @override
@@ -44,7 +48,7 @@ class _AuthViewState extends State<AuthView> with WidgetsBindingObserver {
   }
 
   @override
-  void dispose() { WidgetsBinding.instance.removeObserver(this); _tick?.cancel(); _phone.dispose(); _code.dispose(); super.dispose(); }
+  void dispose() { WidgetsBinding.instance.removeObserver(this); RemoteConfig.changes.removeListener(_onConfig); _tick?.cancel(); _phone.dispose(); _code.dispose(); super.dispose(); }
 
   void _startTimer() {
     _tick?.cancel();
@@ -81,11 +85,14 @@ class _AuthViewState extends State<AuthView> with WidgetsBindingObserver {
               TextSpan(text: t.termsAnd),
               TextSpan(text: t.privacyLink, style: TextStyle(color: c.ink2, decoration: TextDecoration.underline)),
             ]), textAlign: TextAlign.center, style: _f(12, FontWeight.w400, c.ink3, h: 1.4));
-        // С бэкендом вход один — через Telegram-бота: кода из WhatsApp нет.
         final real = !AuthRepository.mocked;
+        // Telegram — на моке всегда, с бэкендом — если сервер включил бота. Кода нет — только бот.
+        final tg = !widget.changePhone && (!real || RemoteConfig.telegramLogin);
+        final tgOnly = real && !widget.changePhone && !RemoteConfig.codeLogin && RemoteConfig.telegramLogin;
+        Widget error(String text) => Padding(padding: const EdgeInsets.only(top: 8, left: 4, right: 4), child: Text(text, style: _f(13, FontWeight.w400, c.error, h: 1.4)));
 
         switch (s.step) {
-          case AuthStep.phone when real:
+          case AuthStep.phone when tgOnly:
             return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               head(t.authTitle, subText(t.authSubTg)),
               gap,
@@ -102,7 +109,8 @@ class _AuthViewState extends State<AuthView> with WidgetsBindingObserver {
               MartInput(label: t.phone, type: MartInputType.phone, required: true, controller: _phone, textInputAction: TextInputAction.done, onChanged: (_) => setState(() {})),
               gap,
               MartButton(label: t.getCodeWa, expanded: true, loading: s.loading, disabledReason: ok ? null : t.enterFullPhone, onPressed: () => cubit.sendCode(_phone.text)),
-              if (!widget.changePhone) ...[
+              if (s.error != null) error(s.error!),
+              if (tg) ...[
                 const SizedBox(height: 12),
                 Row(children: [
                   Expanded(child: Container(height: 1, color: c.divider)),
@@ -111,6 +119,8 @@ class _AuthViewState extends State<AuthView> with WidgetsBindingObserver {
                 ]),
                 const SizedBox(height: 12),
                 MartButton(label: t.loginTelegram, variant: MartButtonVariant.ghost, expanded: true, onPressed: cubit.startTelegram),
+              ],
+              if (!widget.changePhone) ...[
                 gap,
                 terms(),
               ],
@@ -125,7 +135,7 @@ class _AuthViewState extends State<AuthView> with WidgetsBindingObserver {
               gap,
               MartCodeInput(controller: _code, state: s.code, onCompleted: cubit.verify, onEdit: cubit.resetCodeError),
               const SizedBox(height: 8),
-              if (s.code == CodeState.error) Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Text(t.codeWrongMsg, style: _f(13, FontWeight.w400, c.error))),
+              if (s.code == CodeState.error || s.error != null) Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Text(s.error ?? t.codeWrongMsg, style: _f(13, FontWeight.w400, c.error))),
               if (s.code == CodeState.success) Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Text(t.codeOk, style: _f(13, FontWeight.w600, c.success))),
               if (s.code == CodeState.checking) Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Row(children: [
                 SizedBox.square(dimension: 12, child: CircularProgressIndicator(strokeWidth: 2, color: c.primary, backgroundColor: c.border)),
@@ -136,8 +146,8 @@ class _AuthViewState extends State<AuthView> with WidgetsBindingObserver {
               PasteCodeHint(label: t.pasteCode, action: t.paste, onCode: (v) { _code.text = v; cubit.verify(v); }),
               if (_left == 0) link(t.resendCode, () { cubit.sendCode(s.phone); _startTimer(); }, color: c.primary)
               else SizedBox(height: 44, child: Center(child: Text(t.resendIn('0:${_left.toString().padLeft(2, '0')}'), style: _f(14, FontWeight.w400, c.ink3)))),
-              if (!widget.changePhone) link(t.noWaTelegram, cubit.startTelegram),
-              Text(t.codeProtoHint, textAlign: TextAlign.center, style: _f(12, FontWeight.w400, c.ink3)),
+              if (tg) link(t.noWaTelegram, cubit.startTelegram),
+              if (!real) Text(t.codeProtoHint, textAlign: TextAlign.center, style: _f(12, FontWeight.w400, c.ink3)),
             ]);
 
           case AuthStep.telegram:
@@ -182,7 +192,7 @@ class _AuthViewState extends State<AuthView> with WidgetsBindingObserver {
                 ),
               ],
               const SizedBox(height: 8),
-              link(real ? t.goBack : t.loginByWa, cubit.back),
+              link(tgOnly ? t.goBack : t.loginByWa, cubit.back),
             ]);
 
           case AuthStep.done:
