@@ -1,0 +1,76 @@
+
+::group::✅ Passing tests
+✅ /home/runner/work/8mart/8mart/test/api_client_test.dart: переключатель мок / API без API_URL — всё на моке
+✅ /home/runner/work/8mart/8mart/test/api_client_test.dart: переключатель мок / API с адресом — API, кроме перечисленных в API_MOCK; «*» — все
+✅ /home/runner/work/8mart/8mart/test/api_client_test.dart: send query, JSON-тело и Bearer-токен
+✅ /home/runner/work/8mart/8mart/test/api_client_test.dart: send ошибка — ApiError со статусом и сообщением сервера
+✅ /home/runner/work/8mart/8mart/test/api_client_test.dart: send нет сети — ApiError(0); 204 — null
+✅ /home/runner/work/8mart/8mart/test/api_client_test.dart: сторис в форме сайта → модель приложения
+✅ /home/runner/work/8mart/8mart/test/orders_api_test.dart: заказ черновик уходит без сумм: товары, место и оплата — сервер считает сам
+✅ /home/runner/work/8mart/8mart/test/orders_api_test.dart: заказ самовывоз: точка вместо координат, «у двери» не передаётся
+✅ /home/runner/work/8mart/8mart/test/orders_api_test.dart: заказ заказ с сервера → экран статуса: номер, время этапов, слот, курьер, оплата
+✅ /home/runner/work/8mart/8mart/test/orders_api_test.dart: заказ нет заказа — null, нет сети — ApiError
+✅ /home/runner/work/8mart/8mart/test/orders_api_test.dart: заказ список — по id с устройства; карточки состава дозагружаются
+✅ /home/runner/work/8mart/8mart/test/orders_api_test.dart: заказ отмена: отказ сервера доходит текстом, статус перечитывается
+✅ /home/runner/work/8mart/8mart/test/orders_api_test.dart: корзина: раскупленное и цены своего филиала — по ключам позиций
+✅ /home/runner/work/8mart/8mart/test/orders_api_test.dart: слоты с сервера: день считается от «сегодня» Казахстана, «Ближайшее» подписывает приложение
+✅ /home/runner/work/8mart/8mart/test/orders_api_test.dart: настройки с сервера контакты, оплата, функции и порог бесплатной доставки
+✅ /home/runner/work/8mart/8mart/test/orders_api_test.dart: настройки с сервера порог есть — действует; до ответа сервера — значения приложения
+✅ /home/runner/work/8mart/8mart/test/order_screen_test.dart: экран статуса: тот же экран, другой заказ — показывает новый, а не прежний
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: fromJson товар: pack из weight, цена null, категория — от вызывающего
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: fromJson букет: варианты со своими id, ценой и фото
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: fromJson точка самовывоза: без графика, со статусом и вывеской
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: Catalog с бэкендом init: категории, счётчики и первые товары разделов
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: Catalog с бэкендом товар раскладывается по корню и подкатегории дерева; в корне подкатегории нет
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: Catalog с бэкендом позиция корзины: размер букета находит букет; id размера открывает его же
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: Catalog с бэкендом ensure дозагружает недостающее одним запросом ?ids=
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: Catalog с бэкендом карточка: описание абзацами, характеристики парами; у букета описание — общий текст
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: Catalog с бэкендом нет сети на первом запуске — unavailable, без исключений
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: CatalogRepository с бэкендом страница: page с единицы, фильтры и сортировка в запросе
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: CatalogRepository с бэкендом «Показать N» — total первой страницы с теми же фильтрами
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: CatalogRepository с бэкендом подсказки: подкатегория из дерева с названием родителя и счётчиком
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: CatalogRepository с бэкендом запрос уходит на сервер как есть: товары по названию раздела находит он («Часто ищут»)
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: CatalogRepository с бэкендом сбой сети — CatalogOffline
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: Places с бэкендом — города и точки из ответа; до ответа и без сети — снимок
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: на моке каталог и места — из MockData, без запросов
+✅ /home/runner/work/8mart/8mart/test/catalog_api_test.dart: на моке API_MOCK=catalog оставляет каталог на моке при заданном адресе
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: PhoneMaskFormatter 8 → +7
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: PhoneMaskFormatter маска
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: PhoneMaskFormatter международный
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: PhoneMaskFormatter пустое — пустое
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: PhoneMaskFormatter Backspace на символе маски стирает цифру
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: PhoneMaskFormatter complete
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: money
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: planShipments только лёгкие — одна курьерская
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: planShipments смешанная — два отправления
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: planShipments доставка: курьер и грузовой — всегда две доставки, together не действует
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: planShipments самовывоз: всё завтра со склада — одно отправление
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: planShipments самовывоз бесплатно
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: planShipments подъём на этаж
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: CatalogRepository подкатегория
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: CatalogRepository сортировка дешевле
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: CatalogRepository фильтр скидка
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: CatalogRepository поиск по подкатегории
+✅ /home/runner/work/8mart/8mart/test/phone_mask_test.dart: CatalogRepository пагинация
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: вход по коду из WhatsApp номер → код → сессия
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: вход по коду из WhatsApp код не отправился — текст сервера, остаёмся на номере
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: вход по коду из WhatsApp кончились попытки — текст сервера: нужен новый код
+✅ /home/runner/work/8mart/8mart/test/slots_test.dart: слоты доставки сегодня: «Ближайшее» и интервалы, до которых ≥ часа
+✅ /home/runner/work/8mart/8mart/test/slots_test.dart: слоты доставки поздно вечером сегодня нет
+✅ /home/runner/work/8mart/8mart/test/slots_test.dart: слоты доставки день — по времени Казахстана
+✅ /home/runner/work/8mart/8mart/test/slots_test.dart: слоты доставки грузовой — с завтра
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: вход через Telegram-бота ссылка на бота → ждём → бот подтвердил номер → сессия
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: вход через Telegram-бота ссылка устарела — просим новую
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: вход через Telegram-бота вход недоступен — текст сервера и «Повторить»
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: вход через Telegram-бота номер из ссылки возврата не принимается: вход подтверждает только сервер
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: сессия переживает перезапуск; профиль сверяется с сервером
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: сессия сервер закрыл сессию (401) — приложение выходит из аккаунта
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: сессия испорченная запись — входа нет, приложение запускается
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: сессия имя: сохраняется на сервере, при сбое возвращается прежнее
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: сессия выход закрывает сессию на сервере и стирает токен; без сети — всё равно выходим
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: сессия удаление аккаунта: успех — выход; отказ — остаёмся в аккаунте
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: мок-режим не изменился: телефон → код 1234
+✅ /home/runner/work/8mart/8mart/test/auth_api_test.dart: экран входа с бэкендом: способы входа — из /app/config
+::endgroup::
+
+🎉 71 tests passed.
