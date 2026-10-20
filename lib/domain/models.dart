@@ -39,7 +39,7 @@ class Product extends Equatable {
         categoryId: categoryId ?? j['cat'] as String? ?? '',
         subId: subId,
         badge: j['badge'] as String?,
-        variants: (j['variants'] as List?)?.map((v) => ProductVariant.fromJson(v as Map<String, dynamic>)).toList(),
+        variants: (j['variants'] as List?)?.map((v) => ProductVariant.fromJson(Map<String, dynamic>.from(v as Map))).toList(),
         colors: (j['colors'] as List?)?.cast<String>(),
       );
   Product asVariant(String key, ProductVariant v, String? color) => Product(id: key, name: '$name, ${v.size}${color == null ? '' : ', ${color.toLowerCase()}'}', pack: v.size,

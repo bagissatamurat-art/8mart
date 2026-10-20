@@ -128,17 +128,32 @@ abstract final class Catalog {
   // ── загрузка ──
 
   /// До `runApp`: сохранённые категории и карточки — корзина и избранное видны сразу и без сети.
+  /// Hive отдаёт вложенные объекты как Map<dynamic, dynamic>: приводим к виду ответа сервера, иначе разбор
+  /// размеров букета падает. Испорченная запись не мешает запуску — она стирается, каталог придёт с сервера.
   static void restore() {
     if (mocked) return;
     final store = _store;
-    final cats = store?.read(_kCategories);
-    if (cats is List) _setCategories(cats);
-    final saved = store?.read(_kProducts);
-    if (saved is Map) {
-      for (final e in saved.entries) { if (e.value is Map) _raw['${e.key}'] = Map<String, dynamic>.from(e.value as Map); }
-      _raw.keys.toList().forEach(_map);
+    try {
+      final cats = _plain(store?.read(_kCategories));
+      if (cats is List) _setCategories(cats);
+      final saved = _plain(store?.read(_kProducts));
+      if (saved is Map<String, dynamic>) {
+        for (final e in saved.entries) { if (e.value is Map<String, dynamic>) _raw[e.key] = e.value as Map<String, dynamic>; }
+        _raw.keys.toList().forEach(_map);
+      }
+    } catch (_) {
+      reset();
+      store?.delete(_kCategories);
+      store?.delete(_kProducts);
     }
   }
+
+  /// JSON с диска → те же типы, что у ответа сервера (Map<String, dynamic>, List<dynamic>).
+  static Object? _plain(Object? v) => switch (v) {
+        Map() => <String, dynamic>{for (final e in v.entries) '${e.key}': _plain(e.value)},
+        List() => <dynamic>[for (final x in v) _plain(x)],
+        _ => v,
+      };
 
   /// Запуск и «потянуть вниз»: дерево категорий, первые страницы разделов (счётчики, полки, обложки), товары корзины и избранного.
   /// Ошибки не бросает: без сети остаётся сохранённое, [unavailable] / [stale] скажут экрану, что показать.

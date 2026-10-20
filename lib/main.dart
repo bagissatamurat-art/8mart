@@ -22,9 +22,10 @@ Future<void> main() async {
     storageDirectory: kIsWeb ? HydratedStorage.webStorageDirectory : await getApplicationDocumentsDirectory(),
   );
   // С бэкендом: сохранённые категории, карточки корзины/избранного и филиалы — до первого кадра (на моке — ничего не делает).
-  Catalog.restore();
-  Places.restore();
-  RemoteConfig.restore();
+  // Ошибка в сохранённом не должна остановить запуск: до runApp она оставит белый экран навсегда.
+  for (final restore in [Catalog.restore, Places.restore, RemoteConfig.restore]) {
+    try { restore(); } catch (e, s) { FlutterError.reportError(FlutterErrorDetails(exception: e, stack: s, library: 'restore')); }
+  }
   // Вход с прошлого запуска (Keychain / Keystore): приложение открывается уже в аккаунте.
   await AuthSession.restore();
   // Свежий каталог и филиалы — сразу, с какого бы экрана ни открылось приложение (сплэш или ссылка на товар).
